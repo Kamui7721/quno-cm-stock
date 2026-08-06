@@ -63,10 +63,12 @@ export function assertGate(): void {
   }
 }
 
+// SameSite=None, damit die Session auch in der eingebetteten Vorschau
+// (App läuft dort in einem iframe) mitgesendet wird. Secure + HttpOnly bleiben.
 export function setCookieHeader(token: string): string {
-  return `${GATE_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=${GATE_MAX_AGE}`;
+  return `${GATE_COOKIE}=${token}; Path=/; HttpOnly; SameSite=None; Secure; Partitioned; Max-Age=${GATE_MAX_AGE}`;
 }
 
 export function clearCookieHeader(): string {
-  return `${GATE_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Secure; Max-Age=0`;
+  return `${GATE_COOKIE}=; Path=/; HttpOnly; SameSite=None; Secure; Partitioned; Max-Age=0`;
 }
