@@ -164,6 +164,21 @@ function RechnungenPage() {
     onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
   });
 
+  const loeschen = useMutation({
+    mutationFn: async (id: string) => {
+      const pos = await db.from("rechnungspositionen").delete().eq("rechnung_id", id);
+      if (pos.error) throw pos.error;
+      const res = await db.from("rechnungen").delete().eq("id", id);
+      if (res.error) throw res.error;
+    },
+    onSuccess: () => {
+      toast.success("Rechnung gelöscht");
+      setDetailId(null);
+      qc.invalidateQueries({ queryKey: ["rechnungen"] });
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
+
   const liste = (rechnungen.data ?? []).filter(
     (r) =>
       (!filterLieferant || r.lieferant_id === filterLieferant) &&
