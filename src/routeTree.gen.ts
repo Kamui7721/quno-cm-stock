@@ -17,6 +17,7 @@ import { Route as RechnungenRouteImport } from './routes/rechnungen'
 import { Route as VerkaufszahlenRouteImport } from './routes/verkaufszahlen'
 import { Route as ZaehlungIndexRouteImport } from './routes/zaehlung.index'
 import { Route as ZaehlungZaehlungIdRouteImport } from './routes/zaehlung.$zaehlungId'
+import { Route as ApiPublicN8nRechnungRouteImport } from './routes/api/public/n8n/rechnung'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -58,6 +59,11 @@ const ZaehlungZaehlungIdRoute = ZaehlungZaehlungIdRouteImport.update({
   path: '/zaehlung/$zaehlungId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicN8nRechnungRoute = ApiPublicN8nRechnungRouteImport.update({
+  id: '/api/public/n8n/rechnung',
+  path: '/api/public/n8n/rechnung',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -68,6 +74,7 @@ export interface FileRoutesByFullPath {
   '/verkaufszahlen': typeof VerkaufszahlenRoute
   '/zaehlung/$zaehlungId': typeof ZaehlungZaehlungIdRoute
   '/zaehlung/': typeof ZaehlungIndexRoute
+  '/api/public/n8n/rechnung': typeof ApiPublicN8nRechnungRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,6 +85,7 @@ export interface FileRoutesByTo {
   '/verkaufszahlen': typeof VerkaufszahlenRoute
   '/zaehlung/$zaehlungId': typeof ZaehlungZaehlungIdRoute
   '/zaehlung': typeof ZaehlungIndexRoute
+  '/api/public/n8n/rechnung': typeof ApiPublicN8nRechnungRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +97,7 @@ export interface FileRoutesById {
   '/verkaufszahlen': typeof VerkaufszahlenRoute
   '/zaehlung/$zaehlungId': typeof ZaehlungZaehlungIdRoute
   '/zaehlung/': typeof ZaehlungIndexRoute
+  '/api/public/n8n/rechnung': typeof ApiPublicN8nRechnungRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +110,7 @@ export interface FileRouteTypes {
     | '/verkaufszahlen'
     | '/zaehlung/$zaehlungId'
     | '/zaehlung/'
+    | '/api/public/n8n/rechnung'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
     | '/verkaufszahlen'
     | '/zaehlung/$zaehlungId'
     | '/zaehlung'
+    | '/api/public/n8n/rechnung'
   id:
     | '__root__'
     | '/'
@@ -121,6 +132,7 @@ export interface FileRouteTypes {
     | '/verkaufszahlen'
     | '/zaehlung/$zaehlungId'
     | '/zaehlung/'
+    | '/api/public/n8n/rechnung'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -132,6 +144,7 @@ export interface RootRouteChildren {
   VerkaufszahlenRoute: typeof VerkaufszahlenRoute
   ZaehlungZaehlungIdRoute: typeof ZaehlungZaehlungIdRoute
   ZaehlungIndexRoute: typeof ZaehlungIndexRoute
+  ApiPublicN8nRechnungRoute: typeof ApiPublicN8nRechnungRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -192,6 +205,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ZaehlungZaehlungIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/n8n/rechnung': {
+      id: '/api/public/n8n/rechnung'
+      path: '/api/public/n8n/rechnung'
+      fullPath: '/api/public/n8n/rechnung'
+      preLoaderRoute: typeof ApiPublicN8nRechnungRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -204,17 +224,8 @@ const rootRouteChildren: RootRouteChildren = {
   VerkaufszahlenRoute: VerkaufszahlenRoute,
   ZaehlungZaehlungIdRoute: ZaehlungZaehlungIdRoute,
   ZaehlungIndexRoute: ZaehlungIndexRoute,
+  ApiPublicN8nRechnungRoute: ApiPublicN8nRechnungRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
