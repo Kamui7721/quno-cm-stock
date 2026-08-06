@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/db";
 import {
   Badge,
   Button,
@@ -110,7 +110,7 @@ function ZaehlungDetail() {
         .eq("zaehlung_id", zaehlungId);
       if (del.error) throw del.error;
       if (rows.length) {
-        const ins = await supabase.from("zaehlungspositionen").insert(rows);
+        const ins = await db.from("zaehlungspositionen").insert(rows);
         if (ins.error) throw ins.error;
       }
       const upd = await supabase

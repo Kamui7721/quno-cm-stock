@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Mail, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/db";
 import {
   Badge,
   Button,
@@ -44,7 +44,7 @@ function EinstellungenPage() {
   const kategorien = useQuery({
     queryKey: ["kategorien"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("kategorien").select("*").order("name");
+      const { data, error } = await db.from("kategorien").select("*").order("name");
       if (error) throw error;
       return data;
     },
@@ -54,8 +54,8 @@ function EinstellungenPage() {
     mutationFn: async () => {
       const payload = { name: form.name, typ: form.typ, farbe: form.farbe };
       const res = form.id
-        ? await supabase.from("kategorien").update(payload).eq("id", form.id)
-        : await supabase.from("kategorien").insert(payload);
+        ? await db.from("kategorien").update(payload).eq("id", form.id)
+        : await db.from("kategorien").insert(payload);
       if (res.error) throw res.error;
     },
     onSuccess: () => {
@@ -69,7 +69,7 @@ function EinstellungenPage() {
 
   const loeschen = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("kategorien").delete().eq("id", id);
+      const { error } = await db.from("kategorien").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {

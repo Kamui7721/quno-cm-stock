@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { FileText, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/db";
 import {
   Badge,
   Button,
@@ -67,7 +67,7 @@ function RechnungenPage() {
   const lieferanten = useQuery({
     queryKey: ["lieferanten"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("lieferanten").select("*").order("name");
+      const { data, error } = await db.from("lieferanten").select("*").order("name");
       if (error) throw error;
       return data;
     },
@@ -75,7 +75,7 @@ function RechnungenPage() {
   const kategorien = useQuery({
     queryKey: ["kategorien"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("kategorien").select("*").order("name");
+      const { data, error } = await db.from("kategorien").select("*").order("name");
       if (error) throw error;
       return data;
     },
@@ -83,7 +83,7 @@ function RechnungenPage() {
   const produkte = useQuery({
     queryKey: ["produkte-simple"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("produkte").select("id, name").order("name");
+      const { data, error } = await db.from("produkte").select("id, name").order("name");
       if (error) throw error;
       return data;
     },
@@ -141,7 +141,7 @@ function RechnungenPage() {
           preis: Number(p.preis) || 0,
         }));
       if (rows.length) {
-        const res = await supabase.from("rechnungspositionen").insert(rows);
+        const res = await db.from("rechnungspositionen").insert(rows);
         if (res.error) throw res.error;
       }
     },
@@ -157,7 +157,7 @@ function RechnungenPage() {
 
   const statusToggle = useMutation({
     mutationFn: async ({ id, bezahlt }: { id: string; bezahlt: boolean }) => {
-      const { error } = await supabase.from("rechnungen").update({ bezahlt }).eq("id", id);
+      const { error } = await db.from("rechnungen").update({ bezahlt }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["rechnungen"] }),

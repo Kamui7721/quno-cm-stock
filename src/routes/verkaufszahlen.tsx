@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/db";
 import {
   Button,
   Card,
@@ -44,7 +44,7 @@ function VerkaufszahlenPage() {
   const produkte = useQuery({
     queryKey: ["produkte-simple"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("produkte").select("id, name").order("name");
+      const { data, error } = await db.from("produkte").select("id, name").order("name");
       if (error) throw error;
       return data;
     },
@@ -65,7 +65,7 @@ function VerkaufszahlenPage() {
   const speichern = useMutation({
     mutationFn: async () => {
       if (!form.produkt_id) throw new Error("Bitte ein Produkt wählen");
-      const { error } = await supabase.from("verkaufszahlen").insert({
+      const { error } = await db.from("verkaufszahlen").insert({
         produkt_id: form.produkt_id,
         monat: form.monat,
         verkaufte_menge: Number(form.verkaufte_menge) || 0,
