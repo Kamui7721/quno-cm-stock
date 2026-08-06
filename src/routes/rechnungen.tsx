@@ -490,7 +490,7 @@ function RechnungenPage() {
                 onClick={() => {
                   if (
                     window.confirm(
-                      "Rechnung wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+                      "Rechnung wirklich löschen? Alle Positionen werden ebenfalls gelöscht.",
                     )
                   ) {
                     loeschen.mutate(detail.id);
