@@ -2,13 +2,13 @@ import { type ReactNode, useEffect } from "react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function Card({ className, children }: { className?: string; children: ReactNode }) {
+export function Card({ className, children }: { className?: string | undefined; children: ReactNode }) {
   return (
     <div className={cn("rounded-xl border border-border bg-card", className)}>{children}</div>
   );
 }
 
-export function CardHeader({ title, action }: { title: string; action?: ReactNode }) {
+export function CardHeader({ title, action }: { title: string; action?: ReactNode | undefined }) {
   return (
     <div className="flex items-center justify-between border-b border-border px-5 py-4">
       <h2 className="text-sm font-semibold tracking-wide text-foreground">{title}</h2>
@@ -23,8 +23,8 @@ export function PageHeader({
   action,
 }: {
   title: string;
-  subtitle?: string;
-  action?: ReactNode;
+  subtitle?: string | undefined;
+  action?: ReactNode | undefined;
 }) {
   return (
     <div className="mb-6 flex items-end justify-between gap-4">
@@ -45,8 +45,8 @@ export function KpiCard({
 }: {
   label: string;
   value: string;
-  hint?: string;
-  icon?: ReactNode;
+  hint?: string | undefined;
+  icon?: ReactNode | undefined;
 }) {
   return (
     <Card className="p-5">
@@ -71,11 +71,11 @@ export function Badge({
   className,
   onClick,
 }: {
-  tone?: BadgeTone;
-  color?: string;
+  tone?: BadgeTone | undefined;
+  color?: string | undefined;
   children: ReactNode;
-  className?: string;
-  onClick?: () => void;
+  className?: string | undefined;
+  onClick?: (() => void) | undefined;
 }) {
   const tones: Record<BadgeTone, string> = {
     success: "bg-success/20 text-success",
@@ -108,7 +108,7 @@ export function Button({
   className,
   ...props
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: "primary" | "ghost" | "outline" | "danger";
+  variant?: "primary" | "ghost" | "outline" | "danger" | undefined;
 }) {
   const variants = {
     primary: "bg-primary text-primary-foreground hover:bg-[#be123c]",
@@ -166,7 +166,7 @@ export function Modal({
   onClose: () => void;
   title: string;
   children: ReactNode;
-  wide?: boolean;
+  wide?: boolean | undefined;
 }) {
   useEffect(() => {
     const h = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -266,7 +266,7 @@ export function Tr({
   onClick,
 }: {
   children: ReactNode;
-  onClick?: () => void;
+  onClick?: (() => void) | undefined;
 }) {
   return (
     <tr
@@ -281,7 +281,7 @@ export function Tr({
   );
 }
 
-export function Td({ children, className }: { children?: ReactNode; className?: string }) {
+export function Td({ children, className }: { children?: ReactNode | undefined; className?: string | undefined }) {
   return <td className={cn("px-5 py-3 text-foreground", className)}>{children}</td>;
 }
 
