@@ -438,37 +438,34 @@ function RechnungenPage() {
                       className="rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-medium">{p.bezeichnung}</span>
-                        <span>{eur(Number(p.menge) * Number(p.preis))}</span>
-                      </div>
-                      <div className="mt-1 flex items-center gap-2 text-muted-foreground">
-                        {p.kategorien && (
-                          <Badge color={p.kategorien.farbe}>{p.kategorien.name}</Badge>
-                        )}
-                        <span>
-                          {num(Number(p.menge))} × {eur(Number(p.preis))}
+                        <span className="font-medium">
+                          {num(Number(p.menge))} × {p.bezeichnung}
                         </span>
+                        <span>{eur(Number(p.preis))}</span>
                       </div>
+                      {p.kategorien && (
+                        <div className="mt-1 flex items-center gap-2 text-muted-foreground">
+                          <Badge color={p.kategorien.farbe}>{p.kategorien.name}</Badge>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
               )}
             </div>
 
-            <div>
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                PDF
-              </h3>
-              {detail.pdf_url ? (
+            {detail.pdf_url?.trim() ? (
+              <div>
+                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  PDF
+                </h3>
                 <iframe
                   src={detail.pdf_url}
                   title="PDF-Vorschau"
                   className="h-80 w-full rounded-lg border border-border bg-surface-2"
                 />
-              ) : (
-                <p className="text-sm text-muted-foreground">Kein PDF vorhanden.</p>
-              )}
-            </div>
+              </div>
+            ) : null}
           </>
         )}
       </Drawer>
