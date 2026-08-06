@@ -481,6 +481,25 @@ function RechnungenPage() {
                 />
               </div>
             ) : null}
+
+            <div className="border-t border-border pt-4">
+              <Button
+                variant="danger"
+                className="w-full"
+                disabled={loeschen.isPending}
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      "Rechnung wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+                    )
+                  ) {
+                    loeschen.mutate(detail.id);
+                  }
+                }}
+              >
+                <Trash2 size={16} /> Rechnung löschen
+              </Button>
+            </div>
           </>
         )}
       </Drawer>
