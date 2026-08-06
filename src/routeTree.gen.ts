@@ -10,33 +10,128 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as EinstellungenRouteImport } from './routes/einstellungen'
+import { Route as LieferantenRouteImport } from './routes/lieferanten'
+import { Route as ProdukteRouteImport } from './routes/produkte'
+import { Route as RechnungenRouteImport } from './routes/rechnungen'
+import { Route as VerkaufszahlenRouteImport } from './routes/verkaufszahlen'
+import { Route as ZaehlungIndexRouteImport } from './routes/zaehlung.index'
+import { Route as ZaehlungZaehlungIdRouteImport } from './routes/zaehlung.$zaehlungId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const EinstellungenRoute = EinstellungenRouteImport.update({
+  id: '/einstellungen',
+  path: '/einstellungen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LieferantenRoute = LieferantenRouteImport.update({
+  id: '/lieferanten',
+  path: '/lieferanten',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProdukteRoute = ProdukteRouteImport.update({
+  id: '/produkte',
+  path: '/produkte',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RechnungenRoute = RechnungenRouteImport.update({
+  id: '/rechnungen',
+  path: '/rechnungen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VerkaufszahlenRoute = VerkaufszahlenRouteImport.update({
+  id: '/verkaufszahlen',
+  path: '/verkaufszahlen',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ZaehlungIndexRoute = ZaehlungIndexRouteImport.update({
+  id: '/zaehlung/',
+  path: '/zaehlung/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ZaehlungZaehlungIdRoute = ZaehlungZaehlungIdRouteImport.update({
+  id: '/zaehlung/$zaehlungId',
+  path: '/zaehlung/$zaehlungId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/einstellungen': typeof EinstellungenRoute
+  '/lieferanten': typeof LieferantenRoute
+  '/produkte': typeof ProdukteRoute
+  '/rechnungen': typeof RechnungenRoute
+  '/verkaufszahlen': typeof VerkaufszahlenRoute
+  '/zaehlung/$zaehlungId': typeof ZaehlungZaehlungIdRoute
+  '/zaehlung/': typeof ZaehlungIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/einstellungen': typeof EinstellungenRoute
+  '/lieferanten': typeof LieferantenRoute
+  '/produkte': typeof ProdukteRoute
+  '/rechnungen': typeof RechnungenRoute
+  '/verkaufszahlen': typeof VerkaufszahlenRoute
+  '/zaehlung/$zaehlungId': typeof ZaehlungZaehlungIdRoute
+  '/zaehlung': typeof ZaehlungIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/einstellungen': typeof EinstellungenRoute
+  '/lieferanten': typeof LieferantenRoute
+  '/produkte': typeof ProdukteRoute
+  '/rechnungen': typeof RechnungenRoute
+  '/verkaufszahlen': typeof VerkaufszahlenRoute
+  '/zaehlung/$zaehlungId': typeof ZaehlungZaehlungIdRoute
+  '/zaehlung/': typeof ZaehlungIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/einstellungen'
+    | '/lieferanten'
+    | '/produkte'
+    | '/rechnungen'
+    | '/verkaufszahlen'
+    | '/zaehlung/$zaehlungId'
+    | '/zaehlung/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/einstellungen'
+    | '/lieferanten'
+    | '/produkte'
+    | '/rechnungen'
+    | '/verkaufszahlen'
+    | '/zaehlung/$zaehlungId'
+    | '/zaehlung'
+  id:
+    | '__root__'
+    | '/'
+    | '/einstellungen'
+    | '/lieferanten'
+    | '/produkte'
+    | '/rechnungen'
+    | '/verkaufszahlen'
+    | '/zaehlung/$zaehlungId'
+    | '/zaehlung/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  EinstellungenRoute: typeof EinstellungenRoute
+  LieferantenRoute: typeof LieferantenRoute
+  ProdukteRoute: typeof ProdukteRoute
+  RechnungenRoute: typeof RechnungenRoute
+  VerkaufszahlenRoute: typeof VerkaufszahlenRoute
+  ZaehlungZaehlungIdRoute: typeof ZaehlungZaehlungIdRoute
+  ZaehlungIndexRoute: typeof ZaehlungIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,22 +143,68 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/einstellungen': {
+      id: '/einstellungen'
+      path: '/einstellungen'
+      fullPath: '/einstellungen'
+      preLoaderRoute: typeof EinstellungenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lieferanten': {
+      id: '/lieferanten'
+      path: '/lieferanten'
+      fullPath: '/lieferanten'
+      preLoaderRoute: typeof LieferantenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/produkte': {
+      id: '/produkte'
+      path: '/produkte'
+      fullPath: '/produkte'
+      preLoaderRoute: typeof ProdukteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/rechnungen': {
+      id: '/rechnungen'
+      path: '/rechnungen'
+      fullPath: '/rechnungen'
+      preLoaderRoute: typeof RechnungenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/verkaufszahlen': {
+      id: '/verkaufszahlen'
+      path: '/verkaufszahlen'
+      fullPath: '/verkaufszahlen'
+      preLoaderRoute: typeof VerkaufszahlenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/zaehlung/': {
+      id: '/zaehlung/'
+      path: '/zaehlung'
+      fullPath: '/zaehlung/'
+      preLoaderRoute: typeof ZaehlungIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/zaehlung/$zaehlungId': {
+      id: '/zaehlung/$zaehlungId'
+      path: '/zaehlung/$zaehlungId'
+      fullPath: '/zaehlung/$zaehlungId'
+      preLoaderRoute: typeof ZaehlungZaehlungIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  EinstellungenRoute: EinstellungenRoute,
+  LieferantenRoute: LieferantenRoute,
+  ProdukteRoute: ProdukteRoute,
+  RechnungenRoute: RechnungenRoute,
+  VerkaufszahlenRoute: VerkaufszahlenRoute,
+  ZaehlungZaehlungIdRoute: ZaehlungZaehlungIdRoute,
+  ZaehlungIndexRoute: ZaehlungIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
