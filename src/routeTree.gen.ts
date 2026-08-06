@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as LieferantenRouteImport } from './routes/lieferanten'
+import { Route as ProdukteRouteImport } from './routes/produkte'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LieferantenRoute = LieferantenRouteImport.update({
+  id: '/lieferanten',
+  path: '/lieferanten',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProdukteRoute = ProdukteRouteImport.update({
+  id: '/produkte',
+  path: '/produkte',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/lieferanten': typeof LieferantenRoute
+  '/produkte': typeof ProdukteRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/lieferanten': typeof LieferantenRoute
+  '/produkte': typeof ProdukteRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/lieferanten': typeof LieferantenRoute
+  '/produkte': typeof ProdukteRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/lieferanten' | '/produkte'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/lieferanten' | '/produkte'
+  id: '__root__' | '/' | '/lieferanten' | '/produkte'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  LieferantenRoute: typeof LieferantenRoute
+  ProdukteRoute: typeof ProdukteRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lieferanten': {
+      id: '/lieferanten'
+      path: '/lieferanten'
+      fullPath: '/lieferanten'
+      preLoaderRoute: typeof LieferantenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/produkte': {
+      id: '/produkte'
+      path: '/produkte'
+      fullPath: '/produkte'
+      preLoaderRoute: typeof ProdukteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  LieferantenRoute: LieferantenRoute,
+  ProdukteRoute: ProdukteRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
