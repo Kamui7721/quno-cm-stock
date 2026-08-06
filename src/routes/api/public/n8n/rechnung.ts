@@ -105,14 +105,56 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
             return hit?.id ?? fallback;
           };
 
-          // 5. Positionen schreiben
-          const rows = parsed.positionen.map((p) => ({
-            rechnung_id: rechnung.data.id,
-            bezeichnung: p.bezeichnung,
-            kategorie_id: findKat(p.kategorie_name),
-            menge: p.menge,
-            preis: p.preis,
-          }));
+          // 5. Produkte auflösen bzw. anlegen und Positionen schreiben
+          const rows: Array<{
+            rechnung_id: string;
+            bezeichnung: string;
+            kategorie_id: string | null;
+            produkt_id: string | null;
+            menge: number;
+            preis: number;
+          }> = [];
+
+          for (const p of parsed.positionen) {
+            const katId = findKat(p.kategorie_name);
+            let produktId: string | null = null;
+
+            const vorhanden = await supabaseAdmin
+              .from("produkte")
+              .select("id")
+              .ilike("name", p.bezeichnung)
+              .limit(1)
+              .maybeSingle();
+            if (vorhanden.error) return json({ error: vorhanden.error.message }, 500);
+
+            if (vorhanden.data) {
+              produktId = vorhanden.data.id;
+            } else {
+              const neuesProdukt = await supabaseAdmin
+                .from("produkte")
+                .insert({
+                  name: p.bezeichnung,
+                  kategorie_id: katId,
+                  lieferant_id: lieferantId,
+                  einheit: "stück",
+                  aktueller_bestand: 0,
+                })
+                .select("id")
+                .single();
+              if (neuesProdukt.error) return json({ error: neuesProdukt.error.message }, 500);
+              produktId = neuesProdukt.data.id;
+            }
+
+            rows.push({
+              rechnung_id: rechnung.data.id,
+              bezeichnung: p.bezeichnung,
+              kategorie_id: katId,
+              produkt_id: produktId,
+              menge: p.menge,
+              preis: p.preis,
+            });
+          }
+
           const pos = await supabaseAdmin.from("rechnungspositionen").insert(rows);
           if (pos.error) return json({ error: pos.error.message }, 500);
         }
