@@ -9,10 +9,18 @@ export function PasswortGate({ children }: { children: ReactNode }) {
   const [ok, setOk] = useState(false);
   const [pw, setPw] = useState("");
   const [fehler, setFehler] = useState(false);
+  const [pruefe, setPruefe] = useState(false);
 
   useEffect(() => {
-    setOk(istEingeloggt());
-    setMounted(true);
+    let aktiv = true;
+    void istEingeloggt().then((eingeloggt) => {
+      if (!aktiv) return;
+      setOk(eingeloggt);
+      setMounted(true);
+    });
+    return () => {
+      aktiv = false;
+    };
   }, []);
 
   if (!mounted) return <div className="min-h-screen bg-background" />;
@@ -23,8 +31,12 @@ export function PasswortGate({ children }: { children: ReactNode }) {
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            if (einloggen(pw)) setOk(true);
-            else setFehler(true);
+            setPruefe(true);
+            void einloggen(pw).then((erfolg) => {
+              setPruefe(false);
+              if (erfolg) setOk(true);
+              else setFehler(true);
+            });
           }}
           className="w-full max-w-sm rounded-xl border border-border bg-card p-7"
         >
@@ -46,8 +58,8 @@ export function PasswortGate({ children }: { children: ReactNode }) {
             }}
           />
           {fehler && <p className="mt-2 text-xs text-primary">Falsches Passwort.</p>}
-          <Button type="submit" className="mt-4 w-full">
-            Anmelden
+          <Button type="submit" className="mt-4 w-full" disabled={pruefe}>
+            {pruefe ? "Prüfe…" : "Anmelden"}
           </Button>
         </form>
       </div>

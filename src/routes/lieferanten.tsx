@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/db";
 import {
   Button,
   Card,
@@ -51,7 +51,7 @@ function LieferantenPage() {
   const lieferanten = useQuery({
     queryKey: ["lieferanten"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("lieferanten").select("*").order("name");
+      const { data, error } = await db.from("lieferanten").select("*").order("name");
       if (error) throw error;
       return data;
     },
@@ -61,7 +61,7 @@ function LieferantenPage() {
     queryKey: ["lieferant-produkte", detailId],
     enabled: !!detailId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("produkte")
         .select("*")
         .eq("lieferant_id", detailId!)
@@ -73,7 +73,7 @@ function LieferantenPage() {
 
   const anlegen = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("lieferanten").insert(form);
+      const { error } = await db.from("lieferanten").insert(form);
       if (error) throw error;
     },
     onSuccess: () => {

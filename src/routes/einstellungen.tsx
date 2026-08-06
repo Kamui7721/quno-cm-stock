@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Mail, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/db";
 import {
   Badge,
   Button,
@@ -19,7 +19,6 @@ import {
   Td,
   Tr,
 } from "@/components/ui-kit";
-import { setzePasswort } from "@/lib/gate";
 
 export const Route = createFileRoute("/einstellungen")({
   head: () => ({
@@ -44,7 +43,7 @@ function EinstellungenPage() {
   const kategorien = useQuery({
     queryKey: ["kategorien"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("kategorien").select("*").order("name");
+      const { data, error } = await db.from("kategorien").select("*").order("name");
       if (error) throw error;
       return data;
     },
@@ -54,8 +53,8 @@ function EinstellungenPage() {
     mutationFn: async () => {
       const payload = { name: form.name, typ: form.typ, farbe: form.farbe };
       const res = form.id
-        ? await supabase.from("kategorien").update(payload).eq("id", form.id)
-        : await supabase.from("kategorien").insert(payload);
+        ? await db.from("kategorien").update(payload).eq("id", form.id)
+        : await db.from("kategorien").insert(payload);
       if (res.error) throw res.error;
     },
     onSuccess: () => {
@@ -69,7 +68,7 @@ function EinstellungenPage() {
 
   const loeschen = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from("kategorien").delete().eq("id", id);
+      const { error } = await db.from("kategorien").delete().eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -145,37 +144,12 @@ function EinstellungenPage() {
       </Card>
 
       <Card className="mt-6">
-        <CardHeader title="Passwort ändern" />
-        <form
-          className="flex items-end gap-3 p-5"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (neuesPw.length < 4) {
-              toast.error("Passwort zu kurz");
-              return;
-            }
-            setzePasswort(neuesPw);
-            setNeuesPw("");
-            toast.success(
-              "Passwort in diesem Browser geändert. Für alle Geräte muss es im Code angepasst werden.",
-            );
-          }}
-        >
-          <div className="w-72">
-            <Field label="Neues Passwort">
-              <Input
-                type="password"
-                value={neuesPw}
-                onChange={(e) => setNeuesPw(e.target.value)}
-                placeholder="Neues Passwort"
-              />
-            </Field>
-          </div>
-          <Button type="submit">Speichern</Button>
-        </form>
-        <p className="border-t border-border px-5 py-3 text-xs text-muted-foreground">
-          Hinweis: Das Passwort wird lokal in diesem Browser gespeichert. Damit es dauerhaft für
-          alle gilt, muss der Standardwert im Code (src/lib/gate.ts) geändert werden.
+        <CardHeader title="Passwort" />
+        <p className="p-5 text-xs text-muted-foreground">
+          Das Zugangspasswort wird aus Sicherheitsgründen ausschließlich auf dem Server geprüft
+          und ist im Browser nicht sichtbar. Es kann über das Server-Geheimnis
+          <span className="mx-1 font-mono text-foreground">APP_PASSWORT</span>
+          geändert werden — sage einfach Bescheid, wenn ein neues Passwort gesetzt werden soll.
         </p>
       </Card>
 

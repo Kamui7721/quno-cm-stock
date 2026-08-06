@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/db";
 import {
   Badge,
   Button,
@@ -53,7 +53,7 @@ function ProduktePage() {
   const kategorien = useQuery({
     queryKey: ["kategorien"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("kategorien").select("*").order("name");
+      const { data, error } = await db.from("kategorien").select("*").order("name");
       if (error) throw error;
       return data;
     },
@@ -62,7 +62,7 @@ function ProduktePage() {
   const lieferanten = useQuery({
     queryKey: ["lieferanten"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("lieferanten").select("*").order("name");
+      const { data, error } = await db.from("lieferanten").select("*").order("name");
       if (error) throw error;
       return data;
     },
@@ -71,7 +71,7 @@ function ProduktePage() {
   const produkte = useQuery({
     queryKey: ["produkte"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("produkte")
         .select("*, kategorien(name, farbe), lieferanten(*)")
         .order("name");
@@ -84,7 +84,7 @@ function ProduktePage() {
     queryKey: ["produkt-historie", detailId],
     enabled: !!detailId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("zaehlungspositionen")
         .select("*, zaehlungen(datum, status)")
         .eq("produkt_id", detailId!);
@@ -95,7 +95,7 @@ function ProduktePage() {
 
   const anlegen = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("produkte").insert({
+      const { error } = await db.from("produkte").insert({
         name: form.name,
         kategorie_id: form.kategorie_id || null,
         lieferant_id: form.lieferant_id || null,

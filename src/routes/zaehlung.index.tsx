@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/db";
 import {
   Badge,
   Button,
@@ -35,7 +35,7 @@ function ZaehlungUebersicht() {
   const kategorien = useQuery({
     queryKey: ["kategorien"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("kategorien").select("*").order("name");
+      const { data, error } = await db.from("kategorien").select("*").order("name");
       if (error) throw error;
       return data;
     },
@@ -44,7 +44,7 @@ function ZaehlungUebersicht() {
   const zaehlungen = useQuery({
     queryKey: ["zaehlungen"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("zaehlungen")
         .select("*, kategorien(name, farbe), zaehlungspositionen(differenz_prozent)")
         .order("datum", { ascending: false });
@@ -59,7 +59,7 @@ function ZaehlungUebersicht() {
         (z) => z.kategorie_id === kategorieId && z.status === "offen",
       );
       if (offen) return offen.id;
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("zaehlungen")
         .insert({ kategorie_id: kategorieId, monat: heutigerMonat(), status: "offen" })
         .select("id")

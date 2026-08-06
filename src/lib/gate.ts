@@ -1,29 +1,36 @@
-const KEY = "quno_auth";
-const PW_KEY = "quno_pw";
-export const STANDARD_PASSWORT = "clubmichel2026";
+// Der Passwortschutz wird serverseitig geprüft (/api/public/session).
+// Im Browser liegt nur ein HttpOnly-Cookie, kein Passwort und kein Datenbankzugriff.
+const ENDPOINT = "/api/public/session";
 
-export function aktuellesPasswort(): string {
-  if (typeof window === "undefined") return STANDARD_PASSWORT;
-  return localStorage.getItem(PW_KEY) ?? STANDARD_PASSWORT;
-}
-
-export function setzePasswort(pw: string) {
-  localStorage.setItem(PW_KEY, pw);
-}
-
-export function istEingeloggt(): boolean {
-  if (typeof window === "undefined") return false;
-  return sessionStorage.getItem(KEY) === "1";
-}
-
-export function einloggen(pw: string): boolean {
-  if (pw === aktuellesPasswort()) {
-    sessionStorage.setItem(KEY, "1");
-    return true;
+export async function istEingeloggt(): Promise<boolean> {
+  try {
+    const res = await fetch(ENDPOINT, { credentials: "same-origin" });
+    const body = (await res.json()) as { ok?: boolean };
+    return res.ok && body.ok === true;
+  } catch {
+    return false;
   }
-  return false;
 }
 
-export function ausloggen() {
-  sessionStorage.removeItem(KEY);
+export async function einloggen(pw: string): Promise<boolean> {
+  try {
+    const res = await fetch(ENDPOINT, {
+      method: "POST",
+      credentials: "same-origin",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ passwort: pw }),
+    });
+    const body = (await res.json().catch(() => ({}))) as { ok?: boolean };
+    return res.ok && body.ok === true;
+  } catch {
+    return false;
+  }
+}
+
+export async function ausloggen() {
+  try {
+    await fetch(ENDPOINT, { method: "DELETE", credentials: "same-origin" });
+  } catch {
+    // ignorieren
+  }
 }

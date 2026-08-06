@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Receipt, Package, ClipboardList, Euro } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { db } from "@/lib/db";
 import { Badge, Card, CardHeader, Empty, KpiCard, PageHeader, Table, Td, Tr } from "@/components/ui-kit";
 import { datum, eur, num } from "@/lib/format";
 
@@ -22,12 +22,12 @@ function Dashboard() {
     queryKey: ["dashboard"],
     queryFn: async () => {
       const [rechnungen, produkte, zaehlungen] = await Promise.all([
-        supabase
+        db
           .from("rechnungen")
           .select("*, lieferanten(name)")
           .order("datum", { ascending: false }),
-        supabase.from("produkte").select("id"),
-        supabase
+        db.from("produkte").select("id"),
+        db
           .from("zaehlungen")
           .select("*, kategorien(name, farbe), zaehlungspositionen(differenz_prozent)")
           .order("datum", { ascending: false }),
