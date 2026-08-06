@@ -2,7 +2,10 @@ import type { DbOp, TABELLEN } from "./db-schema";
 import { dbRequest } from "./db.functions";
 
 type Tabelle = (typeof TABELLEN)[number];
-type Ergebnis = { data: any; error: { message: string } | null };
+
+/** Zeile aus der Datenbank — Felder sind zur Laufzeit dynamisch. */
+export type DbRow = Record<string, any>;
+type Ergebnis = { data: DbRow[] & DbRow; error: { message: string } | null };
 
 /**
  * Kleiner Supabase-ähnlicher Query-Builder, der alle Datenzugriffe über eine
@@ -38,9 +41,9 @@ class Query implements PromiseLike<Ergebnis> {
     onrejected?: ((reason: unknown) => T2 | PromiseLike<T2>) | null,
   ): PromiseLike<T1 | T2> {
     return dbRequest({ data: this.op })
-      .then((r) => r as Ergebnis)
+      .then((r) => r as unknown as Ergebnis)
       .catch((e: unknown) => ({
-        data: null,
+        data: null as unknown as DbRow[] & DbRow,
         error: { message: e instanceof Error ? e.message : "Unbekannter Fehler" },
       }))
       .then(onfulfilled, onrejected);
