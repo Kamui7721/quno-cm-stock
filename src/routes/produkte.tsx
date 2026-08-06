@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
 import {
@@ -113,6 +113,31 @@ function ProduktePage() {
     onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
   });
 
+  const loeschen = useMutation({
+    mutationFn: async (id: string) => {
+      const r1 = await db.from("rechnungspositionen").update({ produkt_id: null }).eq("produkt_id", id);
+      if (r1.error) throw r1.error;
+      const r2 = await db.from("zaehlungspositionen").update({ produkt_id: null }).eq("produkt_id", id);
+      if (r2.error) throw r2.error;
+      const r3 = await db.from("verkaufszahlen").update({ produkt_id: null }).eq("produkt_id", id);
+      if (r3.error) throw r3.error;
+      const { error } = await db.from("produkte").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Produkt gelöscht");
+      setDetailId(null);
+      qc.invalidateQueries({ queryKey: ["produkte"] });
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
+
+  const loeschenBestaetigen = (id: string) => {
+    if (window.confirm("Produkt wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.")) {
+      loeschen.mutate(id);
+    }
+  };
+
   const liste = (produkte.data ?? []).filter((p) => !filter || p.kategorie_id === filter);
   const detail = (produkte.data ?? []).find((p) => p.id === detailId);
 
@@ -145,7 +170,7 @@ function ProduktePage() {
         ) : liste.length === 0 ? (
           <Empty text="Keine Produkte vorhanden." />
         ) : (
-          <Table head={["Name", "Kategorie", "Lieferant", "Einheit", "Bestand"]}>
+          <Table head={["Name", "Kategorie", "Lieferant", "Einheit", "Bestand", ""]}>
             {liste.map((p) => (
               <Tr key={p.id} onClick={() => setDetailId(p.id)}>
                 <Td>{p.name}</Td>
@@ -160,6 +185,19 @@ function ProduktePage() {
                 <Td>{p.einheit}</Td>
                 <Td>
                   {num(Number(p.aktueller_bestand))} {p.einheit}
+                </Td>
+                <Td className="text-right">
+                  <button
+                    type="button"
+                    aria-label={`${p.name} löschen`}
+                    className="rounded-md p-1.5 text-destructive transition hover:bg-destructive/10"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      loeschenBestaetigen(p.id);
+                    }}
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </Td>
               </Tr>
             ))}
@@ -313,6 +351,17 @@ function ProduktePage() {
                   ))}
                 </div>
               )}
+            </div>
+
+            <div className="border-t border-border pt-4">
+              <Button
+                variant="danger"
+                className="w-full"
+                disabled={loeschen.isPending}
+                onClick={() => loeschenBestaetigen(detail.id)}
+              >
+                <Trash2 size={16} /> Produkt löschen
+              </Button>
             </div>
           </>
         )}

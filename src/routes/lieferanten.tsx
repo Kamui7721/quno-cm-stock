@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
 import {
@@ -81,6 +81,25 @@ function LieferantenPage() {
       setModal(false);
       setForm(leer);
       qc.invalidateQueries({ queryKey: ["lieferanten"] });
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
+
+  const loeschen = useMutation({
+    mutationFn: async (id: string) => {
+      const r1 = await db.from("produkte").update({ lieferant_id: null }).eq("lieferant_id", id);
+      if (r1.error) throw r1.error;
+      const r2 = await db.from("rechnungen").update({ lieferant_id: null }).eq("lieferant_id", id);
+      if (r2.error) throw r2.error;
+      const { error } = await db.from("lieferanten").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Lieferant gelöscht");
+      setDetailId(null);
+      qc.invalidateQueries({ queryKey: ["lieferanten"] });
+      qc.invalidateQueries({ queryKey: ["produkte"] });
+      qc.invalidateQueries({ queryKey: ["rechnungen"] });
     },
     onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
   });
@@ -193,6 +212,25 @@ function LieferantenPage() {
                   ))}
                 </div>
               )}
+            </div>
+
+            <div className="border-t border-border pt-4">
+              <Button
+                variant="danger"
+                className="w-full"
+                disabled={loeschen.isPending}
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      "Lieferant wirklich löschen? Verknüpfte Produkte verlieren die Lieferanten-Zuordnung.",
+                    )
+                  ) {
+                    loeschen.mutate(detail.id);
+                  }
+                }}
+              >
+                <Trash2 size={16} /> Lieferant löschen
+              </Button>
             </div>
           </>
         )}
