@@ -1,10 +1,10 @@
 import type { DbOp } from "./db-schema";
 import { assertGate } from "./gate.server";
 
-export async function runDbOp(op: DbOp): Promise<{
-  data: unknown;
-  error: { message: string } | null;
-}> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type DbErgebnis = { data: any; error: { message: string } | null };
+
+export async function runDbOp(op: DbOp): Promise<DbErgebnis> {
   assertGate();
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

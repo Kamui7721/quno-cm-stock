@@ -17,6 +17,7 @@ import { Route as RechnungenRouteImport } from './routes/rechnungen'
 import { Route as VerkaufszahlenRouteImport } from './routes/verkaufszahlen'
 import { Route as ZaehlungIndexRouteImport } from './routes/zaehlung.index'
 import { Route as ZaehlungZaehlungIdRouteImport } from './routes/zaehlung.$zaehlungId'
+import { Route as ApiPublicSessionRouteImport } from './routes/api/public/session'
 import { Route as ApiPublicN8nRechnungRouteImport } from './routes/api/public/n8n/rechnung'
 
 const IndexRoute = IndexRouteImport.update({
@@ -59,6 +60,11 @@ const ZaehlungZaehlungIdRoute = ZaehlungZaehlungIdRouteImport.update({
   path: '/zaehlung/$zaehlungId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicSessionRoute = ApiPublicSessionRouteImport.update({
+  id: '/api/public/session',
+  path: '/api/public/session',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicN8nRechnungRoute = ApiPublicN8nRechnungRouteImport.update({
   id: '/api/public/n8n/rechnung',
   path: '/api/public/n8n/rechnung',
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/verkaufszahlen': typeof VerkaufszahlenRoute
   '/zaehlung/$zaehlungId': typeof ZaehlungZaehlungIdRoute
   '/zaehlung/': typeof ZaehlungIndexRoute
+  '/api/public/session': typeof ApiPublicSessionRoute
   '/api/public/n8n/rechnung': typeof ApiPublicN8nRechnungRoute
 }
 export interface FileRoutesByTo {
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/verkaufszahlen': typeof VerkaufszahlenRoute
   '/zaehlung/$zaehlungId': typeof ZaehlungZaehlungIdRoute
   '/zaehlung': typeof ZaehlungIndexRoute
+  '/api/public/session': typeof ApiPublicSessionRoute
   '/api/public/n8n/rechnung': typeof ApiPublicN8nRechnungRoute
 }
 export interface FileRoutesById {
@@ -97,6 +105,7 @@ export interface FileRoutesById {
   '/verkaufszahlen': typeof VerkaufszahlenRoute
   '/zaehlung/$zaehlungId': typeof ZaehlungZaehlungIdRoute
   '/zaehlung/': typeof ZaehlungIndexRoute
+  '/api/public/session': typeof ApiPublicSessionRoute
   '/api/public/n8n/rechnung': typeof ApiPublicN8nRechnungRoute
 }
 export interface FileRouteTypes {
@@ -110,6 +119,7 @@ export interface FileRouteTypes {
     | '/verkaufszahlen'
     | '/zaehlung/$zaehlungId'
     | '/zaehlung/'
+    | '/api/public/session'
     | '/api/public/n8n/rechnung'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/verkaufszahlen'
     | '/zaehlung/$zaehlungId'
     | '/zaehlung'
+    | '/api/public/session'
     | '/api/public/n8n/rechnung'
   id:
     | '__root__'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
     | '/verkaufszahlen'
     | '/zaehlung/$zaehlungId'
     | '/zaehlung/'
+    | '/api/public/session'
     | '/api/public/n8n/rechnung'
   fileRoutesById: FileRoutesById
 }
@@ -144,6 +156,7 @@ export interface RootRouteChildren {
   VerkaufszahlenRoute: typeof VerkaufszahlenRoute
   ZaehlungZaehlungIdRoute: typeof ZaehlungZaehlungIdRoute
   ZaehlungIndexRoute: typeof ZaehlungIndexRoute
+  ApiPublicSessionRoute: typeof ApiPublicSessionRoute
   ApiPublicN8nRechnungRoute: typeof ApiPublicN8nRechnungRoute
 }
 
@@ -205,6 +218,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ZaehlungZaehlungIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/session': {
+      id: '/api/public/session'
+      path: '/api/public/session'
+      fullPath: '/api/public/session'
+      preLoaderRoute: typeof ApiPublicSessionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/n8n/rechnung': {
       id: '/api/public/n8n/rechnung'
       path: '/api/public/n8n/rechnung'
@@ -224,18 +244,9 @@ const rootRouteChildren: RootRouteChildren = {
   VerkaufszahlenRoute: VerkaufszahlenRoute,
   ZaehlungZaehlungIdRoute: ZaehlungZaehlungIdRoute,
   ZaehlungIndexRoute: ZaehlungIndexRoute,
+  ApiPublicSessionRoute: ApiPublicSessionRoute,
   ApiPublicN8nRechnungRoute: ApiPublicN8nRechnungRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
