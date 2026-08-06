@@ -71,7 +71,7 @@ function ProduktePage() {
   const produkte = useQuery({
     queryKey: ["produkte"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("produkte")
         .select("*, kategorien(name, farbe), lieferanten(*)")
         .order("name");
@@ -84,7 +84,7 @@ function ProduktePage() {
     queryKey: ["produkt-historie", detailId],
     enabled: !!detailId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("zaehlungspositionen")
         .select("*, zaehlungen(datum, status)")
         .eq("produkt_id", detailId!);

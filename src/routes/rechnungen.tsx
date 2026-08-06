@@ -91,7 +91,7 @@ function RechnungenPage() {
   const rechnungen = useQuery({
     queryKey: ["rechnungen"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("rechnungen")
         .select("*, lieferanten(name)")
         .order("datum", { ascending: false });
@@ -103,7 +103,7 @@ function RechnungenPage() {
     queryKey: ["rechnungspositionen", detailId],
     enabled: !!detailId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("rechnungspositionen")
         .select("*, kategorien(name, farbe)")
         .eq("rechnung_id", detailId!);
@@ -119,7 +119,7 @@ function RechnungenPage() {
 
   const anlegen = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("rechnungen")
         .insert({
           rechnungsnummer: kopf.rechnungsnummer,

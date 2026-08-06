@@ -44,7 +44,7 @@ function ZaehlungUebersicht() {
   const zaehlungen = useQuery({
     queryKey: ["zaehlungen"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("zaehlungen")
         .select("*, kategorien(name, farbe), zaehlungspositionen(differenz_prozent)")
         .order("datum", { ascending: false });
@@ -59,7 +59,7 @@ function ZaehlungUebersicht() {
         (z) => z.kategorie_id === kategorieId && z.status === "offen",
       );
       if (offen) return offen.id;
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("zaehlungen")
         .insert({ kategorie_id: kategorieId, monat: heutigerMonat(), status: "offen" })
         .select("id")

@@ -22,12 +22,12 @@ function Dashboard() {
     queryKey: ["dashboard"],
     queryFn: async () => {
       const [rechnungen, produkte, zaehlungen] = await Promise.all([
-        supabase
+        db
           .from("rechnungen")
           .select("*, lieferanten(name)")
           .order("datum", { ascending: false }),
         db.from("produkte").select("id"),
-        supabase
+        db
           .from("zaehlungen")
           .select("*, kategorien(name, farbe), zaehlungspositionen(differenz_prozent)")
           .order("datum", { ascending: false }),

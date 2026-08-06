@@ -53,7 +53,7 @@ function VerkaufszahlenPage() {
   const zahlen = useQuery({
     queryKey: ["verkaufszahlen"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("verkaufszahlen")
         .select("*, produkte(name)")
         .order("monat", { ascending: false });

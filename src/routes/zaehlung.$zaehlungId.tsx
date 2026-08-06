@@ -41,7 +41,7 @@ function ZaehlungDetail() {
   const zaehlung = useQuery({
     queryKey: ["zaehlung", zaehlungId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("zaehlungen")
         .select("*, kategorien(name, farbe)")
         .eq("id", zaehlungId)
@@ -57,7 +57,7 @@ function ZaehlungDetail() {
     queryKey: ["zaehlung-produkte", kategorieId],
     enabled: !!kategorieId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("produkte")
         .select("*")
         .eq("kategorie_id", kategorieId!)
@@ -70,7 +70,7 @@ function ZaehlungDetail() {
   const positionen = useQuery({
     queryKey: ["zaehlung-positionen", zaehlungId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("zaehlungspositionen")
         .select("*, produkte(name, einheit)")
         .eq("zaehlung_id", zaehlungId);
@@ -104,7 +104,7 @@ function ZaehlungDetail() {
           differenz_prozent: soll === 0 ? 0 : (differenz / soll) * 100,
         };
       });
-      const del = await supabase
+      const del = await db
         .from("zaehlungspositionen")
         .delete()
         .eq("zaehlung_id", zaehlungId);
@@ -113,7 +113,7 @@ function ZaehlungDetail() {
         const ins = await db.from("zaehlungspositionen").insert(rows);
         if (ins.error) throw ins.error;
       }
-      const upd = await supabase
+      const upd = await db
         .from("zaehlungen")
         .update({ status: "abgeschlossen", abgeschlossen_am: new Date().toISOString() })
         .eq("id", zaehlungId);

@@ -61,7 +61,7 @@ function LieferantenPage() {
     queryKey: ["lieferant-produkte", detailId],
     enabled: !!detailId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await db
         .from("produkte")
         .select("*")
         .eq("lieferant_id", detailId!)
