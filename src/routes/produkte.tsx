@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
 import {
@@ -48,6 +48,7 @@ function ProduktePage() {
   const [filter, setFilter] = useState("");
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState(leer);
+  const [editId, setEditId] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
 
   const kategorien = useQuery({
@@ -138,6 +139,39 @@ function ProduktePage() {
     }
   };
 
+  const speichern = useMutation({
+    mutationFn: async () => {
+      const { error } = await db
+        .from("produkte")
+        .update({
+          name: form.name,
+          kategorie_id: form.kategorie_id || null,
+          lieferant_id: form.lieferant_id || null,
+          einheit: form.einheit,
+        })
+        .eq("id", editId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Produkt aktualisiert");
+      setEditId(null);
+      setForm(leer);
+      qc.invalidateQueries({ queryKey: ["produkte"] });
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
+
+  const bearbeiten = (p: any) => {
+    setForm({
+      name: p.name ?? "",
+      kategorie_id: p.kategorie_id ?? "",
+      lieferant_id: p.lieferant_id ?? "",
+      einheit: p.einheit ?? "stück",
+      aktueller_bestand: String(p.aktueller_bestand ?? "0"),
+    });
+    setEditId(p.id);
+  };
+
   const liste = (produkte.data ?? []).filter((p) => !filter || p.kategorie_id === filter);
   const detail = (produkte.data ?? []).find((p) => p.id === detailId);
 
@@ -187,6 +221,17 @@ function ProduktePage() {
                   {num(Number(p.aktueller_bestand))} {p.einheit}
                 </Td>
                 <Td className="text-right">
+                  <button
+                    type="button"
+                    aria-label={`${p.name} bearbeiten`}
+                    className="mr-1 rounded-md p-1.5 text-muted-foreground transition hover:bg-surface-2 hover:text-foreground"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      bearbeiten(p);
+                    }}
+                  >
+                    <Pencil size={16} />
+                  </button>
                   <button
                     type="button"
                     aria-label={`${p.name} löschen`}
@@ -279,6 +324,86 @@ function ProduktePage() {
         </form>
       </Modal>
 
+      <Modal
+        open={!!editId}
+        onClose={() => {
+          setEditId(null);
+          setForm(leer);
+        }}
+        title="Produkt bearbeiten"
+      >
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            speichern.mutate();
+          }}
+        >
+          <Field label="Name">
+            <Input
+              required
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+            />
+          </Field>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Kategorie">
+              <Select
+                value={form.kategorie_id}
+                onChange={(e) => setForm({ ...form, kategorie_id: e.target.value })}
+              >
+                <option value="">–</option>
+                {(kategorien.data ?? []).map((k) => (
+                  <option key={k.id} value={k.id}>
+                    {k.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Lieferant">
+              <Select
+                value={form.lieferant_id}
+                onChange={(e) => setForm({ ...form, lieferant_id: e.target.value })}
+              >
+                <option value="">–</option>
+                {(lieferanten.data ?? []).map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.name}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Einheit">
+              <Select
+                value={form.einheit}
+                onChange={(e) => setForm({ ...form, einheit: e.target.value })}
+              >
+                {EINHEITEN.map((e2) => (
+                  <option key={e2} value={e2}>
+                    {e2}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setEditId(null);
+                setForm(leer);
+              }}
+            >
+              Abbrechen
+            </Button>
+            <Button type="submit" disabled={speichern.isPending}>
+              Speichern
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
       <Drawer
         open={!!detail}
         onClose={() => setDetailId(null)}
@@ -286,6 +411,9 @@ function ProduktePage() {
       >
         {detail && (
           <>
+            <Button variant="outline" className="w-full" onClick={() => bearbeiten(detail)}>
+              <Pencil size={16} /> Produkt bearbeiten
+            </Button>
             <div>
               <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Produkt

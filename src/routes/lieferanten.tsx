@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
 import {
@@ -46,6 +46,7 @@ function LieferantenPage() {
   const qc = useQueryClient();
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState(leer);
+  const [editId, setEditId] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
 
   const lieferanten = useQuery({
@@ -85,6 +86,21 @@ function LieferantenPage() {
     onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
   });
 
+  const speichern = useMutation({
+    mutationFn: async () => {
+      const { error } = await db.from("lieferanten").update(form).eq("id", editId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Lieferant aktualisiert");
+      setEditId(null);
+      setForm(leer);
+      qc.invalidateQueries({ queryKey: ["lieferanten"] });
+      qc.invalidateQueries({ queryKey: ["produkte"] });
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
+
   const loeschen = useMutation({
     mutationFn: async (id: string) => {
       const r1 = await db.from("produkte").update({ lieferant_id: null }).eq("lieferant_id", id);
@@ -116,6 +132,19 @@ function LieferantenPage() {
     ["iban", "IBAN"],
   ];
 
+  const bearbeiten = (l: any) => {
+    setForm({
+      name: l.name ?? "",
+      kontaktperson: l.kontaktperson ?? "",
+      telefon: l.telefon ?? "",
+      email: l.email ?? "",
+      adresse: l.adresse ?? "",
+      kundennummer: l.kundennummer ?? "",
+      iban: l.iban ?? "",
+    });
+    setEditId(l.id);
+  };
+
   return (
     <div>
       <PageHeader
@@ -134,13 +163,26 @@ function LieferantenPage() {
         ) : (lieferanten.data ?? []).length === 0 ? (
           <Empty text="Keine Lieferanten vorhanden." />
         ) : (
-          <Table head={["Name", "Kontaktperson", "Telefon", "Email"]}>
+          <Table head={["Name", "Kontaktperson", "Telefon", "Email", ""]}>
             {(lieferanten.data ?? []).map((l) => (
               <Tr key={l.id} onClick={() => setDetailId(l.id)}>
                 <Td>{l.name}</Td>
                 <Td>{l.kontaktperson ?? "–"}</Td>
                 <Td>{l.telefon ?? "–"}</Td>
                 <Td>{l.email ?? "–"}</Td>
+                <Td className="text-right">
+                  <button
+                    type="button"
+                    aria-label={`${l.name} bearbeiten`}
+                    className="rounded-md p-1.5 text-muted-foreground transition hover:bg-surface-2 hover:text-foreground"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      bearbeiten(l);
+                    }}
+                  >
+                    <Pencil size={16} />
+                  </button>
+                </Td>
               </Tr>
             ))}
           </Table>
@@ -177,9 +219,56 @@ function LieferantenPage() {
         </form>
       </Modal>
 
+      <Modal
+        open={!!editId}
+        onClose={() => {
+          setEditId(null);
+          setForm(leer);
+        }}
+        title="Lieferant bearbeiten"
+      >
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            speichern.mutate();
+          }}
+        >
+          <div className="grid grid-cols-2 gap-4">
+            {felder.map(([key, label]) => (
+              <Field key={key} label={label}>
+                <Input
+                  required={key === "name"}
+                  value={form[key]}
+                  onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                />
+              </Field>
+            ))}
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setEditId(null);
+                setForm(leer);
+              }}
+            >
+              Abbrechen
+            </Button>
+            <Button type="submit" disabled={speichern.isPending}>
+              Speichern
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
       <Drawer open={!!detail} onClose={() => setDetailId(null)} title={detail?.name ?? "Lieferant"}>
         {detail && (
           <>
+            <Button variant="outline" className="w-full" onClick={() => bearbeiten(detail)}>
+              <Pencil size={16} /> Lieferant bearbeiten
+            </Button>
             <div>
               <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Stammdaten
