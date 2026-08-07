@@ -197,7 +197,7 @@ function LieferantenPage() {
             anlegen.mutate();
           }}
         >
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {felder.map(([key, label]) => (
               <Field key={key} label={label}>
                 <Input
@@ -234,7 +234,7 @@ function LieferantenPage() {
             speichern.mutate();
           }}
         >
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {felder.map(([key, label]) => (
               <Field key={key} label={label}>
                 <Input

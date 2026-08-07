@@ -240,7 +240,7 @@ function RechnungenPage() {
         }
       />
 
-      <div className="mb-4 grid max-w-2xl grid-cols-3 gap-3">
+      <div className="mb-4 grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
         <Select value={filterLieferant} onChange={(e) => setFilterLieferant(e.target.value)}>
           <option value="">Alle Lieferanten</option>
           {(lieferanten.data ?? []).map((l) => (
@@ -314,7 +314,7 @@ function RechnungenPage() {
             anlegen.mutate();
           }}
         >
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <Field label="Rechnungsnummer">
               <Input
                 required
@@ -585,7 +585,7 @@ function RechnungenPage() {
               ))}
             </Select>
           </Field>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Datum">
               <Input
                 type="date"
