@@ -556,6 +556,71 @@ function RechnungenPage() {
           </>
         )}
       </Drawer>
+
+      <Modal open={!!editId} onClose={() => setEditId(null)} title="Rechnung bearbeiten">
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            speichern.mutate();
+          }}
+        >
+          <Field label="Rechnungsnummer">
+            <Input
+              required
+              value={editForm.rechnungsnummer}
+              onChange={(e) => setEditForm({ ...editForm, rechnungsnummer: e.target.value })}
+            />
+          </Field>
+          <Field label="Lieferant">
+            <Select
+              value={editForm.lieferant_id}
+              onChange={(e) => setEditForm({ ...editForm, lieferant_id: e.target.value })}
+            >
+              <option value="">–</option>
+              {(lieferanten.data ?? []).map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Datum">
+              <Input
+                type="date"
+                value={editForm.datum}
+                onChange={(e) => setEditForm({ ...editForm, datum: e.target.value })}
+              />
+            </Field>
+            <Field label="Gesamtbetrag (€)">
+              <Input
+                type="number"
+                step="any"
+                value={editForm.gesamtbetrag}
+                onChange={(e) => setEditForm({ ...editForm, gesamtbetrag: e.target.value })}
+              />
+            </Field>
+          </div>
+          <Field label="Status">
+            <Select
+              value={String(editForm.bezahlt)}
+              onChange={(e) => setEditForm({ ...editForm, bezahlt: e.target.value === "true" })}
+            >
+              <option value="false">Offen</option>
+              <option value="true">Bezahlt</option>
+            </Select>
+          </Field>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" onClick={() => setEditId(null)}>
+              Abbrechen
+            </Button>
+            <Button type="submit" disabled={speichern.isPending}>
+              Speichern
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
