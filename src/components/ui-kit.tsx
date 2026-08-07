@@ -295,8 +295,8 @@ export function Tr({
       )}
     >
       {Children.map(children, (child, i) =>
-        isValidElement<{ label?: string }>(child)
-          ? cloneElement(child, { label: head[i] })
+        isValidElement<{ label?: string | undefined }>(child)
+          ? cloneElement(child, { label: head[i] ?? "" })
           : child,
       )}
     </tr>
