@@ -6,6 +6,12 @@ const API_TOKEN = "quno-cm-2026";
 const schema = z.object({
   rechnungsnummer: z.string().trim().min(1).max(200),
   lieferant_name: z.string().trim().min(1).max(200),
+  lieferant_kontaktperson: z.string().trim().max(200).optional().nullable(),
+  lieferant_telefon: z.string().trim().max(100).optional().nullable(),
+  lieferant_email: z.string().trim().max(200).optional().nullable(),
+  lieferant_adresse: z.string().trim().max(500).optional().nullable(),
+  lieferant_kundennummer: z.string().trim().max(100).optional().nullable(),
+  lieferant_iban: z.string().trim().max(100).optional().nullable(),
   datum: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   gesamtbetrag: z.number().finite().min(0),
   pdf_url: z.string().trim().max(2000).optional().nullable(),
@@ -46,6 +52,17 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+        const stammdaten: Record<string, string> = {};
+        const setze = (key: string, wert?: string | null) => {
+          if (wert != null && wert.trim() !== "") stammdaten[key] = wert.trim();
+        };
+        setze("kontaktperson", parsed.lieferant_kontaktperson);
+        setze("telefon", parsed.lieferant_telefon);
+        setze("email", parsed.lieferant_email);
+        setze("adresse", parsed.lieferant_adresse);
+        setze("kundennummer", parsed.lieferant_kundennummer);
+        setze("iban", parsed.lieferant_iban);
+
         // 1. Duplikat-Check
         const existing = await supabaseAdmin
           .from("rechnungen")
@@ -68,10 +85,17 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
         if (lief.error) return json({ error: lief.error.message }, 500);
         if (lief.data) {
           lieferantId = lief.data.id;
+          if (Object.keys(stammdaten).length) {
+            const upd = await supabaseAdmin
+              .from("lieferanten")
+              .update(stammdaten)
+              .eq("id", lieferantId);
+            if (upd.error) return json({ error: upd.error.message }, 500);
+          }
         } else {
           const neu = await supabaseAdmin
             .from("lieferanten")
-            .insert({ name: parsed.lieferant_name })
+            .insert({ name: parsed.lieferant_name, ...stammdaten })
             .select("id")
             .single();
           if (neu.error) return json({ error: neu.error.message }, 500);
