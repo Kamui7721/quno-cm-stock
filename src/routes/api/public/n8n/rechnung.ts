@@ -49,6 +49,8 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+        const lieferantName = (parsed.lieferant_name ?? "").trim() || "Unbekannt";
+
         const stammdaten: {
           kontaktperson?: string;
           telefon?: string;
