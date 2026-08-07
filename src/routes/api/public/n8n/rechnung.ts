@@ -52,8 +52,15 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-        const stammdaten: Record<string, string> = {};
-        const setze = (key: string, wert?: string | null) => {
+        const stammdaten: {
+          kontaktperson?: string;
+          telefon?: string;
+          email?: string;
+          adresse?: string;
+          kundennummer?: string;
+          iban?: string;
+        } = {};
+        const setze = (key: keyof typeof stammdaten, wert?: string | null) => {
           if (wert != null && wert.trim() !== "") stammdaten[key] = wert.trim();
         };
         setze("kontaktperson", parsed.lieferant_kontaktperson);
