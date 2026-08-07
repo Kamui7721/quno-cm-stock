@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { FileText, Plus, Trash2 } from "lucide-react";
+import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
 import {
@@ -63,6 +63,14 @@ function RechnungenPage() {
     datum: new Date().toISOString().slice(0, 10),
   });
   const [positionen, setPositionen] = useState<PosForm[]>([leerePos()]);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    rechnungsnummer: "",
+    lieferant_id: "",
+    datum: "",
+    gesamtbetrag: "0",
+    bezahlt: false,
+  });
 
   const lieferanten = useQuery({
     queryKey: ["lieferanten"],
