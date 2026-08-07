@@ -178,7 +178,38 @@ function ZaehlungDetail() {
         </Card>
       ) : (
         <>
-          <Card>
+          {/* Mobile: große Karten pro Produkt */}
+          <div className="space-y-3 md:hidden">
+            {(produkte.data ?? []).length === 0 ? (
+              <Card>
+                <Empty text="Keine Produkte in dieser Kategorie." />
+              </Card>
+            ) : (
+              (produkte.data ?? []).map((p) => (
+                <Card key={p.id} className="p-4">
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="min-w-0 truncate text-base font-semibold text-foreground">
+                      {p.name}
+                    </span>
+                    <span className="shrink-0 text-xs text-muted-foreground">
+                      Soll {num(Number(p.aktueller_bestand))} {p.einheit}
+                    </span>
+                  </div>
+                  <Input
+                    type="number"
+                    step="any"
+                    inputMode="decimal"
+                    className="mt-3 h-[60px] text-center text-2xl font-semibold"
+                    placeholder="0"
+                    value={werte[p.id] ?? ""}
+                    onChange={(e) => setWerte({ ...werte, [p.id]: e.target.value })}
+                  />
+                </Card>
+              ))
+            )}
+          </div>
+
+          <Card className="hidden md:block">
             {(produkte.data ?? []).length === 0 ? (
               <Empty text="Keine Produkte in dieser Kategorie." />
             ) : (
@@ -193,6 +224,7 @@ function ZaehlungDetail() {
                       <Input
                         type="number"
                         step="any"
+                        inputMode="decimal"
                         className="w-32"
                         placeholder="0"
                         value={werte[p.id] ?? ""}
@@ -204,10 +236,11 @@ function ZaehlungDetail() {
               </Table>
             )}
           </Card>
-          <div className="mt-5 flex justify-end">
+          <div className="sticky bottom-0 z-20 -mx-4 mt-5 border-t border-border bg-background/95 px-4 py-3 backdrop-blur md:static md:mx-0 md:flex md:justify-end md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
             <Button
               onClick={() => abschliessen.mutate()}
               disabled={abschliessen.isPending || (produkte.data ?? []).length === 0}
+              className="h-14 w-full text-base md:h-auto md:w-auto md:text-sm"
             >
               Zählung abschließen
             </Button>

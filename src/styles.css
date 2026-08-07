@@ -166,3 +166,47 @@
   scrollbar-width: thin;
   scrollbar-color: var(--border) transparent;
 }
+
+/* Responsive tables: on small screens each row becomes a card */
+@media (max-width: 767px) {
+  .resp-table {
+    overflow-x: visible;
+  }
+  .resp-table table,
+  .resp-table tbody {
+    display: block;
+    width: 100%;
+  }
+  .resp-table thead {
+    display: none;
+  }
+  .resp-table tr {
+    display: block;
+    margin: 0.75rem;
+    padding: 0.25rem 0;
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    background: var(--surface-2);
+  }
+  .resp-table td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.5rem 0.875rem;
+    text-align: right;
+  }
+  .resp-table td::before {
+    content: attr(data-label);
+    flex: none;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted-foreground);
+    text-align: left;
+  }
+  .resp-table td:empty {
+    display: none;
+  }
+}

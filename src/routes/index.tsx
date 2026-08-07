@@ -60,7 +60,7 @@ function Dashboard() {
     <div>
       <PageHeader title="Dashboard" subtitle="Überblick über deine Inventur" />
 
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
         <KpiCard
           label="Offene Rechnungen"
           value={isLoading ? "…" : String(offene.length)}
