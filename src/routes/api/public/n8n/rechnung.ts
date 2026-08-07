@@ -85,7 +85,7 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
         const lief = await supabaseAdmin
           .from("lieferanten")
           .select("id")
-          .ilike("name", parsed.lieferant_name)
+          .ilike("name", lieferantName)
           .limit(1)
           .maybeSingle();
         if (lief.error) return json({ error: lief.error.message }, 500);
