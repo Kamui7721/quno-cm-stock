@@ -201,11 +201,13 @@ export function Drawer({
   onClose,
   title,
   children,
+  action,
 }: {
   open: boolean;
   onClose: () => void;
   title: string;
   children: ReactNode;
+  action?: ReactNode | undefined;
 }) {
   useEffect(() => {
     const h = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -220,9 +222,12 @@ export function Drawer({
       <aside className="absolute right-0 top-0 h-full w-[480px] overflow-y-auto border-l border-border bg-card scroll-slim">
         <div className="sticky top-0 flex items-center justify-between border-b border-border bg-card px-5 py-4">
           <h2 className="text-base font-semibold text-foreground">{title}</h2>
-          <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
-            <X size={18} />
-          </button>
+          <div className="flex items-center gap-2">
+            {action}
+            <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+              <X size={18} />
+            </button>
+          </div>
         </div>
         <div className="space-y-6 p-5">{children}</div>
       </aside>

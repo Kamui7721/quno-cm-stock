@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { FileText, Plus, Trash2 } from "lucide-react";
+import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
 import {
@@ -63,6 +63,14 @@ function RechnungenPage() {
     datum: new Date().toISOString().slice(0, 10),
   });
   const [positionen, setPositionen] = useState<PosForm[]>([leerePos()]);
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editForm, setEditForm] = useState({
+    rechnungsnummer: "",
+    lieferant_id: "",
+    datum: "",
+    gesamtbetrag: "0",
+    bezahlt: false,
+  });
 
   const lieferanten = useQuery({
     queryKey: ["lieferanten"],
@@ -178,6 +186,39 @@ function RechnungenPage() {
     },
     onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
   });
+
+  const speichern = useMutation({
+    mutationFn: async () => {
+      const { error } = await db
+        .from("rechnungen")
+        .update({
+          rechnungsnummer: editForm.rechnungsnummer,
+          lieferant_id: editForm.lieferant_id || null,
+          datum: editForm.datum,
+          gesamtbetrag: Number(editForm.gesamtbetrag) || 0,
+          bezahlt: editForm.bezahlt,
+        })
+        .eq("id", editId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Rechnung aktualisiert");
+      setEditId(null);
+      qc.invalidateQueries({ queryKey: ["rechnungen"] });
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
+
+  const bearbeiten = (r: any) => {
+    setEditForm({
+      rechnungsnummer: r.rechnungsnummer ?? "",
+      lieferant_id: r.lieferant_id ?? "",
+      datum: r.datum ?? "",
+      gesamtbetrag: String(r.gesamtbetrag ?? 0),
+      bezahlt: !!r.bezahlt,
+    });
+    setEditId(r.id);
+  };
 
   const liste = (rechnungen.data ?? []).filter(
     (r) =>
@@ -417,6 +458,18 @@ function RechnungenPage() {
         open={!!detail}
         onClose={() => setDetailId(null)}
         title={detail ? `Rechnung ${detail.rechnungsnummer}` : "Rechnung"}
+        action={
+          detail ? (
+            <button
+              type="button"
+              aria-label="Rechnung bearbeiten"
+              className="rounded-md p-1.5 text-muted-foreground transition hover:bg-surface-2 hover:text-foreground"
+              onClick={() => bearbeiten(detail)}
+            >
+              <Pencil size={16} />
+            </button>
+          ) : null
+        }
       >
         {detail && (
           <>
@@ -503,6 +556,71 @@ function RechnungenPage() {
           </>
         )}
       </Drawer>
+
+      <Modal open={!!editId} onClose={() => setEditId(null)} title="Rechnung bearbeiten">
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            speichern.mutate();
+          }}
+        >
+          <Field label="Rechnungsnummer">
+            <Input
+              required
+              value={editForm.rechnungsnummer}
+              onChange={(e) => setEditForm({ ...editForm, rechnungsnummer: e.target.value })}
+            />
+          </Field>
+          <Field label="Lieferant">
+            <Select
+              value={editForm.lieferant_id}
+              onChange={(e) => setEditForm({ ...editForm, lieferant_id: e.target.value })}
+            >
+              <option value="">–</option>
+              {(lieferanten.data ?? []).map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.name}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Datum">
+              <Input
+                type="date"
+                value={editForm.datum}
+                onChange={(e) => setEditForm({ ...editForm, datum: e.target.value })}
+              />
+            </Field>
+            <Field label="Gesamtbetrag (€)">
+              <Input
+                type="number"
+                step="any"
+                value={editForm.gesamtbetrag}
+                onChange={(e) => setEditForm({ ...editForm, gesamtbetrag: e.target.value })}
+              />
+            </Field>
+          </div>
+          <Field label="Status">
+            <Select
+              value={String(editForm.bezahlt)}
+              onChange={(e) => setEditForm({ ...editForm, bezahlt: e.target.value === "true" })}
+            >
+              <option value="false">Offen</option>
+              <option value="true">Bezahlt</option>
+            </Select>
+          </Field>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" onClick={() => setEditId(null)}>
+              Abbrechen
+            </Button>
+            <Button type="submit" disabled={speichern.isPending}>
+              Speichern
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }
