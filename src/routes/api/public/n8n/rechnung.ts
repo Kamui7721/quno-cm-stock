@@ -5,7 +5,7 @@ const API_TOKEN = "quno-cm-2026";
 
 const schema = z.object({
   rechnungsnummer: z.string().trim().min(1).max(200),
-  lieferant_name: z.string().trim().min(1).max(200),
+  lieferant_name: z.string().trim().max(200).nullable().optional(),
   lieferant_kontaktperson: z.string().trim().max(200).optional().nullable(),
   lieferant_telefon: z.string().trim().max(100).optional().nullable(),
   lieferant_email: z.string().trim().max(200).optional().nullable(),
@@ -16,17 +16,14 @@ const schema = z.object({
   gesamtbetrag: z.number().finite().min(0),
   pdf_url: z.string().trim().max(2000).optional().nullable(),
   gmail_message_id: z.string().trim().min(1).max(200),
-  positionen: z
-    .array(
-      z.object({
-        bezeichnung: z.string().trim().min(1).max(300),
-        kategorie_name: z.string().trim().max(200).optional().nullable(),
-        menge: z.number().finite().min(0),
-        preis: z.number().finite().min(0),
-      }),
-    )
-    .max(200)
-    .default([]),
+  positionen: z.array(
+    z.object({
+      bezeichnung: z.string().trim().min(1).max(300),
+      kategorie_name: z.string().trim().max(200).optional().nullable(),
+      menge: z.number().finite().min(0),
+      preis: z.number().finite().min(0),
+    }),
+  ).max(200),
 });
 
 const json = (body: unknown, status = 200) =>
@@ -51,6 +48,8 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
         }
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+        const lieferantName = (parsed.lieferant_name ?? "").trim() || "Unbekannt";
 
         const stammdaten: {
           kontaktperson?: string;
@@ -86,7 +85,7 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
         const lief = await supabaseAdmin
           .from("lieferanten")
           .select("id")
-          .ilike("name", parsed.lieferant_name)
+          .ilike("name", lieferantName)
           .limit(1)
           .maybeSingle();
         if (lief.error) return json({ error: lief.error.message }, 500);
@@ -102,7 +101,7 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
         } else {
           const neu = await supabaseAdmin
             .from("lieferanten")
-            .insert({ name: parsed.lieferant_name, ...stammdaten })
+            .insert({ name: lieferantName, ...stammdaten })
             .select("id")
             .single();
           if (neu.error) return json({ error: neu.error.message }, 500);
