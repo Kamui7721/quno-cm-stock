@@ -187,6 +187,39 @@ function RechnungenPage() {
     onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
   });
 
+  const speichern = useMutation({
+    mutationFn: async () => {
+      const { error } = await db
+        .from("rechnungen")
+        .update({
+          rechnungsnummer: editForm.rechnungsnummer,
+          lieferant_id: editForm.lieferant_id || null,
+          datum: editForm.datum,
+          gesamtbetrag: Number(editForm.gesamtbetrag) || 0,
+          bezahlt: editForm.bezahlt,
+        })
+        .eq("id", editId!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Rechnung aktualisiert");
+      setEditId(null);
+      qc.invalidateQueries({ queryKey: ["rechnungen"] });
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
+
+  const bearbeiten = (r: any) => {
+    setEditForm({
+      rechnungsnummer: r.rechnungsnummer ?? "",
+      lieferant_id: r.lieferant_id ?? "",
+      datum: r.datum ?? "",
+      gesamtbetrag: String(r.gesamtbetrag ?? 0),
+      bezahlt: !!r.bezahlt,
+    });
+    setEditId(r.id);
+  };
+
   const liste = (rechnungen.data ?? []).filter(
     (r) =>
       (!filterLieferant || r.lieferant_id === filterLieferant) &&
@@ -425,6 +458,18 @@ function RechnungenPage() {
         open={!!detail}
         onClose={() => setDetailId(null)}
         title={detail ? `Rechnung ${detail.rechnungsnummer}` : "Rechnung"}
+        action={
+          detail ? (
+            <button
+              type="button"
+              aria-label="Rechnung bearbeiten"
+              className="rounded-md p-1.5 text-muted-foreground transition hover:bg-surface-2 hover:text-foreground"
+              onClick={() => bearbeiten(detail)}
+            >
+              <Pencil size={16} />
+            </button>
+          ) : null
+        }
       >
         {detail && (
           <>
