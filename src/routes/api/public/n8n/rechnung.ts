@@ -101,7 +101,7 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
         } else {
           const neu = await supabaseAdmin
             .from("lieferanten")
-            .insert({ name: parsed.lieferant_name, ...stammdaten })
+            .insert({ name: lieferantName, ...stammdaten })
             .select("id")
             .single();
           if (neu.error) return json({ error: neu.error.message }, 500);
