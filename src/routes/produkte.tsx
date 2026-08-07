@@ -46,6 +46,7 @@ const leer = {
 function ProduktePage() {
   const qc = useQueryClient();
   const [filter, setFilter] = useState("");
+  const [lieferantFilter, setLieferantFilter] = useState("");
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState(leer);
   const [editId, setEditId] = useState<string | null>(null);
@@ -172,7 +173,11 @@ function ProduktePage() {
     setEditId(p.id);
   };
 
-  const liste = (produkte.data ?? []).filter((p) => !filter || p.kategorie_id === filter);
+  const liste = (produkte.data ?? []).filter((p) => {
+    const kategorieOk = !filter || p.kategorie_id === filter;
+    const lieferantOk = !lieferantFilter || p.lieferant_id === lieferantFilter;
+    return kategorieOk && lieferantOk;
+  });
   const detail = (produkte.data ?? []).find((p) => p.id === detailId);
 
   return (
@@ -187,15 +192,27 @@ function ProduktePage() {
         }
       />
 
-      <div className="mb-4 w-64">
-        <Select value={filter} onChange={(e) => setFilter(e.target.value)}>
-          <option value="">Alle Kategorien</option>
-          {(kategorien.data ?? []).map((k) => (
-            <option key={k.id} value={k.id}>
-              {k.name}
-            </option>
-          ))}
-        </Select>
+      <div className="mb-4 flex flex-wrap gap-3">
+        <div className="w-64">
+          <Select value={filter} onChange={(e) => setFilter(e.target.value)}>
+            <option value="">Alle Kategorien</option>
+            {(kategorien.data ?? []).map((k) => (
+              <option key={k.id} value={k.id}>
+                {k.name}
+              </option>
+            ))}
+          </Select>
+        </div>
+        <div className="w-64">
+          <Select value={lieferantFilter} onChange={(e) => setLieferantFilter(e.target.value)}>
+            <option value="">Alle Lieferanten</option>
+            {(lieferanten.data ?? []).map((l) => (
+              <option key={l.id} value={l.id}>
+                {l.name}
+              </option>
+            ))}
+          </Select>
+        </div>
       </div>
 
       <Card>
