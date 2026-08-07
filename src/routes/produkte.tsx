@@ -46,6 +46,7 @@ const leer = {
 function ProduktePage() {
   const qc = useQueryClient();
   const [filter, setFilter] = useState("");
+  const [lieferantFilter, setLieferantFilter] = useState("");
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState(leer);
   const [editId, setEditId] = useState<string | null>(null);
