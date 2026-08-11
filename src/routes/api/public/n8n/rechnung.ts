@@ -32,6 +32,81 @@ const json = (body: unknown, status = 200) =>
     headers: { "content-type": "application/json" },
   });
 
+const RECHTSFORMEN = [
+  "gmbh",
+  "mbh",
+  "co",
+  "kg",
+  "ohg",
+  "ag",
+  "ug",
+  "kgaa",
+  "ltd",
+  "limited",
+  "llc",
+  "inc",
+  "bv",
+  "nv",
+  "sa",
+  "sarl",
+  "srl",
+  "spa",
+  "plc",
+  "eg",
+  "ev",
+  "gbr",
+  "und",
+  "and",
+];
+
+const kernWoerter = (name: string) =>
+  name
+    .toLowerCase()
+    .replace(/ä/g, "ae")
+    .replace(/ö/g, "oe")
+    .replace(/ü/g, "ue")
+    .replace(/ß/g, "ss")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .split(" ")
+    .filter((w) => w !== "" && !RECHTSFORMEN.includes(w));
+
+const levenshtein = (a: string, b: string) => {
+  if (a === b) return 0;
+  const prev = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    let last = prev[0]!;
+    prev[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const tmp = prev[j]!;
+      prev[j] = Math.min(
+        prev[j]! + 1,
+        prev[j - 1]! + 1,
+        last + (a[i - 1] === b[j - 1] ? 0 : 1),
+      );
+      last = tmp;
+    }
+  }
+  return prev[b.length]!;
+};
+
+const aehnlichkeit = (a: string, b: string) => {
+  const wa = kernWoerter(a);
+  const wb = kernWoerter(b);
+  if (!wa.length || !wb.length) return 0;
+  const sa = wa.join(" ");
+  const sb = wb.join(" ");
+  if (sa === sb) return 1;
+  // Wort-Overlap (Jaccard-artig, an die kürzere Liste normiert)
+  const setB = new Set(wb);
+  const treffer = wa.filter((w) => setB.has(w)).length;
+  const overlap = treffer / Math.min(wa.length, wb.length);
+  // Zeichen-Ähnlichkeit als Absicherung gegen Tippfehler
+  const dist = levenshtein(sa, sb);
+  const chars = 1 - dist / Math.max(sa.length, sb.length);
+  return Math.max(overlap, chars);
+};
+
 export const Route = createFileRoute("/api/public/n8n/rechnung")({
   server: {
     handlers: {
@@ -91,6 +166,19 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
         if (lief.error) return json({ error: lief.error.message }, 500);
         if (lief.data) {
           lieferantId = lief.data.id;
+        } else if (lieferantName.toLowerCase() !== "unbekannt") {
+          // Fuzzy-Matching gegen alle bestehenden Lieferanten
+          const alleLief = await supabaseAdmin.from("lieferanten").select("id, name");
+          if (alleLief.error) return json({ error: alleLief.error.message }, 500);
+          let best: { id: string; score: number } | null = null;
+          for (const l of alleLief.data ?? []) {
+            const score = aehnlichkeit(lieferantName, l.name);
+            if (!best || score > best.score) best = { id: l.id, score };
+          }
+          if (best && best.score > 0.8) lieferantId = best.id;
+        }
+
+        if (lieferantId) {
           if (Object.keys(stammdaten).length) {
             const upd = await supabaseAdmin
               .from("lieferanten")
