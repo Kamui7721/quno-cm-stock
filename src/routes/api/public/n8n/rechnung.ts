@@ -107,6 +107,32 @@ const aehnlichkeit = (a: string, b: string) => {
   return Math.max(overlap, chars);
 };
 
+const extrahiereEinheit = (bezeichnung: string): string => {
+  const lower = bezeichnung.toLowerCase();
+  if (lower.includes("kg") || lower.includes("kilogramm")) return "kg";
+  if (
+    /\b\d*[,.]?\d*\s*l\b/.test(lower) ||
+    lower.includes("liter") ||
+    lower.includes("flasche") ||
+    lower.includes("fl.") ||
+    /x\s*0[,.]33/.test(lower) ||
+    /x\s*0[,.]5/.test(lower) ||
+    /x\s*0[,.]75/.test(lower)
+  ) {
+    return "l";
+  }
+  if (lower.includes("ml")) return "l";
+  if (
+    lower.includes("kiste") ||
+    lower.includes("karton") ||
+    lower.includes("pack") ||
+    lower.includes("paket")
+  ) {
+    return "stück";
+  }
+  return "stück";
+};
+
 export const Route = createFileRoute("/api/public/n8n/rechnung")({
   server: {
     handlers: {
@@ -254,7 +280,7 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
                   name: p.bezeichnung,
                   kategorie_id: katId,
                   lieferant_id: lieferantId,
-                  einheit: "stück",
+                  einheit: extrahiereEinheit(p.bezeichnung),
                   aktueller_bestand: 0,
                 })
                 .select("id")
