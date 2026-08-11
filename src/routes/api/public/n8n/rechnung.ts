@@ -280,7 +280,7 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
                   name: p.bezeichnung,
                   kategorie_id: katId,
                   lieferant_id: lieferantId,
-                  einheit: "stück",
+                  einheit: extrahiereEinheit(p.bezeichnung),
                   aktueller_bestand: 0,
                 })
                 .select("id")
