@@ -219,7 +219,14 @@ function ProduktePage() {
     onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
   });
 
-  const bearbeiten = (p: any) => {
+  const bearbeiten = (p: {
+    id: string;
+    name?: string | null;
+    kategorie_id?: string | null;
+    lieferant_id?: string | null;
+    einheit?: string | null;
+    aktueller_bestand?: number | string | null;
+  }) => {
     setForm({
       name: p.name ?? "",
       kategorie_id: p.kategorie_id ?? "",
