@@ -1,10 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { Receipt, Package, ClipboardList, TrendingUp, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
 import { pruefungSetzen } from "@/lib/pruefung";
+import { rechnungStandardSort } from "@/lib/sortierung";
 import { RechnungDetail } from "@/components/RechnungDetail";
 import {
   Badge,
@@ -148,7 +149,11 @@ function Dashboard() {
           <Empty text="Noch keine Rechnungen erfasst." />
         ) : (
           <Table head={["Rechnungsnummer", "Lieferant", "Datum", "Betrag", "Status"]}>
-            {(data?.rechnungen ?? []).slice(0, 5).map((r) => (
+            {(data?.rechnungen ?? [])
+              .slice()
+              .sort(rechnungStandardSort)
+              .slice(0, 5)
+              .map((r) => (
               <Tr key={r.id}>
                 <Td>{r.rechnungsnummer}</Td>
                 <Td>{r.lieferanten?.name ?? "–"}</Td>
@@ -160,8 +165,15 @@ function Dashboard() {
                   </Badge>
                 </Td>
               </Tr>
-            ))}
+              ))}
           </Table>
+        )}
+        {(data?.rechnungen ?? []).length > 5 && (
+          <div className="border-t border-border px-5 py-3 text-center">
+            <Link to="/rechnungen" search={{ pruefung: undefined }}>
+              <Button variant="outline">Mehr in Rechnungen anzeigen</Button>
+            </Link>
+          </div>
         )}
       </Card>
 
@@ -171,8 +183,8 @@ function Dashboard() {
         const offen = alle
           .filter((r) => !r.geprueft)
           .slice()
-          .sort((a, b) => String(b.erstellt_am ?? "").localeCompare(String(a.erstellt_am ?? "")))
-          .slice(0, 8);
+          .sort(rechnungStandardSort);
+        const offenAnzeige = offen.slice(0, 5);
         return (
           <Card className="mt-6">
             <CardHeader
@@ -207,8 +219,8 @@ function Dashboard() {
                       label: "Auswahl",
                       node: (
                         <Checkbox
-                          checked={auswahl.length > 0 && auswahl.length === offen.length}
-                          onChange={(v) => setAuswahl(v ? offen.map((r) => r.id) : [])}
+                          checked={auswahl.length > 0 && auswahl.length === offenAnzeige.length}
+                          onChange={(v) => setAuswahl(v ? offenAnzeige.map((r) => r.id) : [])}
                         />
                       ),
                     },
@@ -219,7 +231,7 @@ function Dashboard() {
                     "Prüfung",
                   ]}
                 >
-                  {offen.map((r) => (
+                  {offenAnzeige.map((r) => (
                     <Tr key={r.id} onClick={() => setDetailId(r.id)}>
                       <Td>
                         <span onClick={(e) => e.stopPropagation()}>
@@ -241,6 +253,13 @@ function Dashboard() {
                     </Tr>
                   ))}
                 </Table>
+                {offen.length > 5 && (
+                  <div className="border-t border-border px-5 py-3 text-center">
+                    <Link to="/rechnungen" search={{ pruefung: "false" }}>
+                      <Button variant="outline">Mehr in Rechnungen anzeigen</Button>
+                    </Link>
+                  </div>
+                )}
               </>
             )}
           </Card>

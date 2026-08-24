@@ -5,6 +5,7 @@ import { FileText, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
 import { pruefungSetzen } from "@/lib/pruefung";
+import { rechnungStandardSort } from "@/lib/sortierung";
 import { RechnungDetail } from "@/components/RechnungDetail";
 import {
   Badge,
@@ -35,6 +36,12 @@ export const Route = createFileRoute("/rechnungen")({
       },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    pruefung:
+      search["pruefung"] === "false" || search["pruefung"] === "true"
+        ? String(search["pruefung"])
+        : undefined,
+  }),
   component: RechnungenPage,
 });
 
@@ -61,7 +68,8 @@ function RechnungenPage() {
   const [filterLieferant, setFilterLieferant] = useState("");
   const [filterMonat, setFilterMonat] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
-  const [filterPruefung, setFilterPruefung] = useState("");
+  const suche = Route.useSearch();
+  const [filterPruefung, setFilterPruefung] = useState(suche.pruefung ?? "");
   const [auswahl, setAuswahl] = useState<string[]>([]);
   const [sortSpalte, setSortSpalte] = useState<
     "rechnungsnummer" | "lieferant" | "datum" | "gesamtbetrag" | "erstellt_am"
@@ -244,6 +252,7 @@ function RechnungenPage() {
     .slice()
     .sort((a, b) => {
       const f = sortRichtung === "asc" ? 1 : -1;
+      if (sortSpalte === "erstellt_am") return rechnungStandardSort(a, b) * (f === 1 ? -1 : 1);
       if (sortSpalte === "gesamtbetrag")
         return (Number(a.gesamtbetrag) - Number(b.gesamtbetrag)) * f;
       const wert = (r: typeof a) =>
@@ -251,11 +260,10 @@ function RechnungenPage() {
           ? (r.lieferanten?.name ?? "")
           : sortSpalte === "datum"
             ? r.datum
-            : sortSpalte === "erstellt_am"
-              ? (r.erstellt_am ?? "")
-              : r.rechnungsnummer;
+            : r.rechnungsnummer;
       return String(wert(a)).localeCompare(String(wert(b)), "de", { numeric: true }) * f;
     });
+
 
   return (
     <div>
