@@ -192,6 +192,7 @@ export type Database = {
           import_ok: boolean
           import_warnungen: string | null
           lieferant_id: string | null
+          pdf_dateiname: string | null
           pdf_url: string | null
           rechnungsnummer: string
           summe_netto: number | null
@@ -209,6 +210,7 @@ export type Database = {
           import_ok?: boolean
           import_warnungen?: string | null
           lieferant_id?: string | null
+          pdf_dateiname?: string | null
           pdf_url?: string | null
           rechnungsnummer: string
           summe_netto?: number | null
@@ -226,6 +228,7 @@ export type Database = {
           import_ok?: boolean
           import_warnungen?: string | null
           lieferant_id?: string | null
+          pdf_dateiname?: string | null
           pdf_url?: string | null
           rechnungsnummer?: string
           summe_netto?: number | null
