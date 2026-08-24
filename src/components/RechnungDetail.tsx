@@ -50,6 +50,14 @@ export function RechnungDetail({ id, onClose, onEdit }: Props) {
       return data;
     },
   });
+  const beleg = useQuery({
+    queryKey: ["beleg-url", id],
+    enabled: !!id && !!belegPfad(rechnung.data?.pdf_url),
+    staleTime: 30 * 60 * 1000,
+    retry: false,
+    queryFn: () => belegUrlHolen(id!),
+  });
+
 
   const bezahltToggle = useMutation({
     mutationFn: async (bezahlt: boolean) => {
