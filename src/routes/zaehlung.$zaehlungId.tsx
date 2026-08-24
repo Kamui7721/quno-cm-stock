@@ -15,7 +15,7 @@ import {
   Td,
   Tr,
 } from "@/components/ui-kit";
-import { datum, num } from "@/lib/format";
+import { datum, einheitLabel, num } from "@/lib/format";
 
 export const Route = createFileRoute("/zaehlung/$zaehlungId")({
   head: () => ({
