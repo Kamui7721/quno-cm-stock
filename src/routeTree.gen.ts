@@ -21,6 +21,7 @@ import { Route as ApiPublicSessionRouteImport } from './routes/api/public/sessio
 import { Route as ApiRechnungPdfIdRouteImport } from './routes/api/rechnung-pdf.$id'
 import { Route as ApiPublicN8nBelegRouteImport } from './routes/api/public/n8n/beleg'
 import { Route as ApiPublicN8nRechnungRouteImport } from './routes/api/public/n8n/rechnung'
+import { Route as ApiRechnungPdfIdDateiRouteImport } from './routes/api/rechnung-pdf.$id.datei'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -82,6 +83,11 @@ const ApiPublicN8nRechnungRoute = ApiPublicN8nRechnungRouteImport.update({
   path: '/api/public/n8n/rechnung',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiRechnungPdfIdDateiRoute = ApiRechnungPdfIdDateiRouteImport.update({
+  id: '/datei',
+  path: '/datei',
+  getParentRoute: () => ApiRechnungPdfIdRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -93,9 +99,10 @@ export interface FileRoutesByFullPath {
   '/zaehlung/$zaehlungId': typeof ZaehlungZaehlungIdRoute
   '/zaehlung/': typeof ZaehlungIndexRoute
   '/api/public/session': typeof ApiPublicSessionRoute
-  '/api/rechnung-pdf/$id': typeof ApiRechnungPdfIdRoute
+  '/api/rechnung-pdf/$id': typeof ApiRechnungPdfIdRouteWithChildren
   '/api/public/n8n/beleg': typeof ApiPublicN8nBelegRoute
   '/api/public/n8n/rechnung': typeof ApiPublicN8nRechnungRoute
+  '/api/rechnung-pdf/$id/datei': typeof ApiRechnungPdfIdDateiRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -107,9 +114,10 @@ export interface FileRoutesByTo {
   '/zaehlung/$zaehlungId': typeof ZaehlungZaehlungIdRoute
   '/zaehlung': typeof ZaehlungIndexRoute
   '/api/public/session': typeof ApiPublicSessionRoute
-  '/api/rechnung-pdf/$id': typeof ApiRechnungPdfIdRoute
+  '/api/rechnung-pdf/$id': typeof ApiRechnungPdfIdRouteWithChildren
   '/api/public/n8n/beleg': typeof ApiPublicN8nBelegRoute
   '/api/public/n8n/rechnung': typeof ApiPublicN8nRechnungRoute
+  '/api/rechnung-pdf/$id/datei': typeof ApiRechnungPdfIdDateiRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -122,9 +130,10 @@ export interface FileRoutesById {
   '/zaehlung/$zaehlungId': typeof ZaehlungZaehlungIdRoute
   '/zaehlung/': typeof ZaehlungIndexRoute
   '/api/public/session': typeof ApiPublicSessionRoute
-  '/api/rechnung-pdf/$id': typeof ApiRechnungPdfIdRoute
+  '/api/rechnung-pdf/$id': typeof ApiRechnungPdfIdRouteWithChildren
   '/api/public/n8n/beleg': typeof ApiPublicN8nBelegRoute
   '/api/public/n8n/rechnung': typeof ApiPublicN8nRechnungRoute
+  '/api/rechnung-pdf/$id/datei': typeof ApiRechnungPdfIdDateiRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -141,6 +150,7 @@ export interface FileRouteTypes {
     | '/api/rechnung-pdf/$id'
     | '/api/public/n8n/beleg'
     | '/api/public/n8n/rechnung'
+    | '/api/rechnung-pdf/$id/datei'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -155,6 +165,7 @@ export interface FileRouteTypes {
     | '/api/rechnung-pdf/$id'
     | '/api/public/n8n/beleg'
     | '/api/public/n8n/rechnung'
+    | '/api/rechnung-pdf/$id/datei'
   id:
     | '__root__'
     | '/'
@@ -169,6 +180,7 @@ export interface FileRouteTypes {
     | '/api/rechnung-pdf/$id'
     | '/api/public/n8n/beleg'
     | '/api/public/n8n/rechnung'
+    | '/api/rechnung-pdf/$id/datei'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -181,7 +193,7 @@ export interface RootRouteChildren {
   ZaehlungZaehlungIdRoute: typeof ZaehlungZaehlungIdRoute
   ZaehlungIndexRoute: typeof ZaehlungIndexRoute
   ApiPublicSessionRoute: typeof ApiPublicSessionRoute
-  ApiRechnungPdfIdRoute: typeof ApiRechnungPdfIdRoute
+  ApiRechnungPdfIdRoute: typeof ApiRechnungPdfIdRouteWithChildren
   ApiPublicN8nBelegRoute: typeof ApiPublicN8nBelegRoute
   ApiPublicN8nRechnungRoute: typeof ApiPublicN8nRechnungRoute
 }
@@ -272,8 +284,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicN8nRechnungRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/rechnung-pdf/$id/datei': {
+      id: '/api/rechnung-pdf/$id/datei'
+      path: '/datei'
+      fullPath: '/api/rechnung-pdf/$id/datei'
+      preLoaderRoute: typeof ApiRechnungPdfIdDateiRouteImport
+      parentRoute: typeof ApiRechnungPdfIdRoute
+    }
   }
 }
+
+interface ApiRechnungPdfIdRouteChildren {
+  ApiRechnungPdfIdDateiRoute: typeof ApiRechnungPdfIdDateiRoute
+}
+
+const ApiRechnungPdfIdRouteChildren: ApiRechnungPdfIdRouteChildren = {
+  ApiRechnungPdfIdDateiRoute: ApiRechnungPdfIdDateiRoute,
+}
+
+const ApiRechnungPdfIdRouteWithChildren =
+  ApiRechnungPdfIdRoute._addFileChildren(ApiRechnungPdfIdRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -285,7 +315,7 @@ const rootRouteChildren: RootRouteChildren = {
   ZaehlungZaehlungIdRoute: ZaehlungZaehlungIdRoute,
   ZaehlungIndexRoute: ZaehlungIndexRoute,
   ApiPublicSessionRoute: ApiPublicSessionRoute,
-  ApiRechnungPdfIdRoute: ApiRechnungPdfIdRoute,
+  ApiRechnungPdfIdRoute: ApiRechnungPdfIdRouteWithChildren,
   ApiPublicN8nBelegRoute: ApiPublicN8nBelegRoute,
   ApiPublicN8nRechnungRoute: ApiPublicN8nRechnungRoute,
 }
