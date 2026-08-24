@@ -2,7 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
+import { belegPfad, belegUrlHolen } from "@/lib/beleg";
 import { pruefungSetzen } from "@/lib/pruefung";
+
 import { Badge, Button, DetailModal, InfoRow } from "@/components/ui-kit";
 import { datum, datumZeit, eur, num } from "@/lib/format";
 
