@@ -5,6 +5,12 @@ import { Mail, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
 import {
+  PREISALARM_SCHLUESSEL,
+  einstellungSpeichern,
+  preisalarmSchwelleLaden,
+} from "@/lib/einstellungen";
+import { preisdatenNeuBerechnen } from "@/lib/preise.functions";
+import {
   Badge,
   Button,
   Card,
@@ -39,6 +45,39 @@ function EinstellungenPage() {
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState(leer);
   const [neuesPw, setNeuesPw] = useState("");
+  const [schwelleInput, setSchwelleInput] = useState("10");
+
+  useQuery({
+    queryKey: ["preisalarm-schwelle"],
+    queryFn: async () => {
+      const wert = await preisalarmSchwelleLaden();
+      setSchwelleInput(String(wert));
+      return wert;
+    },
+  });
+
+  const schwelleSpeichern = useMutation({
+    mutationFn: async () => {
+      const n = Number(schwelleInput.replace(",", "."));
+      if (!Number.isFinite(n) || n <= 0) throw new Error("Bitte einen Wert größer als 0 angeben");
+      await einstellungSpeichern(PREISALARM_SCHLUESSEL, String(n));
+    },
+    onSuccess: () => {
+      toast.success("Schwellenwert gespeichert");
+      qc.invalidateQueries({ queryKey: ["preisalarm-schwelle"] });
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
+
+  const neuBerechnen = useMutation({
+    mutationFn: async () => preisdatenNeuBerechnen(),
+    onSuccess: (res) => {
+      toast.success(`Preisdaten für ${res.anzahl} Produkte neu berechnet`);
+      qc.invalidateQueries({ queryKey: ["produkte"] });
+      qc.invalidateQueries({ queryKey: ["preisalarm-produkte"] });
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
 
   const kategorien = useQuery({
     queryKey: ["kategorien"],
