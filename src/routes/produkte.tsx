@@ -173,12 +173,73 @@ function ProduktePage() {
     setEditId(p.id);
   };
 
-  const liste = (produkte.data ?? []).filter((p) => {
-    const kategorieOk = !filter || p.kategorie_id === filter;
-    const lieferantOk = !lieferantFilter || p.lieferant_id === lieferantFilter;
-    return kategorieOk && lieferantOk;
+  const zusammenfuehren = useMutation({
+    mutationFn: async ({ zielId, questId }: { zielId: string; questId: string }) => {
+      const alle = produkte.data ?? [];
+      const ziel = alle.find((p) => p.id === zielId);
+      const quelle = alle.find((p) => p.id === questId);
+      if (!ziel || !quelle) throw new Error("Produkte nicht gefunden");
+
+      const r1 = await db
+        .from("rechnungspositionen")
+        .update({ produkt_id: zielId })
+        .eq("produkt_id", questId);
+      if (r1.error) throw r1.error;
+      const r2 = await db
+        .from("zaehlungspositionen")
+        .update({ produkt_id: zielId })
+        .eq("produkt_id", questId);
+      if (r2.error) throw r2.error;
+      const r3 = await db
+        .from("verkaufszahlen")
+        .update({ produkt_id: zielId })
+        .eq("produkt_id", questId);
+      if (r3.error) throw r3.error;
+
+      const bestand = Number(ziel.aktueller_bestand) + Number(quelle.aktueller_bestand);
+      const r4 = await db.from("produkte").update({ aktueller_bestand: bestand }).eq("id", zielId);
+      if (r4.error) throw r4.error;
+
+      const r5 = await db.from("produkte").delete().eq("id", questId);
+      if (r5.error) throw r5.error;
+    },
+    onSuccess: () => {
+      toast.success("Produkte zusammengeführt");
+      setMergeOpen(false);
+      setAuswahl([]);
+      qc.invalidateQueries({ queryKey: ["produkte"] });
+      qc.invalidateQueries({ queryKey: ["produkte-simple"] });
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
   });
-  const detail = (produkte.data ?? []).find((p) => p.id === detailId);
+
+  const alleProdukte = produkte.data ?? [];
+  const suchbegriff = sucheAktiv.trim().toLowerCase();
+  const passtZurSuche = (p: (typeof alleProdukte)[number]) =>
+    !suchbegriff ||
+    p.name.toLowerCase().includes(suchbegriff) ||
+    (p.lieferanten?.name ?? "").toLowerCase().includes(suchbegriff);
+
+  const basis = alleProdukte.filter(
+    (p) => (!lieferantFilter || p.lieferant_id === lieferantFilter) && passtZurSuche(p),
+  );
+  const liste = suchbegriff ? basis : basis.filter((p) => !tab || p.kategorie_id === tab);
+
+  const tabItems = [
+    { key: "", label: "Alle", count: basis.length },
+    ...(kategorien.data ?? []).map((k) => ({
+      key: k.id,
+      label: k.name,
+      count: basis.filter((p) => p.kategorie_id === k.id).length,
+    })),
+  ];
+
+  const detail = alleProdukte.find((p) => p.id === detailId);
+  const gewaehlt = auswahl
+    .map((id) => alleProdukte.find((p) => p.id === id))
+    .filter((p): p is (typeof alleProdukte)[number] => !!p);
+  const mergeZiel = gewaehlt.find((p) => p.id === mergeZielId) ?? gewaehlt[0];
+  const mergeQuelle = gewaehlt.find((p) => p.id !== mergeZiel?.id);
 
   return (
     <div>
@@ -192,27 +253,58 @@ function ProduktePage() {
         }
       />
 
-      <div className="mb-4 flex flex-wrap gap-3">
-        <div className="w-64">
-          <Select value={filter} onChange={(e) => setFilter(e.target.value)}>
-            <option value="">Alle Kategorien</option>
-            {(kategorien.data ?? []).map((k) => (
-              <option key={k.id} value={k.id}>
-                {k.name}
-              </option>
-            ))}
-          </Select>
+      <div className="mb-4 space-y-3">
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <SearchInput
+            className="w-full sm:w-80"
+            value={suche}
+            onChange={setSuche}
+            placeholder="Produkt suchen..."
+          />
+          <div className="w-full sm:w-64">
+            <Select value={lieferantFilter} onChange={(e) => setLieferantFilter(e.target.value)}>
+              <option value="">Alle Lieferanten</option>
+              {(lieferanten.data ?? []).map((l) => (
+                <option key={l.id} value={l.id}>
+                  {l.name}
+                </option>
+              ))}
+            </Select>
+          </div>
         </div>
-        <div className="w-64">
-          <Select value={lieferantFilter} onChange={(e) => setLieferantFilter(e.target.value)}>
-            <option value="">Alle Lieferanten</option>
-            {(lieferanten.data ?? []).map((l) => (
-              <option key={l.id} value={l.id}>
-                {l.name}
-              </option>
-            ))}
-          </Select>
-        </div>
+
+        <Tabs value={tab} onChange={setTab} items={tabItems} />
+
+        {suchbegriff && (
+          <p className="text-xs text-muted-foreground">Suche über alle Kategorien</p>
+        )}
+
+        {auswahl.length > 0 && (
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-xs text-muted-foreground">
+              {auswahl.length} Produkt(e) ausgewählt
+            </span>
+            {auswahl.length === 2 && (
+              <Button
+                variant="outline"
+                className="px-3 py-1.5 text-xs"
+                onClick={() => {
+                  setMergeZielId(auswahl[0] ?? null);
+                  setMergeOpen(true);
+                }}
+              >
+                <GitMerge size={14} /> Zusammenführen
+              </Button>
+            )}
+            <button
+              type="button"
+              className="text-xs text-muted-foreground underline hover:text-foreground"
+              onClick={() => setAuswahl([])}
+            >
+              Auswahl aufheben
+            </button>
+          </div>
+        )}
       </div>
 
       <Card>
@@ -221,9 +313,19 @@ function ProduktePage() {
         ) : liste.length === 0 ? (
           <Empty text="Keine Produkte vorhanden." />
         ) : (
-          <Table head={["Name", "Kategorie", "Lieferant", "Einheit", "Bestand", ""]}>
+          <Table head={["", "Name", "Kategorie", "Lieferant", "Einheit", "Bestand", ""]}>
             {liste.map((p) => (
               <Tr key={p.id} onClick={() => setDetailId(p.id)}>
+                <Td>
+                  <span onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={auswahl.includes(p.id)}
+                      onChange={(v) =>
+                        setAuswahl(v ? [...auswahl, p.id] : auswahl.filter((x) => x !== p.id))
+                      }
+                    />
+                  </span>
+                </Td>
                 <Td>{p.name}</Td>
                 <Td>
                   {p.kategorien ? (
@@ -233,9 +335,9 @@ function ProduktePage() {
                   )}
                 </Td>
                 <Td>{p.lieferanten?.name ?? "–"}</Td>
-                <Td>{p.einheit}</Td>
+                <Td>{einheitLabel(p.einheit)}</Td>
                 <Td>
-                  {num(Number(p.aktueller_bestand))} {p.einheit}
+                  {num(Number(p.aktueller_bestand))} {einheitLabel(p.einheit)}
                 </Td>
                 <Td className="text-right">
                   <button
@@ -266,6 +368,75 @@ function ProduktePage() {
           </Table>
         )}
       </Card>
+
+      <Modal
+        open={mergeOpen && gewaehlt.length === 2}
+        onClose={() => setMergeOpen(false)}
+        title="Produkte zusammenführen"
+        wide
+      >
+        {mergeZiel && mergeQuelle && (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Wähle das Ziel-Produkt. Alle Rechnungspositionen, Zählungen und Verkaufszahlen des
+              anderen Produkts werden übertragen, die Bestände addiert.
+            </p>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              {gewaehlt.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => setMergeZielId(p.id)}
+                  className={
+                    "rounded-lg border p-4 text-left transition " +
+                    (mergeZiel.id === p.id
+                      ? "border-primary bg-primary/10"
+                      : "border-border bg-surface-2 hover:bg-muted")
+                  }
+                >
+                  <div className="text-sm font-semibold text-foreground">{p.name}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {p.kategorien?.name ?? "Keine Kategorie"} · {p.lieferanten?.name ?? "Kein Lieferant"}
+                  </div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    Bestand: {num(Number(p.aktueller_bestand))} {einheitLabel(p.einheit)}
+                  </div>
+                  <div className="mt-2 text-xs font-medium text-primary">
+                    {mergeZiel.id === p.id ? "Ziel-Datensatz (bleibt bestehen)" : "Wird gelöscht"}
+                  </div>
+                </button>
+              ))}
+            </div>
+            <div className="rounded-lg border border-border bg-surface-2 p-3 text-sm">
+              Neuer Bestand:{" "}
+              <span className="font-semibold">
+                {num(Number(mergeZiel.aktueller_bestand) + Number(mergeQuelle.aktueller_bestand))}{" "}
+                {einheitLabel(mergeZiel.einheit)}
+              </span>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="outline" onClick={() => setMergeOpen(false)}>
+                Abbrechen
+              </Button>
+              <Button
+                disabled={zusammenfuehren.isPending}
+                onClick={() => {
+                  if (
+                    window.confirm(
+                      `„${mergeQuelle.name}“ wird gelöscht und in „${mergeZiel.name}“ zusammengeführt. Fortfahren?`,
+                    )
+                  ) {
+                    zusammenfuehren.mutate({ zielId: mergeZiel.id, questId: mergeQuelle.id });
+                  }
+                }}
+              >
+                Zusammenführen
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
 
       <Modal open={modal} onClose={() => setModal(false)} title="Produkt hinzufügen">
         <form
