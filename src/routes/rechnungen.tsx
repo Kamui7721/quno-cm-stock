@@ -70,6 +70,8 @@ function RechnungenPage() {
   const [filterStatus, setFilterStatus] = useState("");
   const suche = Route.useSearch();
   const [filterPruefung, setFilterPruefung] = useState(suche.pruefung ?? "");
+  const [filterBeleg, setFilterBeleg] = useState("");
+
   const [auswahl, setAuswahl] = useState<string[]>([]);
   const [sortSpalte, setSortSpalte] = useState<
     "rechnungsnummer" | "lieferant" | "datum" | "gesamtbetrag" | "erstellt_am"
