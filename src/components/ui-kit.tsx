@@ -369,9 +369,9 @@ export function Table({
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr className="border-b border-border">
-            {cells.map((c) => (
+            {cells.map((c, i) => (
               <th
-                key={c.label}
+                key={`${c.label}-${i}`}
                 className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground"
               >
                 {c.onClick ? (
