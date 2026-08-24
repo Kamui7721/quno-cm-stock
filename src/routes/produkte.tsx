@@ -49,12 +49,23 @@ const leer = {
 
 function ProduktePage() {
   const qc = useQueryClient();
-  const [filter, setFilter] = useState("");
+  const [tab, setTab] = useState("");
+  const [suche, setSuche] = useState("");
+  const [sucheAktiv, setSucheAktiv] = useState("");
   const [lieferantFilter, setLieferantFilter] = useState("");
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState(leer);
   const [editId, setEditId] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [auswahl, setAuswahl] = useState<string[]>([]);
+  const [mergeOpen, setMergeOpen] = useState(false);
+  const [mergeZielId, setMergeZielId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => setSucheAktiv(suche), 300);
+    return () => clearTimeout(t);
+  }, [suche]);
+
 
   const kategorien = useQuery({
     queryKey: ["kategorien"],
