@@ -4,15 +4,15 @@ import { useEffect, useState } from "react";
 import { GitMerge, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
+import { ProduktDetail } from "@/components/ProduktDetail";
+import { abweichungProzent, trendLabel, trendTone } from "@/lib/preise";
 import {
   Badge,
   Button,
   Card,
   Checkbox,
-  Drawer,
   Empty,
   Field,
-  InfoRow,
   Input,
   Modal,
   PageHeader,
@@ -23,9 +23,8 @@ import {
   Td,
   Tr,
 } from "@/components/ui-kit";
-import { datum, einheitLabel, num } from "@/lib/format";
+import { datum, einheitLabel, eur, num } from "@/lib/format";
 import { EINHEITEN } from "@/lib/types";
-
 
 export const Route = createFileRoute("/produkte")({
   head: () => ({
@@ -33,11 +32,32 @@ export const Route = createFileRoute("/produkte")({
       { title: "Produkte — QUNO x CM Inventur" },
       { name: "description", content: "Alle Produkte mit Kategorie, Lieferant und Bestand." },
       { property: "og:title", content: "Produkte — QUNO x CM Inventur" },
-      { property: "og:description", content: "Alle Produkte mit Kategorie, Lieferant und Bestand." },
+      {
+        property: "og:description",
+        content: "Alle Produkte mit Kategorie, Lieferant und Bestand.",
+      },
     ],
   }),
   component: ProduktePage,
 });
+
+type PreisFelder = {
+  letzter_ek?: number | string | null;
+  durchschnitt_ek?: number | string | null;
+};
+
+function letzterEk(p: unknown): number | null {
+  const v = (p as PreisFelder).letzter_ek;
+  return v == null ? null : Number(v);
+}
+
+function trendWert(p: unknown): number | null {
+  const row = p as PreisFelder;
+  return abweichungProzent(
+    row.letzter_ek == null ? null : Number(row.letzter_ek),
+    row.durchschnitt_ek == null ? null : Number(row.durchschnitt_ek),
+  );
+}
 
 const leer = {
   name: "",
@@ -60,12 +80,26 @@ function ProduktePage() {
   const [auswahl, setAuswahl] = useState<string[]>([]);
   const [mergeOpen, setMergeOpen] = useState(false);
   const [mergeZielId, setMergeZielId] = useState<string | null>(null);
+  const [sortFeld, setSortFeld] = useState<"name" | "letzter_ek" | "trend" | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  const sortieren = (feld: "name" | "letzter_ek" | "trend") => {
+    if (sortFeld === feld) setSortDir(sortDir === "asc" ? "desc" : "asc");
+    else {
+      setSortFeld(feld);
+      setSortDir(feld === "name" ? "asc" : "desc");
+    }
+  };
+  const kopfZelle = (label: string, feld: "name" | "letzter_ek" | "trend") => ({
+    label,
+    onClick: () => sortieren(feld),
+    ...(sortFeld === feld ? { dir: sortDir } : {}),
+  });
 
   useEffect(() => {
     const t = setTimeout(() => setSucheAktiv(suche), 300);
     return () => clearTimeout(t);
   }, [suche]);
-
 
   const kategorien = useQuery({
     queryKey: ["kategorien"],
@@ -132,9 +166,15 @@ function ProduktePage() {
 
   const loeschen = useMutation({
     mutationFn: async (id: string) => {
-      const r1 = await db.from("rechnungspositionen").update({ produkt_id: null }).eq("produkt_id", id);
+      const r1 = await db
+        .from("rechnungspositionen")
+        .update({ produkt_id: null })
+        .eq("produkt_id", id);
       if (r1.error) throw r1.error;
-      const r2 = await db.from("zaehlungspositionen").update({ produkt_id: null }).eq("produkt_id", id);
+      const r2 = await db
+        .from("zaehlungspositionen")
+        .update({ produkt_id: null })
+        .eq("produkt_id", id);
       if (r2.error) throw r2.error;
       const r3 = await db.from("verkaufszahlen").update({ produkt_id: null }).eq("produkt_id", id);
       if (r3.error) throw r3.error;
@@ -150,7 +190,9 @@ function ProduktePage() {
   });
 
   const loeschenBestaetigen = (id: string) => {
-    if (window.confirm("Produkt wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.")) {
+    if (
+      window.confirm("Produkt wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.")
+    ) {
       loeschen.mutate(id);
     }
   };
@@ -177,7 +219,14 @@ function ProduktePage() {
     onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
   });
 
-  const bearbeiten = (p: any) => {
+  const bearbeiten = (p: {
+    id: string;
+    name?: string | null;
+    kategorie_id?: string | null;
+    lieferant_id?: string | null;
+    einheit?: string | null;
+    aktueller_bestand?: number | string | null;
+  }) => {
     setForm({
       name: p.name ?? "",
       kategorie_id: p.kategorie_id ?? "",
@@ -238,7 +287,21 @@ function ProduktePage() {
   const basis = alleProdukte.filter(
     (p) => (!lieferantFilter || p.lieferant_id === lieferantFilter) && passtZurSuche(p),
   );
-  const liste = suchbegriff ? basis : basis.filter((p) => !tab || p.kategorie_id === tab);
+  const gefiltert = suchbegriff ? basis : basis.filter((p) => !tab || p.kategorie_id === tab);
+  const liste = sortFeld
+    ? gefiltert.slice().sort((a, b) => {
+        const f = sortDir === "asc" ? 1 : -1;
+        if (sortFeld === "name") return a.name.localeCompare(b.name) * f;
+        if (sortFeld === "letzter_ek") {
+          const av = letzterEk(a) ?? -Infinity;
+          const bv = letzterEk(b) ?? -Infinity;
+          return (av - bv) * f;
+        }
+        const at = trendWert(a) ?? -Infinity;
+        const bt = trendWert(b) ?? -Infinity;
+        return (at - bt) * f;
+      })
+    : gefiltert;
 
   const tabItems = [
     { key: "", label: "Alle", count: alleProdukte.length },
@@ -290,9 +353,7 @@ function ProduktePage() {
 
         <Tabs value={tab} onChange={setTab} items={tabItems} />
 
-        {suchbegriff && (
-          <p className="text-xs text-muted-foreground">Suche über alle Kategorien</p>
-        )}
+        {suchbegriff && <p className="text-xs text-muted-foreground">Suche über alle Kategorien</p>}
 
         {auswahl.length > 0 && (
           <div className="flex flex-wrap items-center gap-3">
@@ -328,7 +389,19 @@ function ProduktePage() {
         ) : liste.length === 0 ? (
           <Empty text="Keine Produkte vorhanden." />
         ) : (
-          <Table head={["", "Name", "Kategorie", "Lieferant", "Einheit", "Bestand", ""]}>
+          <Table
+            head={[
+              "",
+              kopfZelle("Name", "name"),
+              "Kategorie",
+              "Lieferant",
+              "Einheit",
+              "Bestand",
+              kopfZelle("Letzter EK", "letzter_ek"),
+              kopfZelle("Trend", "trend"),
+              "",
+            ]}
+          >
             {liste.map((p) => (
               <Tr key={p.id} onClick={() => setDetailId(p.id)}>
                 <Td>
@@ -353,6 +426,14 @@ function ProduktePage() {
                 <Td>{einheitLabel(p.einheit)}</Td>
                 <Td>
                   {num(Number(p.aktueller_bestand))} {einheitLabel(p.einheit)}
+                </Td>
+                <Td>{letzterEk(p) !== null ? eur(letzterEk(p)!) : "–"}</Td>
+                <Td>
+                  {trendWert(p) === null ? (
+                    <span className="text-muted-foreground">–</span>
+                  ) : (
+                    <Badge tone={trendTone(trendWert(p)!)}>{trendLabel(trendWert(p)!)}</Badge>
+                  )}
                 </Td>
                 <Td className="text-right">
                   <button
@@ -411,7 +492,8 @@ function ProduktePage() {
                 >
                   <div className="text-sm font-semibold text-foreground">{p.name}</div>
                   <div className="mt-1 text-xs text-muted-foreground">
-                    {p.kategorien?.name ?? "Keine Kategorie"} · {p.lieferanten?.name ?? "Kein Lieferant"}
+                    {p.kategorien?.name ?? "Keine Kategorie"} ·{" "}
+                    {p.lieferanten?.name ?? "Kein Lieferant"}
                   </div>
                   <div className="mt-1 text-xs text-muted-foreground">
                     Bestand: {num(Number(p.aktueller_bestand))} {einheitLabel(p.einheit)}
@@ -451,7 +533,6 @@ function ProduktePage() {
           </div>
         )}
       </Modal>
-
 
       <Modal open={modal} onClose={() => setModal(false)} title="Produkt hinzufügen">
         <form
@@ -607,97 +688,44 @@ function ProduktePage() {
         </form>
       </Modal>
 
-      <Drawer
-        open={!!detail}
+      <ProduktDetail
+        produkt={detail ?? null}
         onClose={() => setDetailId(null)}
-        title={detail?.name ?? "Produkt"}
-      >
-        {detail && (
-          <>
-            <Button variant="outline" className="w-full" onClick={() => bearbeiten(detail)}>
-              <Pencil size={16} /> Produkt bearbeiten
-            </Button>
-            <div>
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Produkt
-              </h3>
-              <InfoRow label="Name" value={detail.name} />
-              <InfoRow
-                label="Kategorie"
-                value={
-                  detail.kategorien ? (
-                    <Badge color={detail.kategorien.farbe}>{detail.kategorien.name}</Badge>
-                  ) : (
-                    "–"
-                  )
-                }
-              />
-              <InfoRow label="Einheit" value={einheitLabel(detail.einheit)} />
-              <InfoRow
-                label="Aktueller Bestand"
-                value={`${num(Number(detail.aktueller_bestand))} ${einheitLabel(detail.einheit)}`}
-              />
-
-              <InfoRow label="Angelegt am" value={datum(detail.erstellt_am)} />
-            </div>
-
-            <div>
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Lieferant
-              </h3>
-              <InfoRow label="Name" value={detail.lieferanten?.name ?? "–"} />
-              <InfoRow label="Kontaktperson" value={detail.lieferanten?.kontaktperson ?? "–"} />
-              <InfoRow label="Telefon" value={detail.lieferanten?.telefon ?? "–"} />
-              <InfoRow label="Email" value={detail.lieferanten?.email ?? "–"} />
-              <InfoRow label="Adresse" value={detail.lieferanten?.adresse ?? "–"} />
-              <InfoRow label="Kundennummer" value={detail.lieferanten?.kundennummer ?? "–"} />
-              <InfoRow label="IBAN" value={detail.lieferanten?.iban ?? "–"} />
-            </div>
-
-            <div>
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Zählungs-Verlauf
-              </h3>
-              {(historie.data ?? []).length === 0 ? (
-                <p className="text-sm text-muted-foreground">Noch keine Zählungen.</p>
-              ) : (
-                <div className="space-y-2">
-                  {(historie.data ?? []).map((h) => (
-                    <div
-                      key={h.id}
-                      className="rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm"
-                    >
-                      <div className="mb-1 flex items-center justify-between">
-                        <span className="text-muted-foreground">
-                          {datum(h.zaehlungen?.datum ?? null)}
-                        </span>
-                        <Badge tone={Number(h.differenz) < 0 ? "danger" : "success"}>
-                          {num(Number(h.differenz_prozent), 1)} %
-                        </Badge>
-                      </div>
-                      <div className="text-muted-foreground">
-                        IST {num(Number(h.ist_bestand))} · SOLL {num(Number(h.soll_bestand))} ·
-                        Differenz {num(Number(h.differenz))}
-                      </div>
+        onEdit={(p) => bearbeiten(p)}
+        onDelete={(id) => loeschenBestaetigen(id)}
+        zusatz={
+          <div>
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Zählungs-Verlauf
+            </h3>
+            {(historie.data ?? []).length === 0 ? (
+              <p className="text-sm text-muted-foreground">Noch keine Zählungen.</p>
+            ) : (
+              <div className="space-y-2">
+                {(historie.data ?? []).map((h) => (
+                  <div
+                    key={h.id}
+                    className="rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm"
+                  >
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="text-muted-foreground">
+                        {datum(h.zaehlungen?.datum ?? null)}
+                      </span>
+                      <Badge tone={Number(h.differenz) < 0 ? "danger" : "success"}>
+                        {num(Number(h.differenz_prozent), 1)} %
+                      </Badge>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="border-t border-border pt-4">
-              <Button
-                variant="danger"
-                className="w-full"
-                disabled={loeschen.isPending}
-                onClick={() => loeschenBestaetigen(detail.id)}
-              >
-                <Trash2 size={16} /> Produkt löschen
-              </Button>
-            </div>
-          </>
-        )}
-      </Drawer>
+                    <div className="text-muted-foreground">
+                      IST {num(Number(h.ist_bestand))} · SOLL {num(Number(h.soll_bestand))} ·
+                      Differenz {num(Number(h.differenz))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        }
+      />
     </div>
   );
 }

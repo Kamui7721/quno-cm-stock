@@ -7,6 +7,9 @@ import { db } from "@/lib/db";
 import { pruefungSetzen } from "@/lib/pruefung";
 import { rechnungStandardSort } from "@/lib/sortierung";
 import { RechnungDetail } from "@/components/RechnungDetail";
+import { ProduktDetail } from "@/components/ProduktDetail";
+import { abweichungProzent, trendLabel, trendTone } from "@/lib/preise";
+import { preisalarmSchwelleLaden } from "@/lib/einstellungen";
 import {
   Badge,
   Button,
@@ -42,10 +45,40 @@ export const Route = createFileRoute("/")({
   component: Dashboard,
 });
 
+type PreisProdukt = {
+  id: string;
+  name: string;
+  einheit: string;
+  aktueller_bestand: number | string;
+  letzter_ek: number | string | null;
+  letzter_ek_datum: string | null;
+  durchschnitt_ek: number | string | null;
+  kategorien?: { name: string; farbe: string } | null;
+  lieferanten?: { name: string | null } | null;
+};
+
 function Dashboard() {
   const qc = useQueryClient();
   const [auswahl, setAuswahl] = useState<string[]>([]);
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [produktId, setProduktId] = useState<string | null>(null);
+
+  const schwelle = useQuery({
+    queryKey: ["preisalarm-schwelle"],
+    queryFn: preisalarmSchwelleLaden,
+  });
+
+  const preisProdukte = useQuery({
+    queryKey: ["preisalarm-produkte"],
+    queryFn: async () => {
+      const { data, error } = await db
+        .from("produkte")
+        .select("*, kategorien(name, farbe), lieferanten(*)")
+        .order("name");
+      if (error) throw error;
+      return data as unknown as PreisProdukt[];
+    },
+  });
 
   const pruefen = useMutation({
     mutationFn: async (ids: string[]) => pruefungSetzen(ids, true),
@@ -154,17 +187,17 @@ function Dashboard() {
               .sort(rechnungStandardSort)
               .slice(0, 5)
               .map((r) => (
-              <Tr key={r.id}>
-                <Td>{r.rechnungsnummer}</Td>
-                <Td>{r.lieferanten?.name ?? "–"}</Td>
-                <Td>{datum(r.datum)}</Td>
-                <Td>{eur(Number(r.gesamtbetrag))}</Td>
-                <Td>
-                  <Badge tone={r.bezahlt ? "success" : "danger"}>
-                    {r.bezahlt ? "bezahlt" : "offen"}
-                  </Badge>
-                </Td>
-              </Tr>
+                <Tr key={r.id}>
+                  <Td>{r.rechnungsnummer}</Td>
+                  <Td>{r.lieferanten?.name ?? "–"}</Td>
+                  <Td>{datum(r.datum)}</Td>
+                  <Td>{eur(Number(r.gesamtbetrag))}</Td>
+                  <Td>
+                    <Badge tone={r.bezahlt ? "success" : "danger"}>
+                      {r.bezahlt ? "bezahlt" : "offen"}
+                    </Badge>
+                  </Td>
+                </Tr>
               ))}
           </Table>
         )}
@@ -266,6 +299,52 @@ function Dashboard() {
         );
       })()}
 
+      {(() => {
+        const grenze = schwelle.data ?? 10;
+        const auffaellig = (preisProdukte.data ?? [])
+          .map((p) => ({
+            produkt: p,
+            abw: abweichungProzent(
+              p.letzter_ek == null ? null : Number(p.letzter_ek),
+              p.durchschnitt_ek == null ? null : Number(p.durchschnitt_ek),
+            ),
+          }))
+          .filter((e): e is { produkt: PreisProdukt; abw: number } =>
+            e.abw !== null ? Math.abs(e.abw) > grenze : false,
+          )
+          .sort((a, b) => Math.abs(b.abw) - Math.abs(a.abw));
+        const anzeige = auffaellig.slice(0, 5);
+        return (
+          <Card className="mt-6">
+            <CardHeader title="Preisveränderungen" />
+            {anzeige.length === 0 ? (
+              <Empty text="Keine auffälligen Preisveränderungen" />
+            ) : (
+              <>
+                <Table head={["Produkt", "Lieferant", "Ø EK", "Letzter EK", "Abweichung"]}>
+                  {anzeige.map(({ produkt: p, abw }) => (
+                    <Tr key={p.id} onClick={() => setProduktId(p.id)}>
+                      <Td>{p.name}</Td>
+                      <Td>{p.lieferanten?.name ?? "–"}</Td>
+                      <Td>{eur(Number(p.durchschnitt_ek))}</Td>
+                      <Td>{eur(Number(p.letzter_ek))}</Td>
+                      <Td>
+                        <Badge tone={trendTone(abw)}>{trendLabel(abw)}</Badge>
+                      </Td>
+                    </Tr>
+                  ))}
+                </Table>
+                <div className="border-t border-border px-5 py-3 text-center">
+                  <Link to="/produkte">
+                    <Button variant="outline">Mehr in Produkte anzeigen</Button>
+                  </Link>
+                </div>
+              </>
+            )}
+          </Card>
+        );
+      })()}
+
       <Card className="mt-6">
         <CardHeader title="Letzte Zählungen pro Kategorie" />
         {(data?.zaehlungen ?? []).length === 0 ? (
@@ -293,6 +372,10 @@ function Dashboard() {
       </Card>
 
       <RechnungDetail id={detailId} onClose={() => setDetailId(null)} />
+      <ProduktDetail
+        produkt={(preisProdukte.data ?? []).find((p) => p.id === produktId) ?? null}
+        onClose={() => setProduktId(null)}
+      />
     </div>
   );
 }

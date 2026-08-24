@@ -5,6 +5,12 @@ import { Mail, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
 import {
+  PREISALARM_SCHLUESSEL,
+  einstellungSpeichern,
+  preisalarmSchwelleLaden,
+} from "@/lib/einstellungen";
+import { preisdatenNeuBerechnen } from "@/lib/preise.functions";
+import {
   Badge,
   Button,
   Card,
@@ -26,7 +32,10 @@ export const Route = createFileRoute("/einstellungen")({
       { title: "Einstellungen — QUNO x CM Inventur" },
       { name: "description", content: "Kategorien verwalten, Passwort ändern, Gmail-Verbindung." },
       { property: "og:title", content: "Einstellungen — QUNO x CM Inventur" },
-      { property: "og:description", content: "Kategorien verwalten, Passwort ändern, Gmail-Verbindung." },
+      {
+        property: "og:description",
+        content: "Kategorien verwalten, Passwort ändern, Gmail-Verbindung.",
+      },
     ],
   }),
   component: EinstellungenPage,
@@ -39,6 +48,39 @@ function EinstellungenPage() {
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState(leer);
   const [neuesPw, setNeuesPw] = useState("");
+  const [schwelleInput, setSchwelleInput] = useState("10");
+
+  useQuery({
+    queryKey: ["preisalarm-schwelle"],
+    queryFn: async () => {
+      const wert = await preisalarmSchwelleLaden();
+      setSchwelleInput(String(wert));
+      return wert;
+    },
+  });
+
+  const schwelleSpeichern = useMutation({
+    mutationFn: async () => {
+      const n = Number(schwelleInput.replace(",", "."));
+      if (!Number.isFinite(n) || n <= 0) throw new Error("Bitte einen Wert größer als 0 angeben");
+      await einstellungSpeichern(PREISALARM_SCHLUESSEL, String(n));
+    },
+    onSuccess: () => {
+      toast.success("Schwellenwert gespeichert");
+      qc.invalidateQueries({ queryKey: ["preisalarm-schwelle"] });
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
+
+  const neuBerechnen = useMutation({
+    mutationFn: async () => preisdatenNeuBerechnen(),
+    onSuccess: (res) => {
+      toast.success(`Preisdaten für ${res.anzahl} Produkte neu berechnet`);
+      qc.invalidateQueries({ queryKey: ["produkte"] });
+      qc.invalidateQueries({ queryKey: ["preisalarm-produkte"] });
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
 
   const kategorien = useQuery({
     queryKey: ["kategorien"],
@@ -144,10 +186,47 @@ function EinstellungenPage() {
       </Card>
 
       <Card className="mt-6">
+        <CardHeader title="Preisauswertung" />
+        <div className="space-y-4 p-5">
+          <Field label="Preisalarm-Schwelle (%)">
+            <div className="flex items-center gap-3">
+              <Input
+                type="number"
+                min="1"
+                step="1"
+                className="w-32"
+                value={schwelleInput}
+                onChange={(e) => setSchwelleInput(e.target.value)}
+              />
+              <Button
+                variant="outline"
+                disabled={schwelleSpeichern.isPending}
+                onClick={() => schwelleSpeichern.mutate()}
+              >
+                Speichern
+              </Button>
+            </div>
+          </Field>
+          <p className="text-xs text-muted-foreground">
+            Produkte, deren letzter Einkaufspreis um mehr als diesen Wert vom Durchschnitt der
+            letzten 12 Monate abweicht, erscheinen im Dashboard unter „Preisveränderungen“.
+          </p>
+          <button
+            type="button"
+            disabled={neuBerechnen.isPending}
+            onClick={() => neuBerechnen.mutate()}
+            className="text-xs text-muted-foreground underline transition hover:text-foreground disabled:opacity-50"
+          >
+            {neuBerechnen.isPending ? "Berechne..." : "Preisdaten neu berechnen"}
+          </button>
+        </div>
+      </Card>
+
+      <Card className="mt-6">
         <CardHeader title="Passwort" />
         <p className="p-5 text-xs text-muted-foreground">
-          Das Zugangspasswort wird aus Sicherheitsgründen ausschließlich auf dem Server geprüft
-          und ist im Browser nicht sichtbar. Es kann über das Server-Geheimnis
+          Das Zugangspasswort wird aus Sicherheitsgründen ausschließlich auf dem Server geprüft und
+          ist im Browser nicht sichtbar. Es kann über das Server-Geheimnis
           <span className="mx-1 font-mono text-foreground">APP_PASSWORT</span>
           geändert werden — sage einfach Bescheid, wenn ein neues Passwort gesetzt werden soll.
         </p>
@@ -161,7 +240,9 @@ function EinstellungenPage() {
               <Mail size={16} />
             </span>
             <div>
-              <div className="text-sm font-medium text-foreground">inventur.clubmichel@gmail.com</div>
+              <div className="text-sm font-medium text-foreground">
+                inventur.clubmichel@gmail.com
+              </div>
               <div className="text-xs text-muted-foreground">
                 Wird später für den automatischen Rechnungsimport genutzt.
               </div>

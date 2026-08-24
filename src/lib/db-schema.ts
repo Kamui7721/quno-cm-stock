@@ -10,6 +10,7 @@ export const TABELLEN = [
   "zaehlungspositionen",
   "verkaufszahlen",
   "lieferant_kategorien",
+  "einstellungen",
 ] as const;
 
 const spalte = z.string().regex(/^[a-z_][a-z0-9_]*$/);
