@@ -349,19 +349,48 @@ export function InfoRow({ label, value }: { label: string; value: ReactNode }) {
 
 const TableHeadContext = createContext<string[]>([]);
 
-export function Table({ head, children }: { head: string[]; children: ReactNode }) {
+export type HeadCell = {
+  label: string;
+  onClick?: (() => void) | undefined;
+  dir?: "asc" | "desc" | null | undefined;
+};
+
+export function Table({
+  head,
+  children,
+}: {
+  head: (string | HeadCell)[];
+  children: ReactNode;
+}) {
+  const cells: HeadCell[] = head.map((h) => (typeof h === "string" ? { label: h } : h));
   return (
     <div className="resp-table overflow-x-auto">
-      <TableHeadContext.Provider value={head}>
+      <TableHeadContext.Provider value={cells.map((c) => c.label)}>
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr className="border-b border-border">
-            {head.map((h) => (
+            {cells.map((c) => (
               <th
-                key={h}
+                key={c.label}
                 className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground"
               >
-                {h}
+                {c.onClick ? (
+                  <button
+                    type="button"
+                    onClick={c.onClick}
+                    className={cn(
+                      "inline-flex items-center gap-1 uppercase tracking-wider transition-colors hover:text-foreground",
+                      c.dir && "text-foreground",
+                    )}
+                  >
+                    {c.label}
+                    <span className="text-[10px]">
+                      {c.dir === "asc" ? "▲" : c.dir === "desc" ? "▼" : ""}
+                    </span>
+                  </button>
+                ) : (
+                  c.label
+                )}
               </th>
             ))}
           </tr>
@@ -372,6 +401,7 @@ export function Table({ head, children }: { head: string[]; children: ReactNode 
     </div>
   );
 }
+
 
 export function Tr({
   children,
