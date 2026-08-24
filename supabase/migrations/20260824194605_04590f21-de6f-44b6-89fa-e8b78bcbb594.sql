@@ -1,0 +1,1 @@
+ALTER TABLE public.rechnungen ADD COLUMN IF NOT EXISTS pdf_vorschau text;

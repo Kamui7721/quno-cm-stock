@@ -194,6 +194,7 @@ export type Database = {
           lieferant_id: string | null
           pdf_dateiname: string | null
           pdf_url: string | null
+          pdf_vorschau: string | null
           rechnungsnummer: string
           summe_netto: number | null
         }
@@ -212,6 +213,7 @@ export type Database = {
           lieferant_id?: string | null
           pdf_dateiname?: string | null
           pdf_url?: string | null
+          pdf_vorschau?: string | null
           rechnungsnummer: string
           summe_netto?: number | null
         }
@@ -230,6 +232,7 @@ export type Database = {
           lieferant_id?: string | null
           pdf_dateiname?: string | null
           pdf_url?: string | null
+          pdf_vorschau?: string | null
           rechnungsnummer?: string
           summe_netto?: number | null
         }
