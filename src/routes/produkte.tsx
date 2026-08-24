@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { db } from "@/lib/db";
 import { ProduktDetail } from "@/components/ProduktDetail";
 import { abweichungProzent, trendLabel, trendTone } from "@/lib/preise";
+import { normalisiereBezeichnung } from "@/lib/aehnlichkeit";
 import {
   Badge,
   Button,
