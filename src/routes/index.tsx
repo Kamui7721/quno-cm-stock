@@ -170,8 +170,8 @@ function Dashboard() {
         )}
         {(data?.rechnungen ?? []).length > 5 && (
           <div className="border-t border-border px-5 py-3 text-center">
-            <Link to="/rechnungen">
-              <Button variant="secondary">Mehr in Rechnungen anzeigen</Button>
+            <Link to="/rechnungen" search={{ pruefung: undefined }}>
+              <Button variant="outline">Mehr in Rechnungen anzeigen</Button>
             </Link>
           </div>
         )}
@@ -256,7 +256,7 @@ function Dashboard() {
                 {offen.length > 5 && (
                   <div className="border-t border-border px-5 py-3 text-center">
                     <Link to="/rechnungen" search={{ pruefung: "false" }}>
-                      <Button variant="secondary">Mehr in Rechnungen anzeigen</Button>
+                      <Button variant="outline">Mehr in Rechnungen anzeigen</Button>
                     </Link>
                   </div>
                 )}
