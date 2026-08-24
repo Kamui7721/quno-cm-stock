@@ -4,6 +4,8 @@ import { useState } from "react";
 import { AlertTriangle, FileText, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
+import { belegPfad, belegUrlHolen } from "@/lib/beleg";
+
 import { pruefungSetzen } from "@/lib/pruefung";
 import { rechnungStandardSort } from "@/lib/sortierung";
 import { RechnungDetail } from "@/components/RechnungDetail";
