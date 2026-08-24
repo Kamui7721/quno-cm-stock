@@ -70,6 +70,8 @@ function RechnungenPage() {
   const [filterStatus, setFilterStatus] = useState("");
   const suche = Route.useSearch();
   const [filterPruefung, setFilterPruefung] = useState(suche.pruefung ?? "");
+  const [filterBeleg, setFilterBeleg] = useState("");
+
   const [auswahl, setAuswahl] = useState<string[]>([]);
   const [sortSpalte, setSortSpalte] = useState<
     "rechnungsnummer" | "lieferant" | "datum" | "gesamtbetrag" | "erstellt_am"
@@ -247,7 +249,9 @@ function RechnungenPage() {
         (!filterLieferant || r.lieferant_id === filterLieferant) &&
         (!filterMonat || r.datum.slice(0, 7) === filterMonat) &&
         (!filterStatus || String(r.bezahlt) === filterStatus) &&
-        (!filterPruefung || String(!!r.geprueft) === filterPruefung),
+        (!filterPruefung || String(!!r.geprueft) === filterPruefung) &&
+        (!filterBeleg || String(!!r.pdf_url?.trim()) === filterBeleg),
+
     )
     .slice()
     .sort((a, b) => {
@@ -277,7 +281,7 @@ function RechnungenPage() {
         }
       />
 
-      <div className="mb-4 grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-4 grid max-w-4xl grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <Select value={filterLieferant} onChange={(e) => setFilterLieferant(e.target.value)}>
           <option value="">Alle Lieferanten</option>
           {(lieferanten.data ?? []).map((l) => (
@@ -297,7 +301,13 @@ function RechnungenPage() {
           <option value="true">Geprüft</option>
           <option value="false">Nicht geprüft</option>
         </Select>
+        <Select value={filterBeleg} onChange={(e) => setFilterBeleg(e.target.value)}>
+          <option value="">Alle Belege</option>
+          <option value="true">Mit PDF</option>
+          <option value="false">Ohne PDF</option>
+        </Select>
       </div>
+
 
       {auswahl.length > 0 && (
         <div className="mb-4 flex flex-col gap-3 rounded-xl border border-border bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
