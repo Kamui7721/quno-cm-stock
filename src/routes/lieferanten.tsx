@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { GitMerge, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
@@ -9,7 +9,7 @@ import {
   Button,
   Card,
   Checkbox,
-  Drawer,
+  DetailModal,
   Empty,
   Field,
   InfoRow,
@@ -30,7 +30,10 @@ export const Route = createFileRoute("/lieferanten")({
       { title: "Lieferanten — QUNO x CM Inventur" },
       { name: "description", content: "Lieferanten mit Kontaktdaten, Kundennummer und IBAN." },
       { property: "og:title", content: "Lieferanten — QUNO x CM Inventur" },
-      { property: "og:description", content: "Lieferanten mit Kontaktdaten, Kundennummer und IBAN." },
+      {
+        property: "og:description",
+        content: "Lieferanten mit Kontaktdaten, Kundennummer und IBAN.",
+      },
     ],
   }),
   component: LieferantenPage,
@@ -193,6 +196,49 @@ function LieferantenPage() {
     onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
   });
 
+  /** Leitet Kategorien aus den Kategorien der zugeordneten Produkte ab (nur ergänzend). */
+  const ableiten = useMutation({
+    mutationFn: async () => {
+      const p = await db.from("produkte").select("lieferant_id, kategorie_id");
+      if (p.error) throw new Error(p.error.message);
+      const katName = new Map((kategorien.data ?? []).map((k) => [k.id, k.name]));
+      const vorhanden = new Set(
+        (zuordnungen.data ?? []).map((z) => `${z.lieferant_id}|${z.kategorie}`),
+      );
+      const neu: { lieferant_id: string; kategorie: string }[] = [];
+      for (const row of p.data ?? []) {
+        if (!row.lieferant_id || !row.kategorie_id) continue;
+        const name = katName.get(row.kategorie_id);
+        if (!name) continue;
+        const key = `${row.lieferant_id}|${name}`;
+        if (vorhanden.has(key)) continue;
+        vorhanden.add(key);
+        neu.push({ lieferant_id: row.lieferant_id, kategorie: name });
+      }
+      if (neu.length) {
+        const r = await db.from("lieferant_kategorien").insert(neu);
+        if (r.error) throw new Error(r.error.message);
+      }
+      return neu.length;
+    },
+    onSuccess: (n) => {
+      if (n > 0) toast.success(`${n} Kategorie-Zuordnung(en) ergänzt`);
+      qc.invalidateQueries({ queryKey: ["lieferant-kategorien"] });
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
+
+  // Einmalige Erstbefüllung, solange noch keine Zuordnung existiert.
+  const initRef = useRef(false);
+  useEffect(() => {
+    if (initRef.current) return;
+    if (zuordnungen.data?.length === 0 && (kategorien.data ?? []).length > 0) {
+      initRef.current = true;
+      ableiten.mutate();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zuordnungen.data, kategorien.data]);
+
   const alle = lieferanten.data ?? [];
   const suchbegriff = sucheAktiv.trim().toLowerCase();
   const basis = alle.filter(
@@ -205,7 +251,7 @@ function LieferantenPage() {
   const liste = suchbegriff ? basis : basis.filter((l) => !tab || katVon(l.id).includes(tab));
 
   const tabItems = [
-    { key: "", label: "Alle", count: basis.length },
+    { key: "", label: "Alle", count: alle.length },
     ...(kategorien.data ?? []).map((k) => ({
       key: k.name,
       label: k.name,
@@ -238,7 +284,7 @@ function LieferantenPage() {
         const zielWert = (mergeZiel[feld] ?? "") as string;
         const quelleWert = (mergeQuelle[feld] ?? "") as string;
         const wunsch = mergeWerte[feld] === "quelle" ? quelleWert : zielWert;
-        updates[feld] = (wunsch || zielWert || quelleWert) || null;
+        updates[feld] = wunsch || zielWert || quelleWert || null;
       }
       for (const feld of ["kundennummer", "iban"] as const) {
         updates[feld] = (mergeZiel[feld] ?? mergeQuelle[feld] ?? null) as string | null;
@@ -309,9 +355,7 @@ function LieferantenPage() {
               checked={formKategorien.includes(k.name)}
               onChange={(v) =>
                 setFormKategorien(
-                  v
-                    ? [...formKategorien, k.name]
-                    : formKategorien.filter((x) => x !== k.name),
+                  v ? [...formKategorien, k.name] : formKategorien.filter((x) => x !== k.name),
                 )
               }
             />
@@ -340,12 +384,22 @@ function LieferantenPage() {
       />
 
       <div className="mb-4 space-y-3">
-        <SearchInput
-          className="w-full sm:w-80"
-          value={suche}
-          onChange={setSuche}
-          placeholder="Lieferant suchen..."
-        />
+        <div className="flex flex-wrap items-center gap-3">
+          <SearchInput
+            className="w-full sm:w-80"
+            value={suche}
+            onChange={setSuche}
+            placeholder="Lieferant suchen..."
+          />
+          <button
+            type="button"
+            disabled={ableiten.isPending}
+            onClick={() => ableiten.mutate()}
+            className="text-xs text-muted-foreground underline underline-offset-2 transition hover:text-foreground disabled:opacity-50"
+          >
+            Kategorien aus Produkten ableiten
+          </button>
+        </div>
         <Tabs value={tab} onChange={setTab} items={tabItems} />
         {suchbegriff && <p className="text-xs text-muted-foreground">Suche über alle Kategorien</p>}
 
@@ -539,7 +593,9 @@ function LieferantenPage() {
                   }
                 >
                   <div className="text-sm font-semibold text-foreground">{l.name}</div>
-                  <div className="mt-1 text-xs text-muted-foreground">{l.email ?? "keine E-Mail"}</div>
+                  <div className="mt-1 text-xs text-muted-foreground">
+                    {l.email ?? "keine E-Mail"}
+                  </div>
                   <div className="mt-2 text-xs font-medium text-primary">
                     {mergeZiel.id === l.id ? "Ziel-Datensatz (bleibt bestehen)" : "Wird gelöscht"}
                   </div>
@@ -615,12 +671,45 @@ function LieferantenPage() {
         )}
       </Modal>
 
-      <Drawer open={!!detail} onClose={() => setDetailId(null)} title={detail?.name ?? "Lieferant"}>
+      <DetailModal
+        open={!!detail}
+        onClose={() => setDetailId(null)}
+        title={detail?.name ?? "Lieferant"}
+        action={
+          detail ? (
+            <button
+              type="button"
+              aria-label="Lieferant bearbeiten"
+              className="rounded-md p-1.5 text-muted-foreground transition hover:bg-surface-2 hover:text-foreground"
+              onClick={() => bearbeiten(detail)}
+            >
+              <Pencil size={16} />
+            </button>
+          ) : null
+        }
+        footer={
+          detail ? (
+            <Button
+              variant="danger"
+              className="w-full"
+              disabled={loeschen.isPending}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    "Lieferant wirklich löschen? Verknüpfte Produkte verlieren die Lieferanten-Zuordnung.",
+                  )
+                ) {
+                  loeschen.mutate(detail.id);
+                }
+              }}
+            >
+              <Trash2 size={16} /> Lieferant löschen
+            </Button>
+          ) : null
+        }
+      >
         {detail && (
           <>
-            <Button variant="outline" className="w-full" onClick={() => bearbeiten(detail)}>
-              <Pencil size={16} /> Lieferant bearbeiten
-            </Button>
             <div>
               <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Stammdaten
@@ -670,28 +759,9 @@ function LieferantenPage() {
                 </div>
               )}
             </div>
-
-            <div className="border-t border-border pt-4">
-              <Button
-                variant="danger"
-                className="w-full"
-                disabled={loeschen.isPending}
-                onClick={() => {
-                  if (
-                    window.confirm(
-                      "Lieferant wirklich löschen? Verknüpfte Produkte verlieren die Lieferanten-Zuordnung.",
-                    )
-                  ) {
-                    loeschen.mutate(detail.id);
-                  }
-                }}
-              >
-                <Trash2 size={16} /> Lieferant löschen
-              </Button>
-            </div>
           </>
         )}
-      </Drawer>
+      </DetailModal>
     </div>
   );
 }

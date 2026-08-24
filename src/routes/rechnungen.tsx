@@ -1,17 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { FileText, Pencil, Plus, Trash2 } from "lucide-react";
+import { FileText, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
+import { pruefungSetzen } from "@/lib/pruefung";
+import { RechnungDetail } from "@/components/RechnungDetail";
 import {
   Badge,
   Button,
   Card,
-  Drawer,
+  Checkbox,
   Empty,
   Field,
-  InfoRow,
   Input,
   Modal,
   PageHeader,
@@ -20,7 +21,7 @@ import {
   Td,
   Tr,
 } from "@/components/ui-kit";
-import { datum, datumZeit, eur, num } from "@/lib/format";
+import { datum, eur } from "@/lib/format";
 
 export const Route = createFileRoute("/rechnungen")({
   head: () => ({
@@ -28,7 +29,10 @@ export const Route = createFileRoute("/rechnungen")({
       { title: "Rechnungen — QUNO x CM Inventur" },
       { name: "description", content: "Eingangsrechnungen mit Positionen und Zahlungsstatus." },
       { property: "og:title", content: "Rechnungen — QUNO x CM Inventur" },
-      { property: "og:description", content: "Eingangsrechnungen mit Positionen und Zahlungsstatus." },
+      {
+        property: "og:description",
+        content: "Eingangsrechnungen mit Positionen und Zahlungsstatus.",
+      },
     ],
   }),
   component: RechnungenPage,
@@ -57,6 +61,8 @@ function RechnungenPage() {
   const [filterLieferant, setFilterLieferant] = useState("");
   const [filterMonat, setFilterMonat] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+  const [filterPruefung, setFilterPruefung] = useState("");
+  const [auswahl, setAuswahl] = useState<string[]>([]);
   const [sortSpalte, setSortSpalte] = useState<
     "rechnungsnummer" | "lieferant" | "datum" | "gesamtbetrag" | "erstellt_am"
   >("erstellt_am");
@@ -111,17 +117,16 @@ function RechnungenPage() {
       return data;
     },
   });
-  const detailPositionen = useQuery({
-    queryKey: ["rechnungspositionen", detailId],
-    enabled: !!detailId,
-    queryFn: async () => {
-      const { data, error } = await db
-        .from("rechnungspositionen")
-        .select("*, kategorien(name, farbe)")
-        .eq("rechnung_id", detailId!);
-      if (error) throw error;
-      return data;
+  const pruefen = useMutation({
+    mutationFn: async ({ ids, geprueft }: { ids: string[]; geprueft: boolean }) =>
+      pruefungSetzen(ids, geprueft),
+    onSuccess: (_d, v) => {
+      toast.success(v.geprueft ? "Als geprüft markiert" : "Prüfung zurückgesetzt");
+      setAuswahl([]);
+      qc.invalidateQueries({ queryKey: ["rechnungen"] });
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
     },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
   });
 
   const gesamt = positionen.reduce(
@@ -160,7 +165,11 @@ function RechnungenPage() {
     onSuccess: () => {
       toast.success("Rechnung gespeichert");
       setModal(false);
-      setKopf({ rechnungsnummer: "", lieferant_id: "", datum: new Date().toISOString().slice(0, 10) });
+      setKopf({
+        rechnungsnummer: "",
+        lieferant_id: "",
+        datum: new Date().toISOString().slice(0, 10),
+      });
       setPositionen([leerePos()]);
       qc.invalidateQueries({ queryKey: ["rechnungen"] });
     },
@@ -173,21 +182,6 @@ function RechnungenPage() {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["rechnungen"] }),
-    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
-  });
-
-  const loeschen = useMutation({
-    mutationFn: async (id: string) => {
-      const pos = await db.from("rechnungspositionen").delete().eq("rechnung_id", id);
-      if (pos.error) throw pos.error;
-      const res = await db.from("rechnungen").delete().eq("id", id);
-      if (res.error) throw res.error;
-    },
-    onSuccess: () => {
-      toast.success("Rechnung gelöscht");
-      setDetailId(null);
-      qc.invalidateQueries({ queryKey: ["rechnungen"] });
-    },
     onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
   });
 
@@ -213,6 +207,7 @@ function RechnungenPage() {
     onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const bearbeiten = (r: any) => {
     setEditForm({
       rechnungsnummer: r.rechnungsnummer ?? "",
@@ -243,7 +238,8 @@ function RechnungenPage() {
       (r) =>
         (!filterLieferant || r.lieferant_id === filterLieferant) &&
         (!filterMonat || r.datum.slice(0, 7) === filterMonat) &&
-        (!filterStatus || String(r.bezahlt) === filterStatus),
+        (!filterStatus || String(r.bezahlt) === filterStatus) &&
+        (!filterPruefung || String(!!r.geprueft) === filterPruefung),
     )
     .slice()
     .sort((a, b) => {
@@ -260,7 +256,6 @@ function RechnungenPage() {
               : r.rechnungsnummer;
       return String(wert(a)).localeCompare(String(wert(b)), "de", { numeric: true }) * f;
     });
-  const detail = (rechnungen.data ?? []).find((r) => r.id === detailId);
 
   return (
     <div>
@@ -274,7 +269,7 @@ function RechnungenPage() {
         }
       />
 
-      <div className="mb-4 grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
+      <div className="mb-4 grid max-w-3xl grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Select value={filterLieferant} onChange={(e) => setFilterLieferant(e.target.value)}>
           <option value="">Alle Lieferanten</option>
           {(lieferanten.data ?? []).map((l) => (
@@ -289,7 +284,35 @@ function RechnungenPage() {
           <option value="true">Bezahlt</option>
           <option value="false">Offen</option>
         </Select>
+        <Select value={filterPruefung} onChange={(e) => setFilterPruefung(e.target.value)}>
+          <option value="">Alle Prüfungen</option>
+          <option value="true">Geprüft</option>
+          <option value="false">Nicht geprüft</option>
+        </Select>
       </div>
+
+      {auswahl.length > 0 && (
+        <div className="mb-4 flex flex-col gap-3 rounded-xl border border-border bg-card px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <span className="text-sm font-medium text-foreground">
+            {auswahl.length} {auswahl.length === 1 ? "Rechnung" : "Rechnungen"} ausgewählt
+          </span>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              disabled={pruefen.isPending}
+              onClick={() => pruefen.mutate({ ids: auswahl, geprueft: true })}
+            >
+              Als geprüft markieren
+            </Button>
+            <Button
+              variant="outline"
+              disabled={pruefen.isPending}
+              onClick={() => pruefen.mutate({ ids: auswahl, geprueft: false })}
+            >
+              Prüfung zurücksetzen
+            </Button>
+          </div>
+        </div>
+      )}
 
       <Card>
         {rechnungen.error ? (
@@ -299,16 +322,38 @@ function RechnungenPage() {
         ) : (
           <Table
             head={[
+              {
+                label: "Auswahl",
+                node: (
+                  <span onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={auswahl.length > 0 && auswahl.length === liste.length}
+                      onChange={(v) => setAuswahl(v ? liste.map((r) => r.id) : [])}
+                    />
+                  </span>
+                ),
+              },
               kopfZelle("Rechnungsnummer", "rechnungsnummer"),
               kopfZelle("Lieferant", "lieferant"),
               kopfZelle("Datum", "datum"),
               kopfZelle("Betrag", "gesamtbetrag"),
               "Status",
+              "Prüfung",
               "PDF",
             ]}
           >
             {liste.map((r) => (
               <Tr key={r.id} onClick={() => setDetailId(r.id)}>
+                <Td>
+                  <span onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                      checked={auswahl.includes(r.id)}
+                      onChange={(v) =>
+                        setAuswahl((a) => (v ? [...a, r.id] : a.filter((x) => x !== r.id)))
+                      }
+                    />
+                  </span>
+                </Td>
                 <Td>{r.rechnungsnummer}</Td>
                 <Td>{r.lieferanten?.name ?? "–"}</Td>
                 <Td>{datum(r.datum)}</Td>
@@ -322,6 +367,11 @@ function RechnungenPage() {
                       {r.bezahlt ? "bezahlt" : "offen"}
                     </Badge>
                   </span>
+                </Td>
+                <Td>
+                  <Badge tone={r.geprueft ? "success" : "danger"}>
+                    {r.geprueft ? "geprüft" : "nicht geprüft"}
+                  </Badge>
                 </Td>
                 <Td>
                   {r.pdf_url ? (
@@ -344,12 +394,7 @@ function RechnungenPage() {
         )}
       </Card>
 
-      <Modal
-        open={modal}
-        onClose={() => setModal(false)}
-        title="Rechnung manuell hinzufügen"
-        wide
-      >
+      <Modal open={modal} onClose={() => setModal(false)} title="Rechnung manuell hinzufügen" wide>
         <form
           className="space-y-5"
           onSubmit={(e) => {
@@ -403,7 +448,10 @@ function RechnungenPage() {
             </div>
             <div className="space-y-2">
               {positionen.map((p, i) => (
-                <div key={i} className="grid grid-cols-[2fr_1fr_1fr_70px_90px_32px] items-center gap-2">
+                <div
+                  key={i}
+                  className="grid grid-cols-[2fr_1fr_1fr_70px_90px_32px] items-center gap-2"
+                >
                   <Input
                     placeholder="Bezeichnung"
                     value={p.bezeichnung}
@@ -497,117 +545,7 @@ function RechnungenPage() {
         </form>
       </Modal>
 
-      <Drawer
-        open={!!detail}
-        onClose={() => setDetailId(null)}
-        title={detail ? `Rechnung ${detail.rechnungsnummer}` : "Rechnung"}
-        action={
-          detail ? (
-            <button
-              type="button"
-              aria-label="Rechnung bearbeiten"
-              className="rounded-md p-1.5 text-muted-foreground transition hover:bg-surface-2 hover:text-foreground"
-              onClick={() => bearbeiten(detail)}
-            >
-              <Pencil size={16} />
-            </button>
-          ) : null
-        }
-      >
-        {detail && (
-          <>
-            <div>
-              <InfoRow label="Lieferant" value={detail.lieferanten?.name ?? "–"} />
-              <InfoRow label="Datum" value={datum(detail.datum)} />
-              <InfoRow label="Gesamtbetrag" value={eur(Number(detail.gesamtbetrag))} />
-              <InfoRow
-                label="Status"
-                value={
-                  <Badge
-                    tone={detail.bezahlt ? "success" : "warning"}
-                    onClick={() =>
-                      statusToggle.mutate({ id: detail.id, bezahlt: !detail.bezahlt })
-                    }
-                  >
-                    {detail.bezahlt ? "bezahlt" : "offen"}
-                  </Badge>
-                }
-              />
-            </div>
-
-            <div>
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Positionen
-              </h3>
-              {(detailPositionen.data ?? []).length === 0 ? (
-                <p className="text-sm text-muted-foreground">Keine Positionen erfasst.</p>
-              ) : (
-                <div className="space-y-2">
-                  {(detailPositionen.data ?? []).map((p) => (
-                    <div
-                      key={p.id}
-                      className="rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-medium">
-                          {num(Number(p.menge))} × {p.bezeichnung}
-                        </span>
-                        <span>{eur(Number(p.preis))}</span>
-                      </div>
-                      {p.kategorien && (
-                        <div className="mt-1 flex items-center gap-2 text-muted-foreground">
-                          <Badge color={p.kategorien.farbe}>{p.kategorien.name}</Badge>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {detail.pdf_url?.trim() ? (
-              <div>
-                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  PDF
-                </h3>
-                <iframe
-                  src={detail.pdf_url}
-                  title="PDF-Vorschau"
-                  className="h-80 w-full rounded-lg border border-border bg-surface-2"
-                />
-              </div>
-            ) : null}
-
-            <div className="border-t border-border pt-4 text-xs text-muted-foreground">
-              <p>Hinzugefügt am {datumZeit(detail.erstellt_am)}</p>
-              <p className="mt-0.5">
-                {detail.gmail_message_id
-                  ? "Automatisch per E-Mail importiert"
-                  : "Manuell erfasst"}
-              </p>
-            </div>
-
-            <div className="border-t border-border pt-4">
-              <Button
-                variant="danger"
-                className="w-full"
-                disabled={loeschen.isPending}
-                onClick={() => {
-                  if (
-                    window.confirm(
-                      "Rechnung wirklich löschen? Alle Positionen werden ebenfalls gelöscht.",
-                    )
-                  ) {
-                    loeschen.mutate(detail.id);
-                  }
-                }}
-              >
-                <Trash2 size={16} /> Rechnung löschen
-              </Button>
-            </div>
-          </>
-        )}
-      </Drawer>
+      <RechnungDetail id={detailId} onClose={() => setDetailId(null)} onEdit={bearbeiten} />
 
       <Modal open={!!editId} onClose={() => setEditId(null)} title="Rechnung bearbeiten">
         <form

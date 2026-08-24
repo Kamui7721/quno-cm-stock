@@ -1,8 +1,24 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { Receipt, Package, ClipboardList, TrendingUp } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { Receipt, Package, ClipboardList, TrendingUp, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
 import { db } from "@/lib/db";
-import { Badge, Card, CardHeader, Empty, KpiCard, PageHeader, Table, Td, Tr } from "@/components/ui-kit";
+import { pruefungSetzen } from "@/lib/pruefung";
+import { RechnungDetail } from "@/components/RechnungDetail";
+import {
+  Badge,
+  Button,
+  Card,
+  CardHeader,
+  Checkbox,
+  Empty,
+  KpiCard,
+  PageHeader,
+  Table,
+  Td,
+  Tr,
+} from "@/components/ui-kit";
 import {
   datum,
   eur,
@@ -12,7 +28,6 @@ import {
   monatVerschieben,
   num,
 } from "@/lib/format";
-
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -27,14 +42,26 @@ export const Route = createFileRoute("/")({
 });
 
 function Dashboard() {
+  const qc = useQueryClient();
+  const [auswahl, setAuswahl] = useState<string[]>([]);
+  const [detailId, setDetailId] = useState<string | null>(null);
+
+  const pruefen = useMutation({
+    mutationFn: async (ids: string[]) => pruefungSetzen(ids, true),
+    onSuccess: () => {
+      toast.success("Als geprüft markiert");
+      setAuswahl([]);
+      qc.invalidateQueries({ queryKey: ["dashboard"] });
+      qc.invalidateQueries({ queryKey: ["rechnungen"] });
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
+
   const { data, isLoading, error } = useQuery({
     queryKey: ["dashboard"],
     queryFn: async () => {
       const [rechnungen, produkte, zaehlungen] = await Promise.all([
-        db
-          .from("rechnungen")
-          .select("*, lieferanten(name)")
-          .order("datum", { ascending: false }),
+        db.from("rechnungen").select("*, lieferanten(name)").order("datum", { ascending: false }),
         db.from("produkte").select("id"),
         db
           .from("zaehlungen")
@@ -84,7 +111,6 @@ function Dashboard() {
       ? positionen.reduce((s, p) => s + Number(p.differenz_prozent), 0) / positionen.length
       : 0;
 
-
   return (
     <div>
       <PageHeader title="Dashboard" subtitle="Überblick über deine Inventur" />
@@ -114,7 +140,6 @@ function Dashboard() {
           hintClassName={veraenderung.klasse}
           icon={<TrendingUp size={16} />}
         />
-
       </div>
 
       <Card className="mt-6">
@@ -139,6 +164,88 @@ function Dashboard() {
           </Table>
         )}
       </Card>
+
+      {(() => {
+        const alle = data?.rechnungen ?? [];
+        const geprueftAnzahl = alle.filter((r) => r.geprueft).length;
+        const offen = alle
+          .filter((r) => !r.geprueft)
+          .slice()
+          .sort((a, b) => String(b.erstellt_am ?? "").localeCompare(String(a.erstellt_am ?? "")))
+          .slice(0, 8);
+        return (
+          <Card className="mt-6">
+            <CardHeader
+              title="Rechnungsprüfung"
+              action={
+                <span className="text-xs text-muted-foreground">
+                  {geprueftAnzahl} von {alle.length} geprüft
+                </span>
+              }
+            />
+            {alle.length === 0 ? (
+              <Empty text="Noch keine Rechnungen erfasst." />
+            ) : offen.length === 0 ? (
+              <div className="flex items-center justify-center gap-2 px-5 py-10 text-sm text-success">
+                <CheckCircle2 size={18} /> Alle Rechnungen sind geprüft
+              </div>
+            ) : (
+              <>
+                {auswahl.length > 0 && (
+                  <div className="flex flex-col gap-2 border-b border-border px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <span className="text-sm text-foreground">
+                      {auswahl.length} {auswahl.length === 1 ? "Rechnung" : "Rechnungen"} ausgewählt
+                    </span>
+                    <Button disabled={pruefen.isPending} onClick={() => pruefen.mutate(auswahl)}>
+                      Als geprüft markieren
+                    </Button>
+                  </div>
+                )}
+                <Table
+                  head={[
+                    {
+                      label: "Auswahl",
+                      node: (
+                        <Checkbox
+                          checked={auswahl.length > 0 && auswahl.length === offen.length}
+                          onChange={(v) => setAuswahl(v ? offen.map((r) => r.id) : [])}
+                        />
+                      ),
+                    },
+                    "Rechnungsnummer",
+                    "Lieferant",
+                    "Datum",
+                    "Betrag",
+                    "Prüfung",
+                  ]}
+                >
+                  {offen.map((r) => (
+                    <Tr key={r.id} onClick={() => setDetailId(r.id)}>
+                      <Td>
+                        <span onClick={(e) => e.stopPropagation()}>
+                          <Checkbox
+                            checked={auswahl.includes(r.id)}
+                            onChange={(v) =>
+                              setAuswahl((a) => (v ? [...a, r.id] : a.filter((x) => x !== r.id)))
+                            }
+                          />
+                        </span>
+                      </Td>
+                      <Td>{r.rechnungsnummer}</Td>
+                      <Td>{r.lieferanten?.name ?? "–"}</Td>
+                      <Td>{datum(r.datum)}</Td>
+                      <Td>{eur(Number(r.gesamtbetrag))}</Td>
+                      <Td>
+                        <Badge tone="danger">nicht geprüft</Badge>
+                      </Td>
+                    </Tr>
+                  ))}
+                </Table>
+              </>
+            )}
+          </Card>
+        );
+      })()}
 
       <Card className="mt-6">
         <CardHeader title="Letzte Zählungen pro Kategorie" />
@@ -165,6 +272,8 @@ function Dashboard() {
           </Table>
         )}
       </Card>
+
+      <RechnungDetail id={detailId} onClose={() => setDetailId(null)} />
     </div>
   );
 }
