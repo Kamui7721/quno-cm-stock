@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, Pencil, Trash2 } from "lucide-react";
 import {
@@ -40,11 +40,13 @@ export function ProduktDetail({
   onClose,
   onEdit,
   onDelete,
+  zusatz,
 }: {
   produkt: Produkt | null | undefined;
   onClose: () => void;
   onEdit?: ((p: Produkt) => void) | undefined;
   onDelete?: ((id: string) => void) | undefined;
+  zusatz?: ReactNode | undefined;
 }) {
   const [rechnungId, setRechnungId] = useState<string | null>(null);
   const id = produkt?.id ?? null;
@@ -283,6 +285,8 @@ export function ProduktDetail({
                 </div>
               )}
             </div>
+
+            {zusatz}
           </>
         )}
       </DetailModal>

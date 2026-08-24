@@ -4,15 +4,15 @@ import { useEffect, useState } from "react";
 import { GitMerge, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
+import { ProduktDetail } from "@/components/ProduktDetail";
+import { abweichungProzent, trendLabel, trendTone } from "@/lib/preise";
 import {
   Badge,
   Button,
   Card,
   Checkbox,
-  Drawer,
   Empty,
   Field,
-  InfoRow,
   Input,
   Modal,
   PageHeader,
@@ -23,7 +23,7 @@ import {
   Td,
   Tr,
 } from "@/components/ui-kit";
-import { datum, einheitLabel, num } from "@/lib/format";
+import { datum, einheitLabel, eur, num } from "@/lib/format";
 import { EINHEITEN } from "@/lib/types";
 
 
