@@ -66,6 +66,40 @@ function EinstellungenPage() {
   const [schwelleInput, setSchwelleInput] = useState("10");
   const [paare, setPaare] = useState<Dublette[] | null>(null);
   const [gewaehlt, setGewaehlt] = useState<string[]>([]);
+  const [resetBereich, setResetBereich] = useState<ResetBereich | null>(null);
+  const [resetZahlen, setResetZahlen] = useState<string | null>(null);
+  const [resetWort, setResetWort] = useState("");
+
+  const resetOeffnen = useMutation({
+    mutationFn: async (bereich: ResetBereich) => {
+      const zahlen = await resetZahlenLaden({ data: { bereich } });
+      return { bereich, text: zahlenText(zahlen) };
+    },
+    onSuccess: ({ bereich, text }) => {
+      setResetBereich(bereich);
+      setResetZahlen(text);
+      setResetWort("");
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
+
+  const resetStarten = useMutation({
+    mutationFn: async (bereich: ResetBereich) => resetAusfuehrenFn({ data: { bereich } }),
+    onSuccess: (res) => {
+      setResetBereich(null);
+      setResetWort("");
+      toast.success(`Gelöscht: ${zahlenText(res.zahlen)}`);
+      if (res.verbliebeneDateien.length) {
+        toast.warning(
+          `${res.verbliebeneDateien.length} Datei(en) konnten nicht gelöscht werden: ${res.verbliebeneDateien.join(", ")}`,
+        );
+      }
+      qc.invalidateQueries();
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
+
+
 
   const dublettenSuche = useMutation({
     mutationFn: async (): Promise<Dublette[]> => {
