@@ -35,6 +35,35 @@ export type Database = {
         }
         Relationships: []
       }
+      lieferant_kategorien: {
+        Row: {
+          erstellt_am: string
+          id: string
+          kategorie: string
+          lieferant_id: string
+        }
+        Insert: {
+          erstellt_am?: string
+          id?: string
+          kategorie: string
+          lieferant_id: string
+        }
+        Update: {
+          erstellt_am?: string
+          id?: string
+          kategorie?: string
+          lieferant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lieferant_kategorien_lieferant_id_fkey"
+            columns: ["lieferant_id"]
+            isOneToOne: false
+            referencedRelation: "lieferanten"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lieferanten: {
         Row: {
           adresse: string | null

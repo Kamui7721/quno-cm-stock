@@ -7,7 +7,7 @@ import {
   useContext,
   useEffect,
 } from "react";
-import { X } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function Card({ className, children }: { className?: string | undefined; children: ReactNode }) {
@@ -49,11 +49,13 @@ export function KpiCard({
   label,
   value,
   hint,
+  hintClassName,
   icon,
 }: {
   label: string;
   value: string;
   hint?: string | undefined;
+  hintClassName?: string | undefined;
   icon?: ReactNode | undefined;
 }) {
   return (
@@ -65,10 +67,103 @@ export function KpiCard({
         {icon && <span className="text-primary">{icon}</span>}
       </div>
       <div className="mt-3 text-2xl font-semibold text-foreground">{value}</div>
-      {hint && <div className="mt-1 text-xs text-muted-foreground">{hint}</div>}
+      {hint && (
+        <div className={cn("mt-1 text-xs text-muted-foreground", hintClassName)}>{hint}</div>
+      )}
     </Card>
   );
 }
+
+export function Tabs<T extends string>({
+  value,
+  onChange,
+  items,
+}: {
+  value: T;
+  onChange: (v: T) => void;
+  items: { key: T; label: string; count?: number | undefined }[];
+}) {
+  return (
+    <div className="flex flex-wrap gap-1 rounded-lg border border-border bg-surface-2 p-1">
+      {items.map((it) => (
+        <button
+          key={it.key}
+          type="button"
+          onClick={() => onChange(it.key)}
+          className={cn(
+            "rounded-md px-4 py-1.5 text-sm font-medium transition-colors",
+            value === it.key
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {it.label}
+          {it.count !== undefined && ` (${it.count})`}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function SearchInput({
+  value,
+  onChange,
+  placeholder,
+  className,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  className?: string | undefined;
+}) {
+  return (
+    <div className={cn("relative", className)}>
+      <Search
+        size={16}
+        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+      />
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="pl-9 pr-9"
+      />
+      {value && (
+        <button
+          type="button"
+          aria-label="Suche zurücksetzen"
+          onClick={() => onChange("")}
+          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-muted-foreground transition hover:bg-muted hover:text-foreground"
+        >
+          <X size={16} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+export function Checkbox({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  label?: string | undefined;
+}) {
+  return (
+    <label className="inline-flex cursor-pointer items-center gap-2 text-sm text-foreground">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="h-4 w-4 cursor-pointer accent-[#e11d48]"
+      />
+      {label}
+    </label>
+  );
+}
+
 
 type BadgeTone = "success" | "danger" | "warning" | "neutral";
 
@@ -254,19 +349,48 @@ export function InfoRow({ label, value }: { label: string; value: ReactNode }) {
 
 const TableHeadContext = createContext<string[]>([]);
 
-export function Table({ head, children }: { head: string[]; children: ReactNode }) {
+export type HeadCell = {
+  label: string;
+  onClick?: (() => void) | undefined;
+  dir?: "asc" | "desc" | null | undefined;
+};
+
+export function Table({
+  head,
+  children,
+}: {
+  head: (string | HeadCell)[];
+  children: ReactNode;
+}) {
+  const cells: HeadCell[] = head.map((h) => (typeof h === "string" ? { label: h } : h));
   return (
     <div className="resp-table overflow-x-auto">
-      <TableHeadContext.Provider value={head}>
+      <TableHeadContext.Provider value={cells.map((c) => c.label)}>
       <table className="w-full border-collapse text-sm">
         <thead>
           <tr className="border-b border-border">
-            {head.map((h) => (
+            {cells.map((c, i) => (
               <th
-                key={h}
+                key={`${c.label}-${i}`}
                 className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground"
               >
-                {h}
+                {c.onClick ? (
+                  <button
+                    type="button"
+                    onClick={c.onClick}
+                    className={cn(
+                      "inline-flex items-center gap-1 uppercase tracking-wider transition-colors hover:text-foreground",
+                      c.dir && "text-foreground",
+                    )}
+                  >
+                    {c.label}
+                    <span className="text-[10px]">
+                      {c.dir === "asc" ? "▲" : c.dir === "desc" ? "▼" : ""}
+                    </span>
+                  </button>
+                ) : (
+                  c.label
+                )}
               </th>
             ))}
           </tr>
@@ -277,6 +401,7 @@ export function Table({ head, children }: { head: string[]; children: ReactNode 
     </div>
   );
 }
+
 
 export function Tr({
   children,

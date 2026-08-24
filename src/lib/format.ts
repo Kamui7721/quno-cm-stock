@@ -17,3 +17,21 @@ export const monatLabel = (m: string) => {
 };
 
 export const heutigerMonat = () => new Date().toISOString().slice(0, 7);
+export const einheitLabel = (e: string | null | undefined) =>
+  e === "stück" ? "Stück" : (e ?? "–");
+
+export const datumZeit = (d: string | null | undefined) =>
+  d
+    ? new Intl.DateTimeFormat("de-DE", { dateStyle: "short", timeStyle: "short" }).format(
+        new Date(d),
+      )
+    : "–";
+
+/** Verschiebt einen Monat im Format YYYY-MM um n Monate. */
+export const monatVerschieben = (m: string, n: number) => {
+  const [y, mo] = m.split("-").map(Number);
+  const d = new Date(Date.UTC(y!, (mo ?? 1) - 1 + n, 1));
+  return d.toISOString().slice(0, 7);
+};
+
+export const monatKurz = (m: string) => monatLabel(m).split(" ")[0] ?? m;
