@@ -10,10 +10,14 @@ import {
 import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function Card({ className, children }: { className?: string | undefined; children: ReactNode }) {
-  return (
-    <div className={cn("rounded-xl border border-border bg-card", className)}>{children}</div>
-  );
+export function Card({
+  className,
+  children,
+}: {
+  className?: string | undefined;
+  children: ReactNode;
+}) {
+  return <div className={cn("rounded-xl border border-border bg-card", className)}>{children}</div>;
 }
 
 export function CardHeader({ title, action }: { title: string; action?: ReactNode | undefined }) {
@@ -37,7 +41,9 @@ export function PageHeader({
   return (
     <div className="mb-6 flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-4">
       <div className="min-w-0">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">{title}</h1>
+        <h1 className="text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
+          {title}
+        </h1>
         {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
       </div>
       {action}
@@ -164,7 +170,6 @@ export function Checkbox({
   );
 }
 
-
 type BadgeTone = "success" | "danger" | "warning" | "neutral";
 
 export function Badge({
@@ -186,9 +191,7 @@ export function Badge({
     warning: "bg-warning/20 text-warning",
     neutral: "bg-muted text-muted-foreground",
   };
-  const style = color
-    ? { backgroundColor: `${color}33`, color }
-    : undefined;
+  const style = color ? { backgroundColor: `${color}33`, color } : undefined;
   const Comp = onClick ? "button" : "span";
   return (
     <Comp
@@ -299,6 +302,59 @@ export function Modal({
   );
 }
 
+/**
+ * Zentriertes Detail-Modal: fixierte Kopf-/Fußzeile, nur der innere Bereich scrollt.
+ * Schließen per X, Klick auf den Hintergrund und Escape.
+ */
+export function DetailModal({
+  open,
+  onClose,
+  title,
+  action,
+  footer,
+  children,
+}: {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  action?: ReactNode | undefined;
+  footer?: ReactNode | undefined;
+  children: ReactNode;
+}) {
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    if (open) window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [open, onClose]);
+
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative flex max-h-[85vh] w-full max-w-[640px] flex-col overflow-hidden rounded-xl border border-border bg-card shadow-2xl">
+        <div className="flex shrink-0 items-center justify-between border-b border-border px-5 py-4">
+          <h2 className="truncate text-base font-semibold text-foreground">{title}</h2>
+          <div className="flex items-center gap-2">
+            {action}
+            <button
+              type="button"
+              aria-label="Schließen"
+              onClick={onClose}
+              className="text-muted-foreground hover:text-foreground"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+        <div className="scroll-slim min-h-0 flex-1 space-y-6 overflow-y-auto p-5">{children}</div>
+        {footer && (
+          <div className="shrink-0 border-t border-border bg-card px-5 py-4">{footer}</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function Drawer({
   open,
   onClose,
@@ -351,57 +407,53 @@ const TableHeadContext = createContext<string[]>([]);
 
 export type HeadCell = {
   label: string;
+  node?: ReactNode | undefined;
   onClick?: (() => void) | undefined;
   dir?: "asc" | "desc" | null | undefined;
 };
 
-export function Table({
-  head,
-  children,
-}: {
-  head: (string | HeadCell)[];
-  children: ReactNode;
-}) {
+export function Table({ head, children }: { head: (string | HeadCell)[]; children: ReactNode }) {
   const cells: HeadCell[] = head.map((h) => (typeof h === "string" ? { label: h } : h));
   return (
     <div className="resp-table overflow-x-auto">
       <TableHeadContext.Provider value={cells.map((c) => c.label)}>
-      <table className="w-full border-collapse text-sm">
-        <thead>
-          <tr className="border-b border-border">
-            {cells.map((c, i) => (
-              <th
-                key={`${c.label}-${i}`}
-                className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground"
-              >
-                {c.onClick ? (
-                  <button
-                    type="button"
-                    onClick={c.onClick}
-                    className={cn(
-                      "inline-flex items-center gap-1 uppercase tracking-wider transition-colors hover:text-foreground",
-                      c.dir && "text-foreground",
-                    )}
-                  >
-                    {c.label}
-                    <span className="text-[10px]">
-                      {c.dir === "asc" ? "▲" : c.dir === "desc" ? "▼" : ""}
-                    </span>
-                  </button>
-                ) : (
-                  c.label
-                )}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>{children}</tbody>
-      </table>
+        <table className="w-full border-collapse text-sm">
+          <thead>
+            <tr className="border-b border-border">
+              {cells.map((c, i) => (
+                <th
+                  key={`${c.label}-${i}`}
+                  className="px-5 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground"
+                >
+                  {c.node ? (
+                    c.node
+                  ) : c.onClick ? (
+                    <button
+                      type="button"
+                      onClick={c.onClick}
+                      className={cn(
+                        "inline-flex items-center gap-1 uppercase tracking-wider transition-colors hover:text-foreground",
+                        c.dir && "text-foreground",
+                      )}
+                    >
+                      {c.label}
+                      <span className="text-[10px]">
+                        {c.dir === "asc" ? "▲" : c.dir === "desc" ? "▼" : ""}
+                      </span>
+                    </button>
+                  ) : (
+                    c.label
+                  )}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>{children}</tbody>
+        </table>
       </TableHeadContext.Provider>
     </div>
   );
 }
-
 
 export function Tr({
   children,

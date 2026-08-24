@@ -150,6 +150,9 @@ export type Database = {
           bezahlt: boolean
           datum: string
           erstellt_am: string
+          geprueft: boolean
+          geprueft_am: string | null
+          geprueft_von: string | null
           gesamtbetrag: number
           gmail_message_id: string | null
           id: string
@@ -161,6 +164,9 @@ export type Database = {
           bezahlt?: boolean
           datum?: string
           erstellt_am?: string
+          geprueft?: boolean
+          geprueft_am?: string | null
+          geprueft_von?: string | null
           gesamtbetrag?: number
           gmail_message_id?: string | null
           id?: string
@@ -172,6 +178,9 @@ export type Database = {
           bezahlt?: boolean
           datum?: string
           erstellt_am?: string
+          geprueft?: boolean
+          geprueft_am?: string | null
+          geprueft_von?: string | null
           gesamtbetrag?: number
           gmail_message_id?: string | null
           id?: string

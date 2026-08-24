@@ -241,7 +241,7 @@ function ProduktePage() {
   const liste = suchbegriff ? basis : basis.filter((p) => !tab || p.kategorie_id === tab);
 
   const tabItems = [
-    { key: "", label: "Alle", count: basis.length },
+    { key: "", label: "Alle", count: alleProdukte.length },
     ...(kategorien.data ?? []).map((k) => ({
       key: k.id,
       label: k.name,
