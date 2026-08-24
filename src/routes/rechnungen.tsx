@@ -36,6 +36,9 @@ export const Route = createFileRoute("/rechnungen")({
       },
     ],
   }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    pruefung: search.pruefung === "false" || search.pruefung === "true" ? String(search.pruefung) : undefined,
+  }),
   component: RechnungenPage,
 });
 
@@ -62,7 +65,8 @@ function RechnungenPage() {
   const [filterLieferant, setFilterLieferant] = useState("");
   const [filterMonat, setFilterMonat] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
-  const [filterPruefung, setFilterPruefung] = useState("");
+  const suche = Route.useSearch();
+  const [filterPruefung, setFilterPruefung] = useState(suche.pruefung ?? "");
   const [auswahl, setAuswahl] = useState<string[]>([]);
   const [sortSpalte, setSortSpalte] = useState<
     "rechnungsnummer" | "lieferant" | "datum" | "gesamtbetrag" | "erstellt_am"
