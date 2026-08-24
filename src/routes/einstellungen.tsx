@@ -503,6 +503,74 @@ function EinstellungenPage() {
         </div>
       </Card>
 
+      <div className="mt-8 rounded-xl border border-primary/60 bg-primary/5">
+        <div className="flex items-center gap-2 border-b border-primary/40 px-5 py-4">
+          <AlertTriangle size={16} className="text-primary" />
+          <h2 className="text-sm font-semibold tracking-wide text-foreground">
+            Daten zurücksetzen
+          </h2>
+        </div>
+        <div className="space-y-4 p-5">
+          <p className="text-xs text-primary">
+            Diese Aktionen löschen Daten endgültig und können nicht rückgängig gemacht werden.
+            Lieferanten und Verkaufszahlen bleiben unberührt.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {RESET_AKTIONEN.map((a) => (
+              <div
+                key={a.bereich}
+                className="flex flex-col gap-2 rounded-lg border border-border bg-surface-2 p-3"
+              >
+                <span className="text-xs text-muted-foreground">{a.hinweis}</span>
+                <Button
+                  variant="outline"
+                  className="border-primary/60 text-primary hover:bg-primary/10"
+                  disabled={resetOeffnen.isPending}
+                  onClick={() => resetOeffnen.mutate(a.bereich)}
+                >
+                  {a.label}
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <Modal
+        open={resetBereich !== null}
+        onClose={() => setResetBereich(null)}
+        title="Wirklich endgültig löschen?"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-foreground">
+            Folgendes wird unwiderruflich gelöscht:
+            <span className="mt-1 block font-medium text-primary">{resetZahlen}</span>
+          </p>
+          <Field label="Zum Bestätigen LÖSCHEN eintippen">
+            <Input
+              value={resetWort}
+              autoFocus
+              placeholder="LÖSCHEN"
+              onChange={(e) => setResetWort(e.target.value)}
+            />
+          </Field>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" onClick={() => setResetBereich(null)}>
+              Abbrechen
+            </Button>
+            <Button
+              type="button"
+              disabled={resetWort.trim().toUpperCase() !== "LÖSCHEN" || resetStarten.isPending}
+              onClick={() => resetBereich && resetStarten.mutate(resetBereich)}
+            >
+              {resetStarten.isPending ? "Lösche…" : "Endgültig löschen"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+
+
       <Modal
         open={modal}
         onClose={() => setModal(false)}
