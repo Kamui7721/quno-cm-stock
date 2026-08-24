@@ -632,11 +632,12 @@ function ProduktePage() {
                   )
                 }
               />
-              <InfoRow label="Einheit" value={detail.einheit} />
+              <InfoRow label="Einheit" value={einheitLabel(detail.einheit)} />
               <InfoRow
                 label="Aktueller Bestand"
-                value={`${num(Number(detail.aktueller_bestand))} ${detail.einheit}`}
+                value={`${num(Number(detail.aktueller_bestand))} ${einheitLabel(detail.einheit)}`}
               />
+
               <InfoRow label="Angelegt am" value={datum(detail.erstellt_am)} />
             </div>
 
