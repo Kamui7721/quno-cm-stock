@@ -252,7 +252,7 @@ function RechnungenPage() {
         (!filterMonat || r.datum.slice(0, 7) === filterMonat) &&
         (!filterStatus || String(r.bezahlt) === filterStatus) &&
         (!filterPruefung || String(!!r.geprueft) === filterPruefung) &&
-        (!filterBeleg || String(!!r.pdf_url?.trim()) === filterBeleg),
+        (!filterBeleg || String(!!belegPfad(r.pdf_url)) === filterBeleg),
 
     )
     .slice()
