@@ -607,97 +607,44 @@ function ProduktePage() {
         </form>
       </Modal>
 
-      <Drawer
-        open={!!detail}
+      <ProduktDetail
+        produkt={detail ?? null}
         onClose={() => setDetailId(null)}
-        title={detail?.name ?? "Produkt"}
-      >
-        {detail && (
-          <>
-            <Button variant="outline" className="w-full" onClick={() => bearbeiten(detail)}>
-              <Pencil size={16} /> Produkt bearbeiten
-            </Button>
-            <div>
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Produkt
-              </h3>
-              <InfoRow label="Name" value={detail.name} />
-              <InfoRow
-                label="Kategorie"
-                value={
-                  detail.kategorien ? (
-                    <Badge color={detail.kategorien.farbe}>{detail.kategorien.name}</Badge>
-                  ) : (
-                    "–"
-                  )
-                }
-              />
-              <InfoRow label="Einheit" value={einheitLabel(detail.einheit)} />
-              <InfoRow
-                label="Aktueller Bestand"
-                value={`${num(Number(detail.aktueller_bestand))} ${einheitLabel(detail.einheit)}`}
-              />
-
-              <InfoRow label="Angelegt am" value={datum(detail.erstellt_am)} />
-            </div>
-
-            <div>
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Lieferant
-              </h3>
-              <InfoRow label="Name" value={detail.lieferanten?.name ?? "–"} />
-              <InfoRow label="Kontaktperson" value={detail.lieferanten?.kontaktperson ?? "–"} />
-              <InfoRow label="Telefon" value={detail.lieferanten?.telefon ?? "–"} />
-              <InfoRow label="Email" value={detail.lieferanten?.email ?? "–"} />
-              <InfoRow label="Adresse" value={detail.lieferanten?.adresse ?? "–"} />
-              <InfoRow label="Kundennummer" value={detail.lieferanten?.kundennummer ?? "–"} />
-              <InfoRow label="IBAN" value={detail.lieferanten?.iban ?? "–"} />
-            </div>
-
-            <div>
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Zählungs-Verlauf
-              </h3>
-              {(historie.data ?? []).length === 0 ? (
-                <p className="text-sm text-muted-foreground">Noch keine Zählungen.</p>
-              ) : (
-                <div className="space-y-2">
-                  {(historie.data ?? []).map((h) => (
-                    <div
-                      key={h.id}
-                      className="rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm"
-                    >
-                      <div className="mb-1 flex items-center justify-between">
-                        <span className="text-muted-foreground">
-                          {datum(h.zaehlungen?.datum ?? null)}
-                        </span>
-                        <Badge tone={Number(h.differenz) < 0 ? "danger" : "success"}>
-                          {num(Number(h.differenz_prozent), 1)} %
-                        </Badge>
-                      </div>
-                      <div className="text-muted-foreground">
-                        IST {num(Number(h.ist_bestand))} · SOLL {num(Number(h.soll_bestand))} ·
-                        Differenz {num(Number(h.differenz))}
-                      </div>
+        onEdit={(p) => bearbeiten(p)}
+        onDelete={(id) => loeschenBestaetigen(id)}
+        zusatz={
+          <div>
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Zählungs-Verlauf
+            </h3>
+            {(historie.data ?? []).length === 0 ? (
+              <p className="text-sm text-muted-foreground">Noch keine Zählungen.</p>
+            ) : (
+              <div className="space-y-2">
+                {(historie.data ?? []).map((h) => (
+                  <div
+                    key={h.id}
+                    className="rounded-lg border border-border bg-surface-2 px-3 py-2 text-sm"
+                  >
+                    <div className="mb-1 flex items-center justify-between">
+                      <span className="text-muted-foreground">
+                        {datum(h.zaehlungen?.datum ?? null)}
+                      </span>
+                      <Badge tone={Number(h.differenz) < 0 ? "danger" : "success"}>
+                        {num(Number(h.differenz_prozent), 1)} %
+                      </Badge>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="border-t border-border pt-4">
-              <Button
-                variant="danger"
-                className="w-full"
-                disabled={loeschen.isPending}
-                onClick={() => loeschenBestaetigen(detail.id)}
-              >
-                <Trash2 size={16} /> Produkt löschen
-              </Button>
-            </div>
-          </>
-        )}
-      </Drawer>
+                    <div className="text-muted-foreground">
+                      IST {num(Number(h.ist_bestand))} · SOLL {num(Number(h.soll_bestand))} ·
+                      Differenz {num(Number(h.differenz))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        }
+      />
     </div>
   );
 }
