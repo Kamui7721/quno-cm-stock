@@ -223,6 +223,71 @@ function EinstellungenPage() {
       </Card>
 
       <Card className="mt-6">
+        <CardHeader
+          title="Produktdubletten"
+          action={
+            <Button
+              variant="outline"
+              className="px-3 py-1.5 text-xs"
+              disabled={dublettenSuche.isPending}
+              onClick={() => dublettenSuche.mutate()}
+            >
+              {dublettenSuche.isPending ? "Suche…" : "Produktdubletten finden"}
+            </Button>
+          }
+        />
+        <div className="space-y-3 p-5">
+          {paare === null ? (
+            <p className="text-xs text-muted-foreground">
+              Sucht Produkte mit über 85 % Ähnlichkeit der normalisierten Bezeichnung. Die Auswahl
+              wird erst nach Bestätigung zusammengeführt.
+            </p>
+          ) : paare.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Keine Dubletten gefunden.</p>
+          ) : (
+            <>
+              {paare.map((p) => (
+                <label
+                  key={p.key}
+                  className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm"
+                >
+                  <input
+                    type="checkbox"
+                    className="mt-1 h-4 w-4 accent-primary"
+                    checked={gewaehlt.includes(p.key)}
+                    onChange={(e) =>
+                      setGewaehlt((g) =>
+                        e.target.checked ? [...g, p.key] : g.filter((x) => x !== p.key),
+                      )
+                    }
+                  />
+                  <span>
+                    <span className="block text-foreground">
+                      {p.zielName} <span className="text-muted-foreground">←</span> {p.quelleName}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      Ähnlichkeit {Math.round(p.score * 100)} % · behalten wird „{p.zielName}“
+                    </span>
+                  </span>
+                </label>
+              ))}
+              <div className="flex justify-end">
+                <Button
+                  disabled={!gewaehlt.length || zusammenfuehren.isPending}
+                  onClick={() => zusammenfuehren.mutate()}
+                >
+                  {zusammenfuehren.isPending
+                    ? "Führe zusammen…"
+                    : `${gewaehlt.length} Paar(e) zusammenführen`}
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      </Card>
+
+      <Card className="mt-6">
+
         <CardHeader title="Passwort" />
         <p className="p-5 text-xs text-muted-foreground">
           Das Zugangspasswort wird aus Sicherheitsgründen ausschließlich auf dem Server geprüft und
