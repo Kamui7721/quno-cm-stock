@@ -141,7 +141,7 @@ export async function resetAusfuehren(bereich: ResetBereich): Promise<ResetErgeb
     };
     await loesen("rechnungspositionen");
     await loesen("verkaufszahlen");
-    await alleLoeschen(sb, "zaehlungspositionen");
+    await loesen("zaehlungspositionen");
     await alleLoeschen(sb, "produkte");
   }
 
