@@ -20,12 +20,10 @@ export async function vorschauErzeugen(rechnungId: string): Promise<boolean> {
     const res = await fetch(`/api/rechnung-pdf/${rechnungId}/datei`, { credentials: "include" });
     if (!res.ok) return false;
     const daten = new Uint8Array(await res.arrayBuffer());
-    console.log("[vorschau] bytes", daten.byteLength);
 
     const pdfjs = await pdfjsLaden();
     const dokument = await pdfjs.getDocument({ data: daten }).promise;
     const seite = await dokument.getPage(1);
-    console.log("[vorschau] seite geladen");
 
     const basis = seite.getViewport({ scale: 1 });
     const viewport = seite.getViewport({ scale: BREITE / basis.width });
@@ -40,11 +38,9 @@ export async function vorschauErzeugen(rechnungId: string): Promise<boolean> {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await seite.render({ canvas, canvasContext: ctx as any, viewport } as any).promise;
-    console.log("[vorschau] gerendert");
     void dokument.cleanup();
 
     const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/png"));
-    console.log("[vorschau] blob", blob?.size);
     if (!blob) return false;
 
     const upload = await fetch(`/api/rechnung-vorschau/${rechnungId}`, {
