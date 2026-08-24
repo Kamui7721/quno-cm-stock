@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Mail, Pencil, Plus, Trash2 } from "lucide-react";
+import { Mail, Pencil, Plus, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
 import {
@@ -10,10 +10,12 @@ import {
   preisalarmSchwelleLaden,
 } from "@/lib/einstellungen";
 import { preisdatenNeuBerechnen } from "@/lib/preise.functions";
+import { resetAusfuehrenFn, resetZahlenLaden } from "@/lib/reset.functions";
 import { PRODUKT_SCHWELLE, bezeichnungAehnlichkeit } from "@/lib/aehnlichkeit";
 import { vorschauErzeugen } from "@/lib/vorschau";
 
 import { produkteZusammenfuehren } from "@/lib/produkt-merge";
+
 import {
   Badge,
   Button,
@@ -56,6 +58,36 @@ type Dublette = {
   score: number;
 };
 
+type ResetBereich = "zaehlungen" | "rechnungen" | "produkte";
+
+const RESET_AKTIONEN: Array<{ bereich: ResetBereich; label: string; hinweis: string }> = [
+  {
+    bereich: "zaehlungen",
+    label: "Alle Zählungen löschen",
+    hinweis: "Entfernt alle Zählungen samt Zählungspositionen.",
+  },
+  {
+    bereich: "rechnungen",
+    label: "Alle Rechnungen löschen",
+    hinweis: "Entfernt alle Rechnungen, Positionen sowie PDF-Dateien und Vorschaubilder.",
+  },
+  {
+    bereich: "produkte",
+    label: "Alle Produkte löschen",
+    hinweis: "Entfernt alle Produkte samt Preisdaten. Lieferanten bleiben erhalten.",
+  },
+];
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function zahlenText(z: any): string {
+  if (z?.bereich === "zaehlungen") return `${z.zaehlungen} Zählungen, ${z.positionen} Positionen`;
+  if (z?.bereich === "rechnungen")
+    return `${z.rechnungen} Rechnungen, ${z.positionen} Positionen, ${z.dateien} Dateien im Speicher`;
+  return `${z?.produkte ?? 0} Produkte samt Preisdaten (${z?.positionenEntkoppelt ?? 0} Rechnungspositionen behalten ihre Bezeichnung, verlieren aber die Produktzuordnung)`;
+}
+
+
+
 function EinstellungenPage() {
   const qc = useQueryClient();
   const [modal, setModal] = useState(false);
@@ -64,6 +96,40 @@ function EinstellungenPage() {
   const [schwelleInput, setSchwelleInput] = useState("10");
   const [paare, setPaare] = useState<Dublette[] | null>(null);
   const [gewaehlt, setGewaehlt] = useState<string[]>([]);
+  const [resetBereich, setResetBereich] = useState<ResetBereich | null>(null);
+  const [resetZahlen, setResetZahlen] = useState<string | null>(null);
+  const [resetWort, setResetWort] = useState("");
+
+  const resetOeffnen = useMutation({
+    mutationFn: async (bereich: ResetBereich) => {
+      const zahlen = await resetZahlenLaden({ data: { bereich } });
+      return { bereich, text: zahlenText(zahlen) };
+    },
+    onSuccess: ({ bereich, text }) => {
+      setResetBereich(bereich);
+      setResetZahlen(text);
+      setResetWort("");
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
+
+  const resetStarten = useMutation({
+    mutationFn: async (bereich: ResetBereich) => resetAusfuehrenFn({ data: { bereich } }),
+    onSuccess: (res) => {
+      setResetBereich(null);
+      setResetWort("");
+      toast.success(`Gelöscht: ${zahlenText(res.zahlen)}`);
+      if (res.verbliebeneDateien.length) {
+        toast.warning(
+          `${res.verbliebeneDateien.length} Datei(en) konnten nicht gelöscht werden: ${res.verbliebeneDateien.join(", ")}`,
+        );
+      }
+      qc.invalidateQueries();
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
+
+
 
   const dublettenSuche = useMutation({
     mutationFn: async (): Promise<Dublette[]> => {
@@ -436,6 +502,74 @@ function EinstellungenPage() {
           <Badge tone="warning">Nicht verbunden</Badge>
         </div>
       </Card>
+
+      <div className="mt-8 rounded-xl border border-primary/60 bg-primary/5">
+        <div className="flex items-center gap-2 border-b border-primary/40 px-5 py-4">
+          <AlertTriangle size={16} className="text-primary" />
+          <h2 className="text-sm font-semibold tracking-wide text-foreground">
+            Daten zurücksetzen
+          </h2>
+        </div>
+        <div className="space-y-4 p-5">
+          <p className="text-xs text-primary">
+            Diese Aktionen löschen Daten endgültig und können nicht rückgängig gemacht werden.
+            Lieferanten und Verkaufszahlen bleiben unberührt.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {RESET_AKTIONEN.map((a) => (
+              <div
+                key={a.bereich}
+                className="flex flex-col gap-2 rounded-lg border border-border bg-surface-2 p-3"
+              >
+                <span className="text-xs text-muted-foreground">{a.hinweis}</span>
+                <Button
+                  variant="outline"
+                  className="border-primary/60 text-primary hover:bg-primary/10"
+                  disabled={resetOeffnen.isPending}
+                  onClick={() => resetOeffnen.mutate(a.bereich)}
+                >
+                  {a.label}
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <Modal
+        open={resetBereich !== null}
+        onClose={() => setResetBereich(null)}
+        title="Wirklich endgültig löschen?"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-foreground">
+            Folgendes wird unwiderruflich gelöscht:
+            <span className="mt-1 block font-medium text-primary">{resetZahlen}</span>
+          </p>
+          <Field label="Zum Bestätigen LÖSCHEN eintippen">
+            <Input
+              value={resetWort}
+              autoFocus
+              placeholder="LÖSCHEN"
+              onChange={(e) => setResetWort(e.target.value)}
+            />
+          </Field>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" onClick={() => setResetBereich(null)}>
+              Abbrechen
+            </Button>
+            <Button
+              type="button"
+              disabled={resetWort.trim().toUpperCase() !== "LÖSCHEN" || resetStarten.isPending}
+              onClick={() => resetBereich && resetStarten.mutate(resetBereich)}
+            >
+              {resetStarten.isPending ? "Lösche…" : "Endgültig löschen"}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+
 
       <Modal
         open={modal}
