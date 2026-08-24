@@ -244,6 +244,7 @@ function RechnungenPage() {
     .slice()
     .sort((a, b) => {
       const f = sortRichtung === "asc" ? 1 : -1;
+      if (sortSpalte === "erstellt_am") return rechnungStandardSort(a, b) * (f === 1 ? -1 : 1);
       if (sortSpalte === "gesamtbetrag")
         return (Number(a.gesamtbetrag) - Number(b.gesamtbetrag)) * f;
       const wert = (r: typeof a) =>
@@ -251,11 +252,10 @@ function RechnungenPage() {
           ? (r.lieferanten?.name ?? "")
           : sortSpalte === "datum"
             ? r.datum
-            : sortSpalte === "erstellt_am"
-              ? (r.erstellt_am ?? "")
-              : r.rechnungsnummer;
+            : r.rechnungsnummer;
       return String(wert(a)).localeCompare(String(wert(b)), "de", { numeric: true }) * f;
     });
+
 
   return (
     <div>
