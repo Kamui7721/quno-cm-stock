@@ -316,4 +316,3 @@ function Kennzahl({
   );
 }
 
-export { trendLabel, trendTone };
