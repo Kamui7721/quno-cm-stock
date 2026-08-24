@@ -399,16 +399,28 @@ function RechnungenPage() {
                   </span>
                 </Td>
                 <Td>
-                  {r.pdf_url ? (
-                    <a
-                      href={r.pdf_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      onClick={(e) => e.stopPropagation()}
+                  {belegPfad(r.pdf_url) ? (
+                    <button
+                      type="button"
+                      aria-label="Beleg öffnen"
                       className="text-primary hover:opacity-80"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const tab = window.open("", "_blank");
+                        belegUrlHolen(r.id)
+                          .then((url) => {
+                            if (tab) tab.location.href = url;
+                            else window.open(url, "_blank", "noreferrer");
+                          })
+                          .catch((err: Error) => {
+                            tab?.close();
+                            toast.error(err.message);
+                          });
+                      }}
                     >
                       <FileText size={16} />
-                    </a>
+                    </button>
+
                   ) : (
                     <span className="text-muted-foreground">–</span>
                   )}
