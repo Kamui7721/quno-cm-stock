@@ -124,6 +124,7 @@ export type Database = {
       produkte: {
         Row: {
           aktueller_bestand: number
+          bezeichnung_normalisiert: string | null
           durchschnitt_ek: number | null
           einheit: string
           erstellt_am: string
@@ -136,6 +137,7 @@ export type Database = {
         }
         Insert: {
           aktueller_bestand?: number
+          bezeichnung_normalisiert?: string | null
           durchschnitt_ek?: number | null
           einheit?: string
           erstellt_am?: string
@@ -148,6 +150,7 @@ export type Database = {
         }
         Update: {
           aktueller_bestand?: number
+          bezeichnung_normalisiert?: string | null
           durchschnitt_ek?: number | null
           einheit?: string
           erstellt_am?: string
@@ -186,9 +189,12 @@ export type Database = {
           gesamtbetrag: number
           gmail_message_id: string | null
           id: string
+          import_ok: boolean
+          import_warnungen: string | null
           lieferant_id: string | null
           pdf_url: string | null
           rechnungsnummer: string
+          summe_netto: number | null
         }
         Insert: {
           bezahlt?: boolean
@@ -200,9 +206,12 @@ export type Database = {
           gesamtbetrag?: number
           gmail_message_id?: string | null
           id?: string
+          import_ok?: boolean
+          import_warnungen?: string | null
           lieferant_id?: string | null
           pdf_url?: string | null
           rechnungsnummer: string
+          summe_netto?: number | null
         }
         Update: {
           bezahlt?: boolean
@@ -214,9 +223,12 @@ export type Database = {
           gesamtbetrag?: number
           gmail_message_id?: string | null
           id?: string
+          import_ok?: boolean
+          import_warnungen?: string | null
           lieferant_id?: string | null
           pdf_url?: string | null
           rechnungsnummer?: string
+          summe_netto?: number | null
         }
         Relationships: [
           {
@@ -233,6 +245,7 @@ export type Database = {
           bezeichnung: string
           einheit: string | null
           einzelpreis: number | null
+          gebindegroesse: number | null
           id: string
           kategorie_id: string | null
           menge: number
@@ -244,6 +257,7 @@ export type Database = {
           bezeichnung: string
           einheit?: string | null
           einzelpreis?: number | null
+          gebindegroesse?: number | null
           id?: string
           kategorie_id?: string | null
           menge?: number
@@ -255,6 +269,7 @@ export type Database = {
           bezeichnung?: string
           einheit?: string | null
           einzelpreis?: number | null
+          gebindegroesse?: number | null
           id?: string
           kategorie_id?: string | null
           menge?: number
