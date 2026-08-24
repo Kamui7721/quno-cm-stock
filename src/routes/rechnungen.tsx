@@ -4,6 +4,8 @@ import { useState } from "react";
 import { AlertTriangle, FileText, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
+import { belegPfad, belegUrlHolen } from "@/lib/beleg";
+
 import { pruefungSetzen } from "@/lib/pruefung";
 import { rechnungStandardSort } from "@/lib/sortierung";
 import { RechnungDetail } from "@/components/RechnungDetail";
@@ -250,7 +252,7 @@ function RechnungenPage() {
         (!filterMonat || r.datum.slice(0, 7) === filterMonat) &&
         (!filterStatus || String(r.bezahlt) === filterStatus) &&
         (!filterPruefung || String(!!r.geprueft) === filterPruefung) &&
-        (!filterBeleg || String(!!r.pdf_url?.trim()) === filterBeleg),
+        (!filterBeleg || String(!!belegPfad(r.pdf_url)) === filterBeleg),
 
     )
     .slice()
@@ -399,16 +401,28 @@ function RechnungenPage() {
                   </span>
                 </Td>
                 <Td>
-                  {r.pdf_url ? (
-                    <a
-                      href={r.pdf_url}
-                      target="_blank"
-                      rel="noreferrer"
-                      onClick={(e) => e.stopPropagation()}
+                  {belegPfad(r.pdf_url) ? (
+                    <button
+                      type="button"
+                      aria-label="Beleg öffnen"
                       className="text-primary hover:opacity-80"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const tab = window.open("", "_blank");
+                        belegUrlHolen(r.id)
+                          .then((url) => {
+                            if (tab) tab.location.href = url;
+                            else window.open(url, "_blank", "noreferrer");
+                          })
+                          .catch((err: Error) => {
+                            tab?.close();
+                            toast.error(err.message);
+                          });
+                      }}
                     >
                       <FileText size={16} />
-                    </a>
+                    </button>
+
                   ) : (
                     <span className="text-muted-foreground">–</span>
                   )}

@@ -2,7 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
+import { belegPfad, belegUrlHolen } from "@/lib/beleg";
 import { pruefungSetzen } from "@/lib/pruefung";
+
 import { Badge, Button, DetailModal, InfoRow } from "@/components/ui-kit";
 import { datum, datumZeit, eur, num } from "@/lib/format";
 
@@ -48,6 +50,14 @@ export function RechnungDetail({ id, onClose, onEdit }: Props) {
       return data;
     },
   });
+  const beleg = useQuery({
+    queryKey: ["beleg-url", id],
+    enabled: !!id && !!belegPfad(rechnung.data?.pdf_url),
+    staleTime: 30 * 60 * 1000,
+    retry: false,
+    queryFn: () => belegUrlHolen(id!),
+  });
+
 
   const bezahltToggle = useMutation({
     mutationFn: async (bezahlt: boolean) => {
@@ -210,23 +220,32 @@ export function RechnungDetail({ id, onClose, onEdit }: Props) {
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Beleg
             </h3>
-            {r.pdf_url?.trim() ? (
-              <div className="space-y-2">
-                <iframe
-                  src={r.pdf_url}
-                  title="Beleg-Vorschau"
-                  className="h-[400px] w-full rounded-lg border border-border bg-surface-2"
-                />
-                <a href={r.pdf_url} target="_blank" rel="noreferrer">
-                  <Button variant="outline">In neuem Tab öffnen</Button>
-                </a>
-              </div>
-            ) : (
+            {!belegPfad(r.pdf_url) ? (
               <div className="flex h-24 items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">
                 Kein Beleg hinterlegt
               </div>
+            ) : beleg.isPending ? (
+              <div className="flex h-24 items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">
+                Beleg wird geladen…
+              </div>
+            ) : beleg.error || !beleg.data ? (
+              <div className="flex h-24 items-center justify-center rounded-lg border border-dashed border-danger/50 text-sm text-danger">
+                Beleg konnte nicht geladen werden
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <iframe
+                  src={beleg.data}
+                  title="Beleg-Vorschau"
+                  className="h-[400px] w-full rounded-lg border border-border bg-surface-2"
+                />
+                <a href={beleg.data} target="_blank" rel="noreferrer">
+                  <Button variant="outline">In neuem Tab öffnen</Button>
+                </a>
+              </div>
             )}
           </div>
+
 
 
           <div className="border-t border-border pt-4 text-xs text-muted-foreground">
