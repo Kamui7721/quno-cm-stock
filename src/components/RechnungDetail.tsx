@@ -206,18 +206,28 @@ export function RechnungDetail({ id, onClose, onEdit }: Props) {
             )}
           </div>
 
-          {r.pdf_url?.trim() ? (
-            <div>
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                PDF
-              </h3>
-              <iframe
-                src={r.pdf_url}
-                title="PDF-Vorschau"
-                className="h-80 w-full rounded-lg border border-border bg-surface-2"
-              />
-            </div>
-          ) : null}
+          <div>
+            <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Beleg
+            </h3>
+            {r.pdf_url?.trim() ? (
+              <div className="space-y-2">
+                <iframe
+                  src={r.pdf_url}
+                  title="Beleg-Vorschau"
+                  className="h-[400px] w-full rounded-lg border border-border bg-surface-2"
+                />
+                <a href={r.pdf_url} target="_blank" rel="noreferrer">
+                  <Button variant="outline">In neuem Tab öffnen</Button>
+                </a>
+              </div>
+            ) : (
+              <div className="flex h-24 items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">
+                Kein Beleg hinterlegt
+              </div>
+            )}
+          </div>
+
 
           <div className="border-t border-border pt-4 text-xs text-muted-foreground">
             <p>Hinzugefügt am {datumZeit(r.erstellt_am)}</p>
