@@ -37,7 +37,10 @@ export const Route = createFileRoute("/rechnungen")({
     ],
   }),
   validateSearch: (search: Record<string, unknown>) => ({
-    pruefung: search.pruefung === "false" || search.pruefung === "true" ? String(search.pruefung) : undefined,
+    pruefung:
+      search["pruefung"] === "false" || search["pruefung"] === "true"
+        ? String(search["pruefung"])
+        : undefined,
   }),
   component: RechnungenPage,
 });
