@@ -1,13 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { GitMerge, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
 import {
   Badge,
   Button,
   Card,
+  Checkbox,
   Drawer,
   Empty,
   Field,
@@ -15,13 +16,16 @@ import {
   Input,
   Modal,
   PageHeader,
+  SearchInput,
   Select,
   Table,
+  Tabs,
   Td,
   Tr,
 } from "@/components/ui-kit";
-import { datum, num } from "@/lib/format";
+import { datum, einheitLabel, num } from "@/lib/format";
 import { EINHEITEN } from "@/lib/types";
+
 
 export const Route = createFileRoute("/produkte")({
   head: () => ({
