@@ -39,6 +39,21 @@ export const Route = createFileRoute("/produkte")({
   component: ProduktePage,
 });
 
+type PreisFelder = { letzter_ek?: number | string | null; durchschnitt_ek?: number | string | null };
+
+function letzterEk(p: unknown): number | null {
+  const v = (p as PreisFelder).letzter_ek;
+  return v == null ? null : Number(v);
+}
+
+function trendWert(p: unknown): number | null {
+  const row = p as PreisFelder;
+  return abweichungProzent(
+    row.letzter_ek == null ? null : Number(row.letzter_ek),
+    row.durchschnitt_ek == null ? null : Number(row.durchschnitt_ek),
+  );
+}
+
 const leer = {
   name: "",
   kategorie_id: "",
@@ -60,6 +75,21 @@ function ProduktePage() {
   const [auswahl, setAuswahl] = useState<string[]>([]);
   const [mergeOpen, setMergeOpen] = useState(false);
   const [mergeZielId, setMergeZielId] = useState<string | null>(null);
+  const [sortFeld, setSortFeld] = useState<"name" | "letzter_ek" | "trend" | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  const sortieren = (feld: "name" | "letzter_ek" | "trend") => {
+    if (sortFeld === feld) setSortDir(sortDir === "asc" ? "desc" : "asc");
+    else {
+      setSortFeld(feld);
+      setSortDir(feld === "name" ? "asc" : "desc");
+    }
+  };
+  const kopfZelle = (label: string, feld: "name" | "letzter_ek" | "trend") => ({
+    label,
+    onClick: () => sortieren(feld),
+    ...(sortFeld === feld ? { dir: sortDir } : {}),
+  });
 
   useEffect(() => {
     const t = setTimeout(() => setSucheAktiv(suche), 300);
@@ -238,7 +268,21 @@ function ProduktePage() {
   const basis = alleProdukte.filter(
     (p) => (!lieferantFilter || p.lieferant_id === lieferantFilter) && passtZurSuche(p),
   );
-  const liste = suchbegriff ? basis : basis.filter((p) => !tab || p.kategorie_id === tab);
+  const gefiltert = suchbegriff ? basis : basis.filter((p) => !tab || p.kategorie_id === tab);
+  const liste = sortFeld
+    ? gefiltert.slice().sort((a, b) => {
+        const f = sortDir === "asc" ? 1 : -1;
+        if (sortFeld === "name") return a.name.localeCompare(b.name) * f;
+        if (sortFeld === "letzter_ek") {
+          const av = letzterEk(a) ?? -Infinity;
+          const bv = letzterEk(b) ?? -Infinity;
+          return (av - bv) * f;
+        }
+        const at = trendWert(a) ?? -Infinity;
+        const bt = trendWert(b) ?? -Infinity;
+        return (at - bt) * f;
+      })
+    : gefiltert;
 
   const tabItems = [
     { key: "", label: "Alle", count: alleProdukte.length },
@@ -328,7 +372,19 @@ function ProduktePage() {
         ) : liste.length === 0 ? (
           <Empty text="Keine Produkte vorhanden." />
         ) : (
-          <Table head={["", "Name", "Kategorie", "Lieferant", "Einheit", "Bestand", ""]}>
+          <Table
+            head={[
+              "",
+              kopfZelle("Name", "name"),
+              "Kategorie",
+              "Lieferant",
+              "Einheit",
+              "Bestand",
+              kopfZelle("Letzter EK", "letzter_ek"),
+              kopfZelle("Trend", "trend"),
+              "",
+            ]}
+          >
             {liste.map((p) => (
               <Tr key={p.id} onClick={() => setDetailId(p.id)}>
                 <Td>
@@ -353,6 +409,14 @@ function ProduktePage() {
                 <Td>{einheitLabel(p.einheit)}</Td>
                 <Td>
                   {num(Number(p.aktueller_bestand))} {einheitLabel(p.einheit)}
+                </Td>
+                <Td>{letzterEk(p) !== null ? eur(letzterEk(p)!) : "–"}</Td>
+                <Td>
+                  {trendWert(p) === null ? (
+                    <span className="text-muted-foreground">–</span>
+                  ) : (
+                    <Badge tone={trendTone(trendWert(p)!)}>{trendLabel(trendWert(p)!)}</Badge>
+                  )}
                 </Td>
                 <Td className="text-right">
                   <button
