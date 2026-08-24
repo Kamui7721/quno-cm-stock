@@ -1,29 +1,52 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import {
+  PRODUKT_SCHWELLE,
+  bezeichnungAehnlichkeit,
+  levenshtein,
+  normalisiereBezeichnung,
+} from "@/lib/aehnlichkeit";
 
 const API_TOKEN = "quno-cm-2026";
 
+const text = (max: number) => z.string().trim().max(max).nullish();
+const zahl = z.union([z.number(), z.string()]).nullish().transform((v) => {
+  if (v === null || v === undefined || v === "") return null;
+  const n = typeof v === "number" ? v : Number(String(v).replace(",", "."));
+  return Number.isFinite(n) ? n : null;
+});
+
 const schema = z.object({
-  rechnungsnummer: z.string().trim().min(1).max(200),
-  lieferant_name: z.string().trim().max(200).nullable().optional(),
-  lieferant_kontaktperson: z.string().trim().max(200).optional().nullable(),
-  lieferant_telefon: z.string().trim().max(100).optional().nullable(),
-  lieferant_email: z.string().trim().max(200).optional().nullable(),
-  lieferant_adresse: z.string().trim().max(500).optional().nullable(),
-  lieferant_kundennummer: z.string().trim().max(100).optional().nullable(),
-  lieferant_iban: z.string().trim().max(100).optional().nullable(),
-  datum: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  gesamtbetrag: z.number().finite().min(0),
-  pdf_url: z.string().trim().max(2000).optional().nullable(),
-  gmail_message_id: z.string().trim().min(1).max(200),
+  rechnungsnummer: text(200),
+  datum: z
+    .string()
+    .trim()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullish(),
+  gesamtbetrag: zahl,
+  summe_netto: zahl,
+  gmail_message_id: text(200),
+  pdf_url: text(2000),
+  lieferant_name: text(200),
+  lieferant_kontaktperson: text(200),
+  lieferant_telefon: text(100),
+  lieferant_email: text(200),
+  lieferant_adresse: text(500),
+  lieferant_kundennummer: text(100),
+  lieferant_iban: text(100),
+  import_ok: z.boolean().nullish(),
+  import_warnungen: text(4000),
   positionen: z.array(
     z.object({
       bezeichnung: z.string().trim().min(1).max(300),
-      kategorie_name: z.string().trim().max(200).optional().nullable(),
-      menge: z.number().finite().min(0),
-      preis: z.number().finite().min(0),
+      kategorie_name: text(200),
+      menge: zahl,
+      einheit: text(100),
+      gebindegroesse: zahl,
+      einzelpreis: zahl,
+      gesamtpreis: zahl,
     }),
-  ).max(200),
+  ),
 });
 
 const json = (body: unknown, status = 200) =>
@@ -33,30 +56,9 @@ const json = (body: unknown, status = 200) =>
   });
 
 const RECHTSFORMEN = [
-  "gmbh",
-  "mbh",
-  "co",
-  "kg",
-  "ohg",
-  "ag",
-  "ug",
-  "kgaa",
-  "ltd",
-  "limited",
-  "llc",
-  "inc",
-  "bv",
-  "nv",
-  "sa",
-  "sarl",
-  "srl",
-  "spa",
-  "plc",
-  "eg",
-  "ev",
-  "gbr",
-  "und",
-  "and",
+  "gmbh", "mbh", "co", "kg", "ohg", "ag", "ug", "kgaa", "ltd", "limited",
+  "llc", "inc", "bv", "nv", "sa", "sarl", "srl", "spa", "plc", "eg", "ev",
+  "gbr", "und", "and",
 ];
 
 const kernWoerter = (name: string) =>
@@ -71,39 +73,17 @@ const kernWoerter = (name: string) =>
     .split(" ")
     .filter((w) => w !== "" && !RECHTSFORMEN.includes(w));
 
-const levenshtein = (a: string, b: string) => {
-  if (a === b) return 0;
-  const prev = Array.from({ length: b.length + 1 }, (_, i) => i);
-  for (let i = 1; i <= a.length; i++) {
-    let last = prev[0]!;
-    prev[0] = i;
-    for (let j = 1; j <= b.length; j++) {
-      const tmp = prev[j]!;
-      prev[j] = Math.min(
-        prev[j]! + 1,
-        prev[j - 1]! + 1,
-        last + (a[i - 1] === b[j - 1] ? 0 : 1),
-      );
-      last = tmp;
-    }
-  }
-  return prev[b.length]!;
-};
-
-const aehnlichkeit = (a: string, b: string) => {
+const lieferantAehnlichkeit = (a: string, b: string) => {
   const wa = kernWoerter(a);
   const wb = kernWoerter(b);
   if (!wa.length || !wb.length) return 0;
   const sa = wa.join(" ");
   const sb = wb.join(" ");
   if (sa === sb) return 1;
-  // Wort-Overlap (Jaccard-artig, an die kürzere Liste normiert)
   const setB = new Set(wb);
   const treffer = wa.filter((w) => setB.has(w)).length;
   const overlap = treffer / Math.min(wa.length, wb.length);
-  // Zeichen-Ähnlichkeit als Absicherung gegen Tippfehler
-  const dist = levenshtein(sa, sb);
-  const chars = 1 - dist / Math.max(sa.length, sb.length);
+  const chars = 1 - levenshtein(sa, sb) / Math.max(sa.length, sb.length);
   return Math.max(overlap, chars);
 };
 
@@ -122,15 +102,15 @@ const extrahiereEinheit = (bezeichnung: string): string => {
     return "l";
   }
   if (lower.includes("ml")) return "l";
-  if (
-    lower.includes("kiste") ||
-    lower.includes("karton") ||
-    lower.includes("pack") ||
-    lower.includes("paket")
-  ) {
-    return "stück";
-  }
   return "stück";
+};
+
+const normEinheit = (einheit?: string | null, bezeichnung = ""): string => {
+  const e = (einheit ?? "").trim().toLowerCase();
+  if (e === "kg" || e === "kilogramm") return "kg";
+  if (e === "l" || e === "liter" || e === "ltr") return "l";
+  if (e) return "stück";
+  return extrahiereEinheit(bezeichnung);
 };
 
 export const Route = createFileRoute("/api/public/n8n/rechnung")({
@@ -141,26 +121,40 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
           return json({ error: "unauthorized" }, 401);
         }
 
-        let parsed;
+        let body: unknown;
         try {
-          parsed = schema.parse(await request.json());
+          body = await request.json();
         } catch {
-          return json({ error: "invalid payload" }, 400);
+          return json({ error: "invalid json", grund: "Body konnte nicht als JSON gelesen werden" }, 400);
+        }
+
+        const result = schema.safeParse(body);
+        if (!result.success) {
+          return json(
+            {
+              error: "invalid payload",
+              grund: result.error.issues
+                .map((i) => `${i.path.join(".") || "body"}: ${i.message}`)
+                .join(" | "),
+              felder: result.error.issues.map((i) => i.path.join(".")),
+            },
+            400,
+          );
+        }
+        const parsed = result.data;
+
+        const lieferantName = (parsed.lieferant_name ?? "").trim();
+        if (!lieferantName) {
+          return json({ error: "invalid payload", grund: "lieferant_name fehlt" }, 400);
+        }
+        if (parsed.gesamtbetrag === null) {
+          return json({ error: "invalid payload", grund: "gesamtbetrag fehlt oder ist keine Zahl" }, 400);
         }
 
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-        const lieferantName = (parsed.lieferant_name ?? "").trim() || "Unbekannt";
-
-        const stammdaten: {
-          kontaktperson?: string;
-          telefon?: string;
-          email?: string;
-          adresse?: string;
-          kundennummer?: string;
-          iban?: string;
-        } = {};
-        const setze = (key: keyof typeof stammdaten, wert?: string | null) => {
+        const stammdaten: Record<string, string> = {};
+        const setze = (key: string, wert?: string | null) => {
           if (wert != null && wert.trim() !== "") stammdaten[key] = wert.trim();
         };
         setze("kontaktperson", parsed.lieferant_kontaktperson);
@@ -171,14 +165,17 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
         setze("iban", parsed.lieferant_iban);
 
         // 1. Duplikat-Check
-        const existing = await supabaseAdmin
-          .from("rechnungen")
-          .select("id")
-          .eq("gmail_message_id", parsed.gmail_message_id)
-          .maybeSingle();
-        if (existing.error) return json({ error: existing.error.message }, 500);
-        if (existing.data) {
-          return json({ status: "already exists", rechnung_id: existing.data.id });
+        const gmailId = (parsed.gmail_message_id ?? "").trim();
+        if (gmailId) {
+          const existing = await supabaseAdmin
+            .from("rechnungen")
+            .select("id")
+            .eq("gmail_message_id", gmailId)
+            .maybeSingle();
+          if (existing.error) return json({ error: existing.error.message }, 500);
+          if (existing.data) {
+            return json({ status: "already exists", rechnung_id: existing.data.id });
+          }
         }
 
         // 2. Lieferant finden oder anlegen
@@ -193,12 +190,11 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
         if (lief.data) {
           lieferantId = lief.data.id;
         } else if (lieferantName.toLowerCase() !== "unbekannt") {
-          // Fuzzy-Matching gegen alle bestehenden Lieferanten
           const alleLief = await supabaseAdmin.from("lieferanten").select("id, name");
           if (alleLief.error) return json({ error: alleLief.error.message }, 500);
           let best: { id: string; score: number } | null = null;
           for (const l of alleLief.data ?? []) {
-            const score = aehnlichkeit(lieferantName, l.name);
+            const score = lieferantAehnlichkeit(lieferantName, l.name);
             if (!best || score > best.score) best = { id: l.id, score };
           }
           if (best && best.score > 0.8) lieferantId = best.id;
@@ -222,22 +218,30 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
           lieferantId = neu.data.id;
         }
 
+        const importOk = parsed.import_ok ?? true;
+
         // 3. Rechnung anlegen
         const rechnung = await supabaseAdmin
           .from("rechnungen")
           .insert({
-            rechnungsnummer: parsed.rechnungsnummer,
+            rechnungsnummer: parsed.rechnungsnummer?.trim() || "ohne Nummer",
             lieferant_id: lieferantId,
-            datum: parsed.datum,
+            datum: parsed.datum ?? new Date().toISOString().slice(0, 10),
             gesamtbetrag: parsed.gesamtbetrag,
+            summe_netto: parsed.summe_netto,
             pdf_url: parsed.pdf_url ?? null,
-            gmail_message_id: parsed.gmail_message_id,
+            gmail_message_id: gmailId || null,
+            import_ok: importOk,
+            import_warnungen: parsed.import_warnungen ?? null,
+            geprueft: false,
           })
           .select("id")
           .single();
         if (rechnung.error) return json({ error: rechnung.error.message }, 500);
 
-        // 4. Kategorien auflösen
+        let neueProdukte = 0;
+        let zugeordnet = 0;
+
         if (parsed.positionen.length) {
           const kats = await supabaseAdmin.from("kategorien").select("id, name");
           if (kats.error) return json({ error: kats.error.message }, 500);
@@ -249,53 +253,83 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
             return hit?.id ?? fallback;
           };
 
-          // 5. Produkte auflösen bzw. anlegen und Positionen schreiben
-          const rows: Array<{
-            rechnung_id: string;
-            bezeichnung: string;
-            kategorie_id: string | null;
-            produkt_id: string | null;
-            menge: number;
-            preis: number;
-          }> = [];
+          // Produktbestand einmalig laden (für exakte + unscharfe Suche)
+          const prodRes = await supabaseAdmin
+            .from("produkte")
+            .select("id, name, bezeichnung_normalisiert, lieferant_id");
+          if (prodRes.error) return json({ error: prodRes.error.message }, 500);
+          const produkte = (prodRes.data ?? []).map((p) => ({
+            id: p.id,
+            lieferant_id: p.lieferant_id,
+            norm: p.bezeichnung_normalisiert || normalisiereBezeichnung(p.name),
+          }));
+
+          const rows: Array<Record<string, unknown>> = [];
 
           for (const p of parsed.positionen) {
             const katId = findKat(p.kategorie_name);
-            let produktId: string | null = null;
+            const norm = normalisiereBezeichnung(p.bezeichnung);
+            const einheit = normEinheit(p.einheit, p.bezeichnung);
 
-            const vorhanden = await supabaseAdmin
-              .from("produkte")
-              .select("id")
-              .ilike("name", p.bezeichnung)
-              .limit(1)
-              .maybeSingle();
-            if (vorhanden.error) return json({ error: vorhanden.error.message }, 500);
+            // 1) exakter Treffer auf normalisierter Bezeichnung
+            let treffer = produkte.find((x) => x.norm === norm) ?? null;
 
-            if (vorhanden.data) {
-              produktId = vorhanden.data.id;
+            // 2) unscharfe Suche
+            if (!treffer) {
+              let best: { p: (typeof produkte)[number]; score: number } | null = null;
+              for (const x of produkte) {
+                const score = bezeichnungAehnlichkeit(norm, x.norm);
+                if (!best || score > best.score) best = { p: x, score };
+              }
+              if (best && best.score >= PRODUKT_SCHWELLE) treffer = best.p;
+            }
+
+            let produktId: string;
+            if (treffer) {
+              produktId = treffer.id;
+              zugeordnet++;
+              if (!treffer.lieferant_id && lieferantId) {
+                const upd = await supabaseAdmin
+                  .from("produkte")
+                  .update({ lieferant_id: lieferantId, bezeichnung_normalisiert: treffer.norm })
+                  .eq("id", treffer.id);
+                if (upd.error) return json({ error: upd.error.message }, 500);
+                treffer.lieferant_id = lieferantId;
+              }
             } else {
               const neuesProdukt = await supabaseAdmin
                 .from("produkte")
                 .insert({
-                  name: p.bezeichnung,
+                  name: p.bezeichnung.trim(),
+                  bezeichnung_normalisiert: norm,
                   kategorie_id: katId,
                   lieferant_id: lieferantId,
-                  einheit: extrahiereEinheit(p.bezeichnung),
+                  einheit,
                   aktueller_bestand: 0,
                 })
                 .select("id")
                 .single();
               if (neuesProdukt.error) return json({ error: neuesProdukt.error.message }, 500);
               produktId = neuesProdukt.data.id;
+              neueProdukte++;
+              produkte.push({ id: produktId, lieferant_id: lieferantId, norm });
             }
+
+            const menge = p.menge ?? 0;
+            const gesamtpreis = p.gesamtpreis ?? 0;
+            const einzelpreis =
+              p.einzelpreis ?? (menge !== 0 ? gesamtpreis / menge : null);
 
             rows.push({
               rechnung_id: rechnung.data.id,
-              bezeichnung: p.bezeichnung,
+              bezeichnung: p.bezeichnung.trim(),
               kategorie_id: katId,
               produkt_id: produktId,
-              menge: p.menge,
-              preis: p.preis,
+              menge,
+              preis: gesamtpreis,
+              einzelpreis,
+              einheit,
+              gebindegroesse: p.gebindegroesse,
             });
           }
 
@@ -303,12 +337,14 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
           if (pos.error) return json({ error: pos.error.message }, 500);
         }
 
-        // 6. Erfolg
         return json({
           status: "created",
           rechnung_id: rechnung.data.id,
           lieferant_id: lieferantId,
           positionen: parsed.positionen.length,
+          produkte_zugeordnet: zugeordnet,
+          produkte_neu: neueProdukte,
+          import_ok: importOk,
         });
       },
     },
