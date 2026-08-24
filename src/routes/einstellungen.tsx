@@ -58,6 +58,36 @@ type Dublette = {
   score: number;
 };
 
+type ResetBereich = "zaehlungen" | "rechnungen" | "produkte";
+
+const RESET_AKTIONEN: Array<{ bereich: ResetBereich; label: string; hinweis: string }> = [
+  {
+    bereich: "zaehlungen",
+    label: "Alle Zählungen löschen",
+    hinweis: "Entfernt alle Zählungen samt Zählungspositionen.",
+  },
+  {
+    bereich: "rechnungen",
+    label: "Alle Rechnungen löschen",
+    hinweis: "Entfernt alle Rechnungen, Positionen sowie PDF-Dateien und Vorschaubilder.",
+  },
+  {
+    bereich: "produkte",
+    label: "Alle Produkte löschen",
+    hinweis: "Entfernt alle Produkte samt Preisdaten. Lieferanten bleiben erhalten.",
+  },
+];
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function zahlenText(z: any): string {
+  if (z?.bereich === "zaehlungen") return `${z.zaehlungen} Zählungen, ${z.positionen} Positionen`;
+  if (z?.bereich === "rechnungen")
+    return `${z.rechnungen} Rechnungen, ${z.positionen} Positionen, ${z.dateien} Dateien im Speicher`;
+  return `${z?.produkte ?? 0} Produkte samt Preisdaten (${z?.positionenEntkoppelt ?? 0} Rechnungspositionen behalten ihre Bezeichnung, verlieren aber die Produktzuordnung)`;
+}
+
+
+
 function EinstellungenPage() {
   const qc = useQueryClient();
   const [modal, setModal] = useState(false);
