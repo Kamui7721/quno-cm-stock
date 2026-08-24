@@ -10,6 +10,8 @@ import {
   preisalarmSchwelleLaden,
 } from "@/lib/einstellungen";
 import { preisdatenNeuBerechnen } from "@/lib/preise.functions";
+import { PRODUKT_SCHWELLE, bezeichnungAehnlichkeit } from "@/lib/aehnlichkeit";
+import { produkteZusammenfuehren } from "@/lib/produkt-merge";
 import {
   Badge,
   Button,
@@ -43,12 +45,77 @@ export const Route = createFileRoute("/einstellungen")({
 
 const leer = { id: "", name: "", typ: "getränk", farbe: "#3b82f6" };
 
+type Dublette = {
+  key: string;
+  zielId: string;
+  quelleId: string;
+  zielName: string;
+  quelleName: string;
+  score: number;
+};
+
 function EinstellungenPage() {
   const qc = useQueryClient();
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState(leer);
   const [neuesPw, setNeuesPw] = useState("");
   const [schwelleInput, setSchwelleInput] = useState("10");
+  const [paare, setPaare] = useState<Dublette[] | null>(null);
+  const [gewaehlt, setGewaehlt] = useState<string[]>([]);
+
+  const dublettenSuche = useMutation({
+    mutationFn: async (): Promise<Dublette[]> => {
+      const { data, error } = await db.from("produkte").select("id, name").order("name");
+      if (error) throw new Error(error.message);
+      const liste = (data ?? []) as Array<{ id: string; name: string }>;
+      const gefunden: Dublette[] = [];
+      const verbraucht = new Set<string>();
+      for (let i = 0; i < liste.length; i++) {
+        const a = liste[i]!;
+        if (verbraucht.has(a.id)) continue;
+        for (let j = i + 1; j < liste.length; j++) {
+          const b = liste[j]!;
+          if (verbraucht.has(b.id)) continue;
+          const score = bezeichnungAehnlichkeit(a.name, b.name);
+          if (score >= PRODUKT_SCHWELLE) {
+            verbraucht.add(b.id);
+            gefunden.push({
+              key: `${a.id}:${b.id}`,
+              zielId: a.id,
+              quelleId: b.id,
+              zielName: a.name,
+              quelleName: b.name,
+              score,
+            });
+          }
+        }
+      }
+      return gefunden.sort((x, y) => y.score - x.score);
+    },
+    onSuccess: (res) => {
+      setPaare(res);
+      setGewaehlt([]);
+      toast.success(res.length ? `${res.length} mögliche Dublette(n) gefunden` : "Keine Dubletten gefunden");
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
+
+  const zusammenfuehren = useMutation({
+    mutationFn: async () => {
+      const auswahl = (paare ?? []).filter((p) => gewaehlt.includes(p.key));
+      for (const p of auswahl) {
+        await produkteZusammenfuehren(p.zielId, p.quelleId);
+      }
+      return auswahl.length;
+    },
+    onSuccess: (anzahl) => {
+      toast.success(`${anzahl} Paar(e) zusammengeführt`);
+      setPaare((alt) => (alt ?? []).filter((p) => !gewaehlt.includes(p.key)));
+      setGewaehlt([]);
+      qc.invalidateQueries({ queryKey: ["produkte"] });
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
 
   useQuery({
     queryKey: ["preisalarm-schwelle"],
@@ -223,6 +290,71 @@ function EinstellungenPage() {
       </Card>
 
       <Card className="mt-6">
+        <CardHeader
+          title="Produktdubletten"
+          action={
+            <Button
+              variant="outline"
+              className="px-3 py-1.5 text-xs"
+              disabled={dublettenSuche.isPending}
+              onClick={() => dublettenSuche.mutate()}
+            >
+              {dublettenSuche.isPending ? "Suche…" : "Produktdubletten finden"}
+            </Button>
+          }
+        />
+        <div className="space-y-3 p-5">
+          {paare === null ? (
+            <p className="text-xs text-muted-foreground">
+              Sucht Produkte mit über 85 % Ähnlichkeit der normalisierten Bezeichnung. Die Auswahl
+              wird erst nach Bestätigung zusammengeführt.
+            </p>
+          ) : paare.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Keine Dubletten gefunden.</p>
+          ) : (
+            <>
+              {paare.map((p) => (
+                <label
+                  key={p.key}
+                  className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-sm"
+                >
+                  <input
+                    type="checkbox"
+                    className="mt-1 h-4 w-4 accent-primary"
+                    checked={gewaehlt.includes(p.key)}
+                    onChange={(e) =>
+                      setGewaehlt((g) =>
+                        e.target.checked ? [...g, p.key] : g.filter((x) => x !== p.key),
+                      )
+                    }
+                  />
+                  <span>
+                    <span className="block text-foreground">
+                      {p.zielName} <span className="text-muted-foreground">←</span> {p.quelleName}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      Ähnlichkeit {Math.round(p.score * 100)} % · behalten wird „{p.zielName}“
+                    </span>
+                  </span>
+                </label>
+              ))}
+              <div className="flex justify-end">
+                <Button
+                  disabled={!gewaehlt.length || zusammenfuehren.isPending}
+                  onClick={() => zusammenfuehren.mutate()}
+                >
+                  {zusammenfuehren.isPending
+                    ? "Führe zusammen…"
+                    : `${gewaehlt.length} Paar(e) zusammenführen`}
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+      </Card>
+
+      <Card className="mt-6">
+
         <CardHeader title="Passwort" />
         <p className="p-5 text-xs text-muted-foreground">
           Das Zugangspasswort wird aus Sicherheitsgründen ausschließlich auf dem Server geprüft und

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Pencil, Trash2 } from "lucide-react";
+import { AlertTriangle, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
 import { pruefungSetzen } from "@/lib/pruefung";
@@ -158,6 +158,23 @@ export function RechnungDetail({ id, onClose, onEdit }: Props) {
               }
             />
           </div>
+
+          {r.import_warnungen?.trim() ? (
+            <div className="rounded-lg border border-warning/40 bg-warning/10 px-3 py-3">
+              <h3 className="mb-1.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-warning">
+                <AlertTriangle size={14} /> Hinweise zum Import
+              </h3>
+              <ul className="list-inside list-disc space-y-0.5 text-sm text-muted-foreground">
+                {String(r.import_warnungen)
+                  .split("|")
+                  .map((w: string) => w.trim())
+                  .filter(Boolean)
+                  .map((w: string, i: number) => (
+                    <li key={i}>{w}</li>
+                  ))}
+              </ul>
+            </div>
+          ) : null}
 
           <div>
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">

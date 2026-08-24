@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { db } from "@/lib/db";
 import { ProduktDetail } from "@/components/ProduktDetail";
 import { abweichungProzent, trendLabel, trendTone } from "@/lib/preise";
+import { normalisiereBezeichnung } from "@/lib/aehnlichkeit";
 import {
   Badge,
   Button,
@@ -148,6 +149,7 @@ function ProduktePage() {
     mutationFn: async () => {
       const { error } = await db.from("produkte").insert({
         name: form.name,
+        bezeichnung_normalisiert: normalisiereBezeichnung(form.name),
         kategorie_id: form.kategorie_id || null,
         lieferant_id: form.lieferant_id || null,
         einheit: form.einheit,
@@ -203,6 +205,7 @@ function ProduktePage() {
         .from("produkte")
         .update({
           name: form.name,
+          bezeichnung_normalisiert: normalisiereBezeichnung(form.name),
           kategorie_id: form.kategorie_id || null,
           lieferant_id: form.lieferant_id || null,
           einheit: form.einheit,

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { FileText, Plus, Trash2 } from "lucide-react";
+import { AlertTriangle, FileText, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
 import { pruefungSetzen } from "@/lib/pruefung";
@@ -377,9 +377,16 @@ function RechnungenPage() {
                   </span>
                 </Td>
                 <Td>
-                  <Badge tone={r.geprueft ? "success" : "danger"}>
-                    {r.geprueft ? "geprüft" : "nicht geprüft"}
-                  </Badge>
+                  <span className="flex items-center gap-1.5">
+                    <Badge tone={r.geprueft ? "success" : "danger"}>
+                      {r.geprueft ? "geprüft" : "nicht geprüft"}
+                    </Badge>
+                    {r.import_ok === false ? (
+                      <span title={r.import_warnungen || "Import mit Warnungen"}>
+                        <AlertTriangle size={14} className="shrink-0 text-warning" />
+                      </span>
+                    ) : null}
+                  </span>
                 </Td>
                 <Td>
                   {r.pdf_url ? (
