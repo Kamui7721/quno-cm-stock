@@ -18,6 +18,7 @@ import { Route as VerkaufszahlenRouteImport } from './routes/verkaufszahlen'
 import { Route as ZaehlungIndexRouteImport } from './routes/zaehlung.index'
 import { Route as ZaehlungZaehlungIdRouteImport } from './routes/zaehlung.$zaehlungId'
 import { Route as ApiPublicSessionRouteImport } from './routes/api/public/session'
+import { Route as ApiRechnungPdfIdRouteImport } from './routes/api/rechnung-pdf.$id'
 import { Route as ApiPublicN8nRechnungRouteImport } from './routes/api/public/n8n/rechnung'
 
 const IndexRoute = IndexRouteImport.update({
@@ -65,6 +66,11 @@ const ApiPublicSessionRoute = ApiPublicSessionRouteImport.update({
   path: '/api/public/session',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiRechnungPdfIdRoute = ApiRechnungPdfIdRouteImport.update({
+  id: '/api/rechnung-pdf/$id',
+  path: '/api/rechnung-pdf/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicN8nRechnungRoute = ApiPublicN8nRechnungRouteImport.update({
   id: '/api/public/n8n/rechnung',
   path: '/api/public/n8n/rechnung',
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/zaehlung/$zaehlungId': typeof ZaehlungZaehlungIdRoute
   '/zaehlung/': typeof ZaehlungIndexRoute
   '/api/public/session': typeof ApiPublicSessionRoute
+  '/api/rechnung-pdf/$id': typeof ApiRechnungPdfIdRoute
   '/api/public/n8n/rechnung': typeof ApiPublicN8nRechnungRoute
 }
 export interface FileRoutesByTo {
@@ -93,6 +100,7 @@ export interface FileRoutesByTo {
   '/zaehlung/$zaehlungId': typeof ZaehlungZaehlungIdRoute
   '/zaehlung': typeof ZaehlungIndexRoute
   '/api/public/session': typeof ApiPublicSessionRoute
+  '/api/rechnung-pdf/$id': typeof ApiRechnungPdfIdRoute
   '/api/public/n8n/rechnung': typeof ApiPublicN8nRechnungRoute
 }
 export interface FileRoutesById {
@@ -106,6 +114,7 @@ export interface FileRoutesById {
   '/zaehlung/$zaehlungId': typeof ZaehlungZaehlungIdRoute
   '/zaehlung/': typeof ZaehlungIndexRoute
   '/api/public/session': typeof ApiPublicSessionRoute
+  '/api/rechnung-pdf/$id': typeof ApiRechnungPdfIdRoute
   '/api/public/n8n/rechnung': typeof ApiPublicN8nRechnungRoute
 }
 export interface FileRouteTypes {
@@ -120,6 +129,7 @@ export interface FileRouteTypes {
     | '/zaehlung/$zaehlungId'
     | '/zaehlung/'
     | '/api/public/session'
+    | '/api/rechnung-pdf/$id'
     | '/api/public/n8n/rechnung'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -132,6 +142,7 @@ export interface FileRouteTypes {
     | '/zaehlung/$zaehlungId'
     | '/zaehlung'
     | '/api/public/session'
+    | '/api/rechnung-pdf/$id'
     | '/api/public/n8n/rechnung'
   id:
     | '__root__'
@@ -144,6 +155,7 @@ export interface FileRouteTypes {
     | '/zaehlung/$zaehlungId'
     | '/zaehlung/'
     | '/api/public/session'
+    | '/api/rechnung-pdf/$id'
     | '/api/public/n8n/rechnung'
   fileRoutesById: FileRoutesById
 }
@@ -157,6 +169,7 @@ export interface RootRouteChildren {
   ZaehlungZaehlungIdRoute: typeof ZaehlungZaehlungIdRoute
   ZaehlungIndexRoute: typeof ZaehlungIndexRoute
   ApiPublicSessionRoute: typeof ApiPublicSessionRoute
+  ApiRechnungPdfIdRoute: typeof ApiRechnungPdfIdRoute
   ApiPublicN8nRechnungRoute: typeof ApiPublicN8nRechnungRoute
 }
 
@@ -225,6 +238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicSessionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/rechnung-pdf/$id': {
+      id: '/api/rechnung-pdf/$id'
+      path: '/api/rechnung-pdf/$id'
+      fullPath: '/api/rechnung-pdf/$id'
+      preLoaderRoute: typeof ApiRechnungPdfIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/n8n/rechnung': {
       id: '/api/public/n8n/rechnung'
       path: '/api/public/n8n/rechnung'
@@ -245,6 +265,7 @@ const rootRouteChildren: RootRouteChildren = {
   ZaehlungZaehlungIdRoute: ZaehlungZaehlungIdRoute,
   ZaehlungIndexRoute: ZaehlungIndexRoute,
   ApiPublicSessionRoute: ApiPublicSessionRoute,
+  ApiRechnungPdfIdRoute: ApiRechnungPdfIdRoute,
   ApiPublicN8nRechnungRoute: ApiPublicN8nRechnungRoute,
 }
 export const routeTree = rootRouteImport
