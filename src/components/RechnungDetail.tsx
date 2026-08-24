@@ -229,16 +229,30 @@ export function RechnungDetail({ id, onClose, onEdit }: Props) {
                 Beleg wird geladen…
               </div>
             ) : beleg.error || !beleg.data ? (
-              <div className="flex h-24 items-center justify-center rounded-lg border border-dashed border-danger/50 text-sm text-danger">
-                Beleg konnte nicht geladen werden
+              <div className="rounded-lg border border-danger/50 bg-danger/10 px-3 py-3 text-sm text-danger">
+                <p className="font-medium">Beleg konnte nicht geladen werden</p>
+                <p className="mt-1 break-words text-xs">
+                  {beleg.error instanceof Error ? beleg.error.message : "Unbekannter Fehler"}
+                </p>
+                <p className="mt-1 break-all text-xs text-muted-foreground">
+                  Gespeicherter Pfad: {belegPfad(r.pdf_url)}
+                </p>
               </div>
             ) : (
               <div className="space-y-2">
-                <iframe
-                  src={beleg.data}
+                <object
+                  data={`/api/rechnung-pdf/${id}/datei`}
+                  type="application/pdf"
                   title="Beleg-Vorschau"
                   className="h-[400px] w-full rounded-lg border border-border bg-surface-2"
-                />
+                >
+                  <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center text-sm text-muted-foreground">
+                    <p>Die Vorschau wird von deinem Browser blockiert.</p>
+                    <a href={beleg.data} target="_blank" rel="noreferrer">
+                      <Button variant="outline">In neuem Tab öffnen</Button>
+                    </a>
+                  </div>
+                </object>
                 <a href={beleg.data} target="_blank" rel="noreferrer">
                   <Button variant="outline">In neuem Tab öffnen</Button>
                 </a>
@@ -248,6 +262,7 @@ export function RechnungDetail({ id, onClose, onEdit }: Props) {
               </div>
             )}
           </div>
+
 
 
 
