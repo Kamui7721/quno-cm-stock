@@ -26,20 +26,25 @@ import {
 import { datum, einheitLabel, eur, num } from "@/lib/format";
 import { EINHEITEN } from "@/lib/types";
 
-
 export const Route = createFileRoute("/produkte")({
   head: () => ({
     meta: [
       { title: "Produkte — QUNO x CM Inventur" },
       { name: "description", content: "Alle Produkte mit Kategorie, Lieferant und Bestand." },
       { property: "og:title", content: "Produkte — QUNO x CM Inventur" },
-      { property: "og:description", content: "Alle Produkte mit Kategorie, Lieferant und Bestand." },
+      {
+        property: "og:description",
+        content: "Alle Produkte mit Kategorie, Lieferant und Bestand.",
+      },
     ],
   }),
   component: ProduktePage,
 });
 
-type PreisFelder = { letzter_ek?: number | string | null; durchschnitt_ek?: number | string | null };
+type PreisFelder = {
+  letzter_ek?: number | string | null;
+  durchschnitt_ek?: number | string | null;
+};
 
 function letzterEk(p: unknown): number | null {
   const v = (p as PreisFelder).letzter_ek;
@@ -95,7 +100,6 @@ function ProduktePage() {
     const t = setTimeout(() => setSucheAktiv(suche), 300);
     return () => clearTimeout(t);
   }, [suche]);
-
 
   const kategorien = useQuery({
     queryKey: ["kategorien"],
@@ -162,9 +166,15 @@ function ProduktePage() {
 
   const loeschen = useMutation({
     mutationFn: async (id: string) => {
-      const r1 = await db.from("rechnungspositionen").update({ produkt_id: null }).eq("produkt_id", id);
+      const r1 = await db
+        .from("rechnungspositionen")
+        .update({ produkt_id: null })
+        .eq("produkt_id", id);
       if (r1.error) throw r1.error;
-      const r2 = await db.from("zaehlungspositionen").update({ produkt_id: null }).eq("produkt_id", id);
+      const r2 = await db
+        .from("zaehlungspositionen")
+        .update({ produkt_id: null })
+        .eq("produkt_id", id);
       if (r2.error) throw r2.error;
       const r3 = await db.from("verkaufszahlen").update({ produkt_id: null }).eq("produkt_id", id);
       if (r3.error) throw r3.error;
@@ -180,7 +190,9 @@ function ProduktePage() {
   });
 
   const loeschenBestaetigen = (id: string) => {
-    if (window.confirm("Produkt wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.")) {
+    if (
+      window.confirm("Produkt wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.")
+    ) {
       loeschen.mutate(id);
     }
   };
@@ -334,9 +346,7 @@ function ProduktePage() {
 
         <Tabs value={tab} onChange={setTab} items={tabItems} />
 
-        {suchbegriff && (
-          <p className="text-xs text-muted-foreground">Suche über alle Kategorien</p>
-        )}
+        {suchbegriff && <p className="text-xs text-muted-foreground">Suche über alle Kategorien</p>}
 
         {auswahl.length > 0 && (
           <div className="flex flex-wrap items-center gap-3">
@@ -475,7 +485,8 @@ function ProduktePage() {
                 >
                   <div className="text-sm font-semibold text-foreground">{p.name}</div>
                   <div className="mt-1 text-xs text-muted-foreground">
-                    {p.kategorien?.name ?? "Keine Kategorie"} · {p.lieferanten?.name ?? "Kein Lieferant"}
+                    {p.kategorien?.name ?? "Keine Kategorie"} ·{" "}
+                    {p.lieferanten?.name ?? "Kein Lieferant"}
                   </div>
                   <div className="mt-1 text-xs text-muted-foreground">
                     Bestand: {num(Number(p.aktueller_bestand))} {einheitLabel(p.einheit)}
@@ -515,7 +526,6 @@ function ProduktePage() {
           </div>
         )}
       </Modal>
-
 
       <Modal open={modal} onClose={() => setModal(false)} title="Produkt hinzufügen">
         <form

@@ -223,9 +223,7 @@ export function ProduktDetail({
                       key={l.name}
                       className={
                         "flex items-center justify-between rounded-lg border px-3 py-2 text-sm " +
-                        (i === 0
-                          ? "border-success/50 bg-success/10"
-                          : "border-border bg-surface-2")
+                        (i === 0 ? "border-success/50 bg-success/10" : "border-border bg-surface-2")
                       }
                     >
                       <span className="font-medium text-foreground">

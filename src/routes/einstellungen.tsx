@@ -32,7 +32,10 @@ export const Route = createFileRoute("/einstellungen")({
       { title: "Einstellungen — QUNO x CM Inventur" },
       { name: "description", content: "Kategorien verwalten, Passwort ändern, Gmail-Verbindung." },
       { property: "og:title", content: "Einstellungen — QUNO x CM Inventur" },
-      { property: "og:description", content: "Kategorien verwalten, Passwort ändern, Gmail-Verbindung." },
+      {
+        property: "og:description",
+        content: "Kategorien verwalten, Passwort ändern, Gmail-Verbindung.",
+      },
     ],
   }),
   component: EinstellungenPage,
@@ -222,8 +225,8 @@ function EinstellungenPage() {
       <Card className="mt-6">
         <CardHeader title="Passwort" />
         <p className="p-5 text-xs text-muted-foreground">
-          Das Zugangspasswort wird aus Sicherheitsgründen ausschließlich auf dem Server geprüft
-          und ist im Browser nicht sichtbar. Es kann über das Server-Geheimnis
+          Das Zugangspasswort wird aus Sicherheitsgründen ausschließlich auf dem Server geprüft und
+          ist im Browser nicht sichtbar. Es kann über das Server-Geheimnis
           <span className="mx-1 font-mono text-foreground">APP_PASSWORT</span>
           geändert werden — sage einfach Bescheid, wenn ein neues Passwort gesetzt werden soll.
         </p>
@@ -237,7 +240,9 @@ function EinstellungenPage() {
               <Mail size={16} />
             </span>
             <div>
-              <div className="text-sm font-medium text-foreground">inventur.clubmichel@gmail.com</div>
+              <div className="text-sm font-medium text-foreground">
+                inventur.clubmichel@gmail.com
+              </div>
               <div className="text-xs text-muted-foreground">
                 Wird später für den automatischen Rechnungsimport genutzt.
               </div>

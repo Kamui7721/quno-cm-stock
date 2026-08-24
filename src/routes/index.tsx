@@ -187,17 +187,17 @@ function Dashboard() {
               .sort(rechnungStandardSort)
               .slice(0, 5)
               .map((r) => (
-              <Tr key={r.id}>
-                <Td>{r.rechnungsnummer}</Td>
-                <Td>{r.lieferanten?.name ?? "–"}</Td>
-                <Td>{datum(r.datum)}</Td>
-                <Td>{eur(Number(r.gesamtbetrag))}</Td>
-                <Td>
-                  <Badge tone={r.bezahlt ? "success" : "danger"}>
-                    {r.bezahlt ? "bezahlt" : "offen"}
-                  </Badge>
-                </Td>
-              </Tr>
+                <Tr key={r.id}>
+                  <Td>{r.rechnungsnummer}</Td>
+                  <Td>{r.lieferanten?.name ?? "–"}</Td>
+                  <Td>{datum(r.datum)}</Td>
+                  <Td>{eur(Number(r.gesamtbetrag))}</Td>
+                  <Td>
+                    <Badge tone={r.bezahlt ? "success" : "danger"}>
+                      {r.bezahlt ? "bezahlt" : "offen"}
+                    </Badge>
+                  </Td>
+                </Tr>
               ))}
           </Table>
         )}
