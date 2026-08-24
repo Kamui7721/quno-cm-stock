@@ -14,6 +14,27 @@ export type Database = {
   }
   public: {
     Tables: {
+      einstellungen: {
+        Row: {
+          aktualisiert_am: string
+          erstellt_am: string
+          schluessel: string
+          wert: string
+        }
+        Insert: {
+          aktualisiert_am?: string
+          erstellt_am?: string
+          schluessel: string
+          wert: string
+        }
+        Update: {
+          aktualisiert_am?: string
+          erstellt_am?: string
+          schluessel?: string
+          wert?: string
+        }
+        Relationships: []
+      }
       kategorien: {
         Row: {
           farbe: string
@@ -103,28 +124,37 @@ export type Database = {
       produkte: {
         Row: {
           aktueller_bestand: number
+          durchschnitt_ek: number | null
           einheit: string
           erstellt_am: string
           id: string
           kategorie_id: string | null
+          letzter_ek: number | null
+          letzter_ek_datum: string | null
           lieferant_id: string | null
           name: string
         }
         Insert: {
           aktueller_bestand?: number
+          durchschnitt_ek?: number | null
           einheit?: string
           erstellt_am?: string
           id?: string
           kategorie_id?: string | null
+          letzter_ek?: number | null
+          letzter_ek_datum?: string | null
           lieferant_id?: string | null
           name: string
         }
         Update: {
           aktueller_bestand?: number
+          durchschnitt_ek?: number | null
           einheit?: string
           erstellt_am?: string
           id?: string
           kategorie_id?: string | null
+          letzter_ek?: number | null
+          letzter_ek_datum?: string | null
           lieferant_id?: string | null
           name?: string
         }
@@ -201,6 +231,8 @@ export type Database = {
       rechnungspositionen: {
         Row: {
           bezeichnung: string
+          einheit: string | null
+          einzelpreis: number | null
           id: string
           kategorie_id: string | null
           menge: number
@@ -210,6 +242,8 @@ export type Database = {
         }
         Insert: {
           bezeichnung: string
+          einheit?: string | null
+          einzelpreis?: number | null
           id?: string
           kategorie_id?: string | null
           menge?: number
@@ -219,6 +253,8 @@ export type Database = {
         }
         Update: {
           bezeichnung?: string
+          einheit?: string | null
+          einzelpreis?: number | null
           id?: string
           kategorie_id?: string | null
           menge?: number
@@ -373,7 +409,18 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      preisdaten_neu_berechnen: { Args: never; Returns: number }
+      produkt_ek_werte: {
+        Args: { p_produkt_id: string }
+        Returns: {
+          ek_datum: string
+          ep: number
+        }[]
+      }
+      produkt_preisdaten_aktualisieren: {
+        Args: { p_produkt_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never
