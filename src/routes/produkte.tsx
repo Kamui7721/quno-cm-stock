@@ -148,6 +148,7 @@ function ProduktePage() {
     mutationFn: async () => {
       const { error } = await db.from("produkte").insert({
         name: form.name,
+        bezeichnung_normalisiert: normalisiereBezeichnung(form.name),
         kategorie_id: form.kategorie_id || null,
         lieferant_id: form.lieferant_id || null,
         einheit: form.einheit,
@@ -203,6 +204,7 @@ function ProduktePage() {
         .from("produkte")
         .update({
           name: form.name,
+          bezeichnung_normalisiert: normalisiereBezeichnung(form.name),
           kategorie_id: form.kategorie_id || null,
           lieferant_id: form.lieferant_id || null,
           einheit: form.einheit,

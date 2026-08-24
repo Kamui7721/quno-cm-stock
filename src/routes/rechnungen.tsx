@@ -377,9 +377,18 @@ function RechnungenPage() {
                   </span>
                 </Td>
                 <Td>
-                  <Badge tone={r.geprueft ? "success" : "danger"}>
-                    {r.geprueft ? "geprüft" : "nicht geprüft"}
-                  </Badge>
+                  <span className="flex items-center gap-1.5">
+                    <Badge tone={r.geprueft ? "success" : "danger"}>
+                      {r.geprueft ? "geprüft" : "nicht geprüft"}
+                    </Badge>
+                    {r.import_ok === false ? (
+                      <AlertTriangle
+                        size={14}
+                        className="shrink-0 text-warning"
+                        title={r.import_warnungen || "Import mit Warnungen"}
+                      />
+                    ) : null}
+                  </span>
                 </Td>
                 <Td>
                   {r.pdf_url ? (
