@@ -210,23 +210,32 @@ export function RechnungDetail({ id, onClose, onEdit }: Props) {
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Beleg
             </h3>
-            {r.pdf_url?.trim() ? (
-              <div className="space-y-2">
-                <iframe
-                  src={r.pdf_url}
-                  title="Beleg-Vorschau"
-                  className="h-[400px] w-full rounded-lg border border-border bg-surface-2"
-                />
-                <a href={r.pdf_url} target="_blank" rel="noreferrer">
-                  <Button variant="outline">In neuem Tab öffnen</Button>
-                </a>
-              </div>
-            ) : (
+            {!belegPfad(r.pdf_url) ? (
               <div className="flex h-24 items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">
                 Kein Beleg hinterlegt
               </div>
+            ) : beleg.isPending ? (
+              <div className="flex h-24 items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">
+                Beleg wird geladen…
+              </div>
+            ) : beleg.error || !beleg.data ? (
+              <div className="flex h-24 items-center justify-center rounded-lg border border-dashed border-danger/50 text-sm text-danger">
+                Beleg konnte nicht geladen werden
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <iframe
+                  src={beleg.data}
+                  title="Beleg-Vorschau"
+                  className="h-[400px] w-full rounded-lg border border-border bg-surface-2"
+                />
+                <a href={beleg.data} target="_blank" rel="noreferrer">
+                  <Button variant="outline">In neuem Tab öffnen</Button>
+                </a>
+              </div>
             )}
           </div>
+
 
 
           <div className="border-t border-border pt-4 text-xs text-muted-foreground">
