@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { Mail, Pencil, Plus, Trash2 } from "lucide-react";
+import { Mail, Pencil, Plus, Trash2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
 import {
@@ -10,10 +10,12 @@ import {
   preisalarmSchwelleLaden,
 } from "@/lib/einstellungen";
 import { preisdatenNeuBerechnen } from "@/lib/preise.functions";
+import { resetAusfuehrenFn, resetZahlenLaden } from "@/lib/reset.functions";
 import { PRODUKT_SCHWELLE, bezeichnungAehnlichkeit } from "@/lib/aehnlichkeit";
 import { vorschauErzeugen } from "@/lib/vorschau";
 
 import { produkteZusammenfuehren } from "@/lib/produkt-merge";
+
 import {
   Badge,
   Button,
