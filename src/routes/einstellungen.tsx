@@ -10,6 +10,8 @@ import {
   preisalarmSchwelleLaden,
 } from "@/lib/einstellungen";
 import { preisdatenNeuBerechnen } from "@/lib/preise.functions";
+import { PRODUKT_SCHWELLE, bezeichnungAehnlichkeit } from "@/lib/aehnlichkeit";
+import { produkteZusammenfuehren } from "@/lib/produkt-merge";
 import {
   Badge,
   Button,
@@ -43,12 +45,77 @@ export const Route = createFileRoute("/einstellungen")({
 
 const leer = { id: "", name: "", typ: "getränk", farbe: "#3b82f6" };
 
+type Dublette = {
+  key: string;
+  zielId: string;
+  quelleId: string;
+  zielName: string;
+  quelleName: string;
+  score: number;
+};
+
 function EinstellungenPage() {
   const qc = useQueryClient();
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState(leer);
   const [neuesPw, setNeuesPw] = useState("");
   const [schwelleInput, setSchwelleInput] = useState("10");
+  const [paare, setPaare] = useState<Dublette[] | null>(null);
+  const [gewaehlt, setGewaehlt] = useState<string[]>([]);
+
+  const dublettenSuche = useMutation({
+    mutationFn: async (): Promise<Dublette[]> => {
+      const { data, error } = await db.from("produkte").select("id, name").order("name");
+      if (error) throw new Error(error.message);
+      const liste = (data ?? []) as Array<{ id: string; name: string }>;
+      const gefunden: Dublette[] = [];
+      const verbraucht = new Set<string>();
+      for (let i = 0; i < liste.length; i++) {
+        const a = liste[i]!;
+        if (verbraucht.has(a.id)) continue;
+        for (let j = i + 1; j < liste.length; j++) {
+          const b = liste[j]!;
+          if (verbraucht.has(b.id)) continue;
+          const score = bezeichnungAehnlichkeit(a.name, b.name);
+          if (score >= PRODUKT_SCHWELLE) {
+            verbraucht.add(b.id);
+            gefunden.push({
+              key: `${a.id}:${b.id}`,
+              zielId: a.id,
+              quelleId: b.id,
+              zielName: a.name,
+              quelleName: b.name,
+              score,
+            });
+          }
+        }
+      }
+      return gefunden.sort((x, y) => y.score - x.score);
+    },
+    onSuccess: (res) => {
+      setPaare(res);
+      setGewaehlt([]);
+      toast.success(res.length ? `${res.length} mögliche Dublette(n) gefunden` : "Keine Dubletten gefunden");
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
+
+  const zusammenfuehren = useMutation({
+    mutationFn: async () => {
+      const auswahl = (paare ?? []).filter((p) => gewaehlt.includes(p.key));
+      for (const p of auswahl) {
+        await produkteZusammenfuehren(p.zielId, p.quelleId);
+      }
+      return auswahl.length;
+    },
+    onSuccess: (anzahl) => {
+      toast.success(`${anzahl} Paar(e) zusammengeführt`);
+      setPaare((alt) => (alt ?? []).filter((p) => !gewaehlt.includes(p.key)));
+      setGewaehlt([]);
+      qc.invalidateQueries({ queryKey: ["produkte"] });
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
 
   useQuery({
     queryKey: ["preisalarm-schwelle"],
