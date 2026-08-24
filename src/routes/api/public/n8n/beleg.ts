@@ -183,12 +183,12 @@ export const Route = createFileRoute("/api/public/n8n/beleg")({
             .filter((w) => w !== "" && w.toLowerCase() !== WARNUNG_KEIN_PDF.toLowerCase());
           const neueWarnungen = warnungen.length ? warnungen.join("\n") : null;
 
-          const update: Record<string, unknown> = {
+          const update = {
             pdf_url: pfad,
             pdf_dateiname: d.dateiname ?? null,
             import_warnungen: neueWarnungen,
+            ...(neueWarnungen ? {} : { import_ok: true }),
           };
-          if (!neueWarnungen) update["import_ok"] = true;
 
           const upd = await supabaseAdmin
             .from("rechnungen")
