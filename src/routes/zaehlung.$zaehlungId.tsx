@@ -192,7 +192,7 @@ function ZaehlungDetail() {
                       {p.name}
                     </span>
                     <span className="shrink-0 text-xs text-muted-foreground">
-                      Soll {num(Number(p.aktueller_bestand))} {p.einheit}
+                      Soll {num(Number(p.aktueller_bestand))} {einheitLabel(p.einheit)}
                     </span>
                   </div>
                   <Input
@@ -218,7 +218,7 @@ function ZaehlungDetail() {
                   <Tr key={p.id}>
                     <Td>{p.name}</Td>
                     <Td className="text-muted-foreground">
-                      {num(Number(p.aktueller_bestand))} {p.einheit}
+                      {num(Number(p.aktueller_bestand))} {einheitLabel(p.einheit)}
                     </Td>
                     <Td>
                       <Input
