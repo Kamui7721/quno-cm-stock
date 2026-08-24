@@ -19,6 +19,7 @@ import { Route as ZaehlungIndexRouteImport } from './routes/zaehlung.index'
 import { Route as ZaehlungZaehlungIdRouteImport } from './routes/zaehlung.$zaehlungId'
 import { Route as ApiPublicSessionRouteImport } from './routes/api/public/session'
 import { Route as ApiRechnungPdfIdRouteImport } from './routes/api/rechnung-pdf.$id'
+import { Route as ApiRechnungVorschauIdRouteImport } from './routes/api/rechnung-vorschau.$id'
 import { Route as ApiPublicN8nBelegRouteImport } from './routes/api/public/n8n/beleg'
 import { Route as ApiPublicN8nRechnungRouteImport } from './routes/api/public/n8n/rechnung'
 import { Route as ApiRechnungPdfIdDateiRouteImport } from './routes/api/rechnung-pdf.$id.datei'
@@ -73,6 +74,11 @@ const ApiRechnungPdfIdRoute = ApiRechnungPdfIdRouteImport.update({
   path: '/api/rechnung-pdf/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiRechnungVorschauIdRoute = ApiRechnungVorschauIdRouteImport.update({
+  id: '/api/rechnung-vorschau/$id',
+  path: '/api/rechnung-vorschau/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicN8nBelegRoute = ApiPublicN8nBelegRouteImport.update({
   id: '/api/public/n8n/beleg',
   path: '/api/public/n8n/beleg',
@@ -100,6 +106,7 @@ export interface FileRoutesByFullPath {
   '/zaehlung/': typeof ZaehlungIndexRoute
   '/api/public/session': typeof ApiPublicSessionRoute
   '/api/rechnung-pdf/$id': typeof ApiRechnungPdfIdRouteWithChildren
+  '/api/rechnung-vorschau/$id': typeof ApiRechnungVorschauIdRoute
   '/api/public/n8n/beleg': typeof ApiPublicN8nBelegRoute
   '/api/public/n8n/rechnung': typeof ApiPublicN8nRechnungRoute
   '/api/rechnung-pdf/$id/datei': typeof ApiRechnungPdfIdDateiRoute
@@ -115,6 +122,7 @@ export interface FileRoutesByTo {
   '/zaehlung': typeof ZaehlungIndexRoute
   '/api/public/session': typeof ApiPublicSessionRoute
   '/api/rechnung-pdf/$id': typeof ApiRechnungPdfIdRouteWithChildren
+  '/api/rechnung-vorschau/$id': typeof ApiRechnungVorschauIdRoute
   '/api/public/n8n/beleg': typeof ApiPublicN8nBelegRoute
   '/api/public/n8n/rechnung': typeof ApiPublicN8nRechnungRoute
   '/api/rechnung-pdf/$id/datei': typeof ApiRechnungPdfIdDateiRoute
@@ -131,6 +139,7 @@ export interface FileRoutesById {
   '/zaehlung/': typeof ZaehlungIndexRoute
   '/api/public/session': typeof ApiPublicSessionRoute
   '/api/rechnung-pdf/$id': typeof ApiRechnungPdfIdRouteWithChildren
+  '/api/rechnung-vorschau/$id': typeof ApiRechnungVorschauIdRoute
   '/api/public/n8n/beleg': typeof ApiPublicN8nBelegRoute
   '/api/public/n8n/rechnung': typeof ApiPublicN8nRechnungRoute
   '/api/rechnung-pdf/$id/datei': typeof ApiRechnungPdfIdDateiRoute
@@ -148,6 +157,7 @@ export interface FileRouteTypes {
     | '/zaehlung/'
     | '/api/public/session'
     | '/api/rechnung-pdf/$id'
+    | '/api/rechnung-vorschau/$id'
     | '/api/public/n8n/beleg'
     | '/api/public/n8n/rechnung'
     | '/api/rechnung-pdf/$id/datei'
@@ -163,6 +173,7 @@ export interface FileRouteTypes {
     | '/zaehlung'
     | '/api/public/session'
     | '/api/rechnung-pdf/$id'
+    | '/api/rechnung-vorschau/$id'
     | '/api/public/n8n/beleg'
     | '/api/public/n8n/rechnung'
     | '/api/rechnung-pdf/$id/datei'
@@ -178,6 +189,7 @@ export interface FileRouteTypes {
     | '/zaehlung/'
     | '/api/public/session'
     | '/api/rechnung-pdf/$id'
+    | '/api/rechnung-vorschau/$id'
     | '/api/public/n8n/beleg'
     | '/api/public/n8n/rechnung'
     | '/api/rechnung-pdf/$id/datei'
@@ -194,6 +206,7 @@ export interface RootRouteChildren {
   ZaehlungIndexRoute: typeof ZaehlungIndexRoute
   ApiPublicSessionRoute: typeof ApiPublicSessionRoute
   ApiRechnungPdfIdRoute: typeof ApiRechnungPdfIdRouteWithChildren
+  ApiRechnungVorschauIdRoute: typeof ApiRechnungVorschauIdRoute
   ApiPublicN8nBelegRoute: typeof ApiPublicN8nBelegRoute
   ApiPublicN8nRechnungRoute: typeof ApiPublicN8nRechnungRoute
 }
@@ -270,6 +283,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRechnungPdfIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/rechnung-vorschau/$id': {
+      id: '/api/rechnung-vorschau/$id'
+      path: '/api/rechnung-vorschau/$id'
+      fullPath: '/api/rechnung-vorschau/$id'
+      preLoaderRoute: typeof ApiRechnungVorschauIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/n8n/beleg': {
       id: '/api/public/n8n/beleg'
       path: '/api/public/n8n/beleg'
@@ -316,6 +336,7 @@ const rootRouteChildren: RootRouteChildren = {
   ZaehlungIndexRoute: ZaehlungIndexRoute,
   ApiPublicSessionRoute: ApiPublicSessionRoute,
   ApiRechnungPdfIdRoute: ApiRechnungPdfIdRouteWithChildren,
+  ApiRechnungVorschauIdRoute: ApiRechnungVorschauIdRoute,
   ApiPublicN8nBelegRoute: ApiPublicN8nBelegRoute,
   ApiPublicN8nRechnungRoute: ApiPublicN8nRechnungRoute,
 }

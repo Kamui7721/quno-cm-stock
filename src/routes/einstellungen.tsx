@@ -11,6 +11,8 @@ import {
 } from "@/lib/einstellungen";
 import { preisdatenNeuBerechnen } from "@/lib/preise.functions";
 import { PRODUKT_SCHWELLE, bezeichnungAehnlichkeit } from "@/lib/aehnlichkeit";
+import { vorschauErzeugen } from "@/lib/vorschau";
+
 import { produkteZusammenfuehren } from "@/lib/produkt-merge";
 import {
   Badge,
@@ -116,6 +118,36 @@ function EinstellungenPage() {
     },
     onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
   });
+
+  const vorschauenErzeugen = useMutation({
+    mutationFn: async () => {
+      const { data, error } = await db
+        .from("rechnungen")
+        .select("id, pdf_url, pdf_vorschau");
+      if (error) throw new Error(error.message);
+      const offen = ((data ?? []) as Array<{
+        id: string;
+        pdf_url: string | null;
+        pdf_vorschau: string | null;
+      }>).filter((r) => (r.pdf_url ?? "").trim() && !(r.pdf_vorschau ?? "").trim());
+
+      let erfolg = 0;
+      for (const r of offen) {
+        if (await vorschauErzeugen(r.id)) erfolg += 1;
+      }
+      return { erfolg, gesamt: offen.length };
+    },
+    onSuccess: ({ erfolg, gesamt }) => {
+      toast.success(
+        gesamt === 0
+          ? "Alle Belege haben bereits eine Vorschau"
+          : `${erfolg} von ${gesamt} Vorschau(en) erzeugt`,
+      );
+      qc.invalidateQueries({ queryKey: ["rechnungen"] });
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
+
 
   useQuery({
     queryKey: ["preisalarm-schwelle"],
@@ -352,6 +384,27 @@ function EinstellungenPage() {
           )}
         </div>
       </Card>
+
+      <Card className="mt-6">
+        <CardHeader
+          title="Beleg-Vorschauen"
+          action={
+            <Button
+              variant="outline"
+              className="px-3 py-1.5 text-xs"
+              disabled={vorschauenErzeugen.isPending}
+              onClick={() => vorschauenErzeugen.mutate()}
+            >
+              {vorschauenErzeugen.isPending ? "Erzeuge…" : "Beleg-Vorschauen erzeugen"}
+            </Button>
+          }
+        />
+        <p className="p-5 text-xs text-muted-foreground">
+          Erzeugt für alle Rechnungen mit hinterlegtem PDF, denen noch ein Vorschaubild fehlt, die
+          erste Seite als Bild (800 px). Bereits vorhandene Vorschauen bleiben unverändert.
+        </p>
+      </Card>
+
 
       <Card className="mt-6">
 

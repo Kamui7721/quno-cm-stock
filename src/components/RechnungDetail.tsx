@@ -1,9 +1,12 @@
+import { useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, Pencil, Trash2 } from "lucide-react";
+import { AlertTriangle, FileText, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
 import { belegPfad, belegUrlHolen } from "@/lib/beleg";
+import { vorschauErzeugen } from "@/lib/vorschau";
 import { pruefungSetzen } from "@/lib/pruefung";
+
 
 import { Badge, Button, DetailModal, InfoRow } from "@/components/ui-kit";
 import { datum, datumZeit, eur, num } from "@/lib/format";
@@ -57,6 +60,26 @@ export function RechnungDetail({ id, onClose, onEdit }: Props) {
     retry: false,
     queryFn: () => belegUrlHolen(id!),
   });
+
+  const vorschau = useMutation({
+    mutationFn: async () => {
+      const ok = await vorschauErzeugen(id!);
+      if (!ok) throw new Error("Vorschau konnte nicht erzeugt werden");
+    },
+    onSuccess: aktualisieren,
+  });
+
+  // Für Belege ohne Vorschau (z. B. per n8n hochgeladen) einmalig nachrendern.
+  const versucht = useRef<string | null>(null);
+  const r0 = rechnung.data;
+  useEffect(() => {
+    if (!id || !r0) return;
+    if (!belegPfad(r0.pdf_url) || belegPfad(r0.pdf_vorschau)) return;
+    if (versucht.current === id) return;
+    versucht.current = id;
+    vorschau.mutate();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, r0?.pdf_url, r0?.pdf_vorschau]);
 
 
   const bezahltToggle = useMutation({
@@ -221,15 +244,15 @@ export function RechnungDetail({ id, onClose, onEdit }: Props) {
               Beleg
             </h3>
             {!belegPfad(r.pdf_url) ? (
-              <div className="flex h-24 items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">
+              <div className="flex h-24 items-center justify-center rounded-xl border border-dashed border-border text-sm text-muted-foreground">
                 Kein Beleg hinterlegt
               </div>
             ) : beleg.isPending ? (
-              <div className="flex h-24 items-center justify-center rounded-lg border border-dashed border-border text-sm text-muted-foreground">
+              <div className="flex h-24 items-center justify-center rounded-xl border border-dashed border-border text-sm text-muted-foreground">
                 Beleg wird geladen…
               </div>
             ) : beleg.error || !beleg.data ? (
-              <div className="rounded-lg border border-danger/50 bg-danger/10 px-3 py-3 text-sm text-danger">
+              <div className="rounded-xl border border-danger/50 bg-danger/10 px-3 py-3 text-sm text-danger">
                 <p className="font-medium">Beleg konnte nicht geladen werden</p>
                 <p className="mt-1 break-words text-xs">
                   {beleg.error instanceof Error ? beleg.error.message : "Unbekannter Fehler"}
@@ -240,28 +263,50 @@ export function RechnungDetail({ id, onClose, onEdit }: Props) {
               </div>
             ) : (
               <div className="space-y-2">
-                <object
-                  data={`/api/rechnung-pdf/${id}/datei`}
-                  type="application/pdf"
-                  title="Beleg-Vorschau"
-                  className="h-[400px] w-full rounded-lg border border-border bg-surface-2"
-                >
-                  <div className="flex h-full flex-col items-center justify-center gap-2 p-4 text-center text-sm text-muted-foreground">
-                    <p>Die Vorschau wird von deinem Browser blockiert.</p>
-                    <a href={beleg.data} target="_blank" rel="noreferrer">
-                      <Button variant="outline">In neuem Tab öffnen</Button>
-                    </a>
+                {belegPfad(r.pdf_vorschau) ? (
+                  <a
+                    href={beleg.data}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="group relative block overflow-hidden rounded-xl border border-border bg-surface-2"
+                  >
+                    <img
+                      src={`/api/rechnung-vorschau/${id}`}
+                      alt="Vorschau der ersten Belegseite"
+                      loading="lazy"
+                      className="h-[340px] w-full object-cover object-top"
+                    />
+                    <span className="absolute inset-0 flex items-center justify-center bg-black/0 text-sm font-medium text-transparent transition group-hover:bg-black/45 group-hover:text-white">
+                      Beleg öffnen
+                    </span>
+                  </a>
+                ) : (
+                  <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-surface-2 px-4 py-8 text-center">
+                    <FileText size={32} className="text-accent" />
+                    <p className="text-sm text-muted-foreground">
+                      {r.pdf_dateiname ?? "Beleg als PDF hinterlegt"}
+                    </p>
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      <a href={beleg.data} target="_blank" rel="noreferrer">
+                        <Button variant="outline">Beleg öffnen</Button>
+                      </a>
+                      <Button
+                        variant="outline"
+                        disabled={vorschau.isPending}
+                        onClick={() => vorschau.mutate()}
+                      >
+                        {vorschau.isPending ? "Erzeuge Vorschau…" : "Vorschau erzeugen"}
+                      </Button>
+                    </div>
                   </div>
-                </object>
-                <a href={beleg.data} target="_blank" rel="noreferrer">
-                  <Button variant="outline">In neuem Tab öffnen</Button>
-                </a>
-                {r.pdf_dateiname && (
+                )}
+                {r.pdf_dateiname && belegPfad(r.pdf_vorschau) && (
                   <p className="text-xs text-muted-foreground">{r.pdf_dateiname}</p>
                 )}
               </div>
             )}
           </div>
+
 
 
 
