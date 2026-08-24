@@ -249,7 +249,9 @@ function RechnungenPage() {
         (!filterLieferant || r.lieferant_id === filterLieferant) &&
         (!filterMonat || r.datum.slice(0, 7) === filterMonat) &&
         (!filterStatus || String(r.bezahlt) === filterStatus) &&
-        (!filterPruefung || String(!!r.geprueft) === filterPruefung),
+        (!filterPruefung || String(!!r.geprueft) === filterPruefung) &&
+        (!filterBeleg || String(!!r.pdf_url?.trim()) === filterBeleg),
+
     )
     .slice()
     .sort((a, b) => {
