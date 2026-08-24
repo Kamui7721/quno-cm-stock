@@ -382,11 +382,9 @@ function RechnungenPage() {
                       {r.geprueft ? "geprüft" : "nicht geprüft"}
                     </Badge>
                     {r.import_ok === false ? (
-                      <AlertTriangle
-                        size={14}
-                        className="shrink-0 text-warning"
-                        title={r.import_warnungen || "Import mit Warnungen"}
-                      />
+                      <span title={r.import_warnungen || "Import mit Warnungen"}>
+                        <AlertTriangle size={14} className="shrink-0 text-warning" />
+                      </span>
                     ) : null}
                   </span>
                 </Td>
