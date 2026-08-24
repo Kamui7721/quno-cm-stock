@@ -242,6 +242,9 @@ export function RechnungDetail({ id, onClose, onEdit }: Props) {
                 <a href={beleg.data} target="_blank" rel="noreferrer">
                   <Button variant="outline">In neuem Tab öffnen</Button>
                 </a>
+                {r.pdf_dateiname && (
+                  <p className="text-xs text-muted-foreground">{r.pdf_dateiname}</p>
+                )}
               </div>
             )}
           </div>
