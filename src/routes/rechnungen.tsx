@@ -20,7 +20,7 @@ import {
   Td,
   Tr,
 } from "@/components/ui-kit";
-import { datum, eur, num } from "@/lib/format";
+import { datum, datumZeit, eur, num } from "@/lib/format";
 
 export const Route = createFileRoute("/rechnungen")({
   head: () => ({
@@ -57,6 +57,10 @@ function RechnungenPage() {
   const [filterLieferant, setFilterLieferant] = useState("");
   const [filterMonat, setFilterMonat] = useState("");
   const [filterStatus, setFilterStatus] = useState("");
+  const [sortSpalte, setSortSpalte] = useState<
+    "rechnungsnummer" | "lieferant" | "datum" | "gesamtbetrag" | "erstellt_am"
+  >("erstellt_am");
+  const [sortRichtung, setSortRichtung] = useState<"asc" | "desc">("desc");
   const [kopf, setKopf] = useState({
     rechnungsnummer: "",
     lieferant_id: "",
@@ -102,7 +106,7 @@ function RechnungenPage() {
       const { data, error } = await db
         .from("rechnungen")
         .select("*, lieferanten(name)")
-        .order("datum", { ascending: false });
+        .order("erstellt_am", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -220,12 +224,42 @@ function RechnungenPage() {
     setEditId(r.id);
   };
 
-  const liste = (rechnungen.data ?? []).filter(
-    (r) =>
-      (!filterLieferant || r.lieferant_id === filterLieferant) &&
-      (!filterMonat || r.datum.slice(0, 7) === filterMonat) &&
-      (!filterStatus || String(r.bezahlt) === filterStatus),
-  );
+  const sortieren = (spalte: typeof sortSpalte) => {
+    if (sortSpalte === spalte) {
+      setSortRichtung(sortRichtung === "asc" ? "desc" : "asc");
+    } else {
+      setSortSpalte(spalte);
+      setSortRichtung("asc");
+    }
+  };
+  const kopfZelle = (label: string, spalte: typeof sortSpalte) => ({
+    label,
+    onClick: () => sortieren(spalte),
+    dir: sortSpalte === spalte ? sortRichtung : null,
+  });
+
+  const liste = (rechnungen.data ?? [])
+    .filter(
+      (r) =>
+        (!filterLieferant || r.lieferant_id === filterLieferant) &&
+        (!filterMonat || r.datum.slice(0, 7) === filterMonat) &&
+        (!filterStatus || String(r.bezahlt) === filterStatus),
+    )
+    .slice()
+    .sort((a, b) => {
+      const f = sortRichtung === "asc" ? 1 : -1;
+      if (sortSpalte === "gesamtbetrag")
+        return (Number(a.gesamtbetrag) - Number(b.gesamtbetrag)) * f;
+      const wert = (r: typeof a) =>
+        sortSpalte === "lieferant"
+          ? (r.lieferanten?.name ?? "")
+          : sortSpalte === "datum"
+            ? r.datum
+            : sortSpalte === "erstellt_am"
+              ? (r.erstellt_am ?? "")
+              : r.rechnungsnummer;
+      return String(wert(a)).localeCompare(String(wert(b)), "de", { numeric: true }) * f;
+    });
   const detail = (rechnungen.data ?? []).find((r) => r.id === detailId);
 
   return (
@@ -263,7 +297,16 @@ function RechnungenPage() {
         ) : liste.length === 0 ? (
           <Empty text="Keine Rechnungen vorhanden." />
         ) : (
-          <Table head={["Rechnungsnummer", "Lieferant", "Datum", "Betrag", "Status", "PDF"]}>
+          <Table
+            head={[
+              kopfZelle("Rechnungsnummer", "rechnungsnummer"),
+              kopfZelle("Lieferant", "lieferant"),
+              kopfZelle("Datum", "datum"),
+              kopfZelle("Betrag", "gesamtbetrag"),
+              "Status",
+              "PDF",
+            ]}
+          >
             {liste.map((r) => (
               <Tr key={r.id} onClick={() => setDetailId(r.id)}>
                 <Td>{r.rechnungsnummer}</Td>
@@ -534,6 +577,15 @@ function RechnungenPage() {
                 />
               </div>
             ) : null}
+
+            <div className="border-t border-border pt-4 text-xs text-muted-foreground">
+              <p>Hinzugefügt am {datumZeit(detail.erstellt_am)}</p>
+              <p className="mt-0.5">
+                {detail.gmail_message_id
+                  ? "Automatisch per E-Mail importiert"
+                  : "Manuell erfasst"}
+              </p>
+            </div>
 
             <div className="border-t border-border pt-4">
               <Button
