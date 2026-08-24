@@ -144,6 +144,43 @@ function EinstellungenPage() {
       </Card>
 
       <Card className="mt-6">
+        <CardHeader title="Preisauswertung" />
+        <div className="space-y-4 p-5">
+          <Field label="Preisalarm-Schwelle (%)">
+            <div className="flex items-center gap-3">
+              <Input
+                type="number"
+                min="1"
+                step="1"
+                className="w-32"
+                value={schwelleInput}
+                onChange={(e) => setSchwelleInput(e.target.value)}
+              />
+              <Button
+                variant="outline"
+                disabled={schwelleSpeichern.isPending}
+                onClick={() => schwelleSpeichern.mutate()}
+              >
+                Speichern
+              </Button>
+            </div>
+          </Field>
+          <p className="text-xs text-muted-foreground">
+            Produkte, deren letzter Einkaufspreis um mehr als diesen Wert vom Durchschnitt der
+            letzten 12 Monate abweicht, erscheinen im Dashboard unter „Preisveränderungen“.
+          </p>
+          <button
+            type="button"
+            disabled={neuBerechnen.isPending}
+            onClick={() => neuBerechnen.mutate()}
+            className="text-xs text-muted-foreground underline transition hover:text-foreground disabled:opacity-50"
+          >
+            {neuBerechnen.isPending ? "Berechne..." : "Preisdaten neu berechnen"}
+          </button>
+        </div>
+      </Card>
+
+      <Card className="mt-6">
         <CardHeader title="Passwort" />
         <p className="p-5 text-xs text-muted-foreground">
           Das Zugangspasswort wird aus Sicherheitsgründen ausschließlich auf dem Server geprüft
