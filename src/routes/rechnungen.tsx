@@ -51,6 +51,7 @@ type PosForm = {
   bezeichnung: string;
   kategorie_id: string;
   produkt_id: string;
+  einheit: string;
   menge: string;
   preis: string;
 };
@@ -59,6 +60,7 @@ const leerePos = (): PosForm => ({
   bezeichnung: "",
   kategorie_id: "",
   produkt_id: "",
+  einheit: "stück",
   menge: "1",
   preis: "0",
 });
