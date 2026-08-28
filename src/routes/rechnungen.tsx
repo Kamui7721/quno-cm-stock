@@ -25,6 +25,7 @@ import {
   Tr,
 } from "@/components/ui-kit";
 import { datum, eur } from "@/lib/format";
+import { EINHEITEN } from "@/lib/types";
 
 export const Route = createFileRoute("/rechnungen")({
   head: () => ({
