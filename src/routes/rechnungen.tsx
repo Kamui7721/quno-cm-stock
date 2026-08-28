@@ -539,6 +539,20 @@ function RechnungenPage() {
                       </option>
                     ))}
                   </Select>
+                  <Select
+                    value={p.einheit}
+                    onChange={(e) =>
+                      setPositionen(
+                        positionen.map((x, j) => (j === i ? { ...x, einheit: e.target.value } : x)),
+                      )
+                    }
+                  >
+                    {EINHEITEN.map((e2) => (
+                      <option key={e2.wert} value={e2.wert}>
+                        {e2.label}
+                      </option>
+                    ))}
+                  </Select>
                   <Input
                     type="number"
                     step="any"
