@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertTriangle, FileText, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -110,6 +110,24 @@ export function RechnungDetail({ id, onClose, onEdit }: Props) {
     onSuccess: () => {
       toast.success("Rechnung gelöscht");
       onClose();
+      aktualisieren();
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
+
+  const [mengeEditId, setMengeEditId] = useState<string | null>(null);
+  const [mengeWert, setMengeWert] = useState("");
+
+  const mengeSpeichern = useMutation({
+    mutationFn: async ({ posId, menge }: { posId: string; menge: number }) => {
+      const { error } = await db.from("rechnungspositionen").update({ menge }).eq("id", posId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Menge aktualisiert");
+      setMengeEditId(null);
+      qc.invalidateQueries({ queryKey: ["rechnungspositionen", id] });
+      qc.invalidateQueries({ queryKey: ["produkte"] });
       aktualisieren();
     },
     onError: (e: Error) => toast.error(`Fehler: ${e.message}`),

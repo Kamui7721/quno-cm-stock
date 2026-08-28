@@ -25,6 +25,7 @@ import {
   Tr,
 } from "@/components/ui-kit";
 import { datum, eur } from "@/lib/format";
+import { EINHEITEN } from "@/lib/types";
 
 export const Route = createFileRoute("/rechnungen")({
   head: () => ({
@@ -51,6 +52,7 @@ type PosForm = {
   bezeichnung: string;
   kategorie_id: string;
   produkt_id: string;
+  einheit: string;
   menge: string;
   preis: string;
 };
@@ -59,6 +61,7 @@ const leerePos = (): PosForm => ({
   bezeichnung: "",
   kategorie_id: "",
   produkt_id: "",
+  einheit: "stück",
   menge: "1",
   preis: "0",
 });
@@ -166,6 +169,7 @@ function RechnungenPage() {
           bezeichnung: p.bezeichnung,
           kategorie_id: p.kategorie_id || null,
           produkt_id: p.produkt_id || null,
+          einheit: p.einheit || "stück",
           menge: Number(p.menge) || 0,
           preis: Number(p.preis) || 0,
         }));
@@ -489,7 +493,7 @@ function RechnungenPage() {
               {positionen.map((p, i) => (
                 <div
                   key={i}
-                  className="grid grid-cols-[2fr_1fr_1fr_70px_90px_32px] items-center gap-2"
+                  className="grid grid-cols-[2fr_1fr_1fr_1fr_70px_90px_32px] items-center gap-2"
                 >
                   <Input
                     placeholder="Bezeichnung"
@@ -533,6 +537,20 @@ function RechnungenPage() {
                     {(produkte.data ?? []).map((pr) => (
                       <option key={pr.id} value={pr.id}>
                         {pr.name}
+                      </option>
+                    ))}
+                  </Select>
+                  <Select
+                    value={p.einheit}
+                    onChange={(e) =>
+                      setPositionen(
+                        positionen.map((x, j) => (j === i ? { ...x, einheit: e.target.value } : x)),
+                      )
+                    }
+                  >
+                    {EINHEITEN.map((e2) => (
+                      <option key={e2.wert} value={e2.wert}>
+                        {e2.label}
                       </option>
                     ))}
                   </Select>
