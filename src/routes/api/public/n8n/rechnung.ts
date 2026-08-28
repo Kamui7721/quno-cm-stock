@@ -107,10 +107,23 @@ const extrahiereEinheit = (bezeichnung: string): string => {
 
 const normEinheit = (einheit?: string | null, bezeichnung = ""): string => {
   const e = (einheit ?? "").trim().toLowerCase();
+  if (!e) return extrahiereEinheit(bezeichnung);
   if (e === "kg" || e === "kilogramm") return "kg";
   if (e === "l" || e === "liter" || e === "ltr") return "l";
-  if (e) return "stück";
-  return extrahiereEinheit(bezeichnung);
+  if (e === "g" || e === "gramm") return "g";
+  if (e === "ml" || e === "milliliter") return "ml";
+  if (e === "dose" || e === "dosen" || e === "ds") return "dose";
+  if (e.includes("flasche") || e === "fl" || e === "btl") {
+    if (/0[,.]75/.test(e)) return "flasche_075";
+    if (/1[,.]?0?\s*l/.test(e) || e.includes("1l")) return "flasche_100";
+    return "flasche_075";
+  }
+  if (e.includes("kiste") || e.includes("kasten") || e === "kst") {
+    if (/\b6\b/.test(e)) return "kiste_6";
+    if (/\b12\b/.test(e)) return "kiste_12";
+    return "kiste";
+  }
+  return "stück";
 };
 
 export const Route = createFileRoute("/api/public/n8n/rechnung")({
