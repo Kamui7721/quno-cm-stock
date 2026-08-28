@@ -168,6 +168,7 @@ function RechnungenPage() {
           bezeichnung: p.bezeichnung,
           kategorie_id: p.kategorie_id || null,
           produkt_id: p.produkt_id || null,
+          einheit: p.einheit || "stück",
           menge: Number(p.menge) || 0,
           preis: Number(p.preis) || 0,
         }));
