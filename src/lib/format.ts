@@ -1,3 +1,4 @@
+import { EINHEIT_LABELS } from "./types";
 export const eur = (n: number | null | undefined) =>
   new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(Number(n ?? 0));
 
