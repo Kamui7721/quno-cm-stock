@@ -17,8 +17,10 @@ export const monatLabel = (m: string) => {
 };
 
 export const heutigerMonat = () => new Date().toISOString().slice(0, 7);
-export const einheitLabel = (e: string | null | undefined) =>
-  e === "stück" ? "Stück" : (e ?? "–");
+export const einheitLabel = (e: string | null | undefined) => {
+  if (!e) return "–";
+  return EINHEIT_LABELS[e.trim().toLowerCase()] ?? e;
+};
 
 export const datumZeit = (d: string | null | undefined) =>
   d
