@@ -128,6 +128,20 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
           return json({ error: "invalid json", grund: "Body konnte nicht als JSON gelesen werden" }, 400);
         }
 
+        // Gesamtbetrag robust bereinigen (z. B. "571,20 €" → 571.2)
+        if (typeof body === "object" && body !== null && "gesamtbetrag" in body) {
+          const raw = (body as Record<string, unknown>).gesamtbetrag;
+          const cleanBetrag = String(raw).replace(",", ".").replace(/[^0-9.]/g, "");
+          const betrag = parseFloat(cleanBetrag);
+          if (Number.isNaN(betrag)) {
+            return json(
+              { error: "invalid payload", grund: "gesamtbetrag ist keine gültige Zahl" },
+              400,
+            );
+          }
+          (body as Record<string, unknown>).gesamtbetrag = betrag;
+        }
+
         const result = schema.safeParse(body);
         if (!result.success) {
           return json(
