@@ -585,8 +585,8 @@ function ProduktePage() {
                 onChange={(e) => setForm({ ...form, einheit: e.target.value })}
               >
                 {EINHEITEN.map((e2) => (
-                  <option key={e2} value={e2}>
-                    {e2}
+                  <option key={e2.wert} value={e2.wert}>
+                    {e2.label}
                   </option>
                 ))}
               </Select>
