@@ -130,7 +130,7 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
 
         // Gesamtbetrag robust bereinigen (z. B. "571,20 €" → 571.2)
         if (typeof body === "object" && body !== null && "gesamtbetrag" in body) {
-          const raw = (body as Record<string, unknown>).gesamtbetrag;
+          const raw = (body as Record<string, unknown>)["gesamtbetrag"];
           const cleanBetrag = String(raw).replace(",", ".").replace(/[^0-9.]/g, "");
           const betrag = parseFloat(cleanBetrag);
           if (Number.isNaN(betrag)) {
@@ -139,7 +139,7 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
               400,
             );
           }
-          (body as Record<string, unknown>).gesamtbetrag = betrag;
+          (body as Record<string, unknown>)["gesamtbetrag"] = betrag;
         }
 
         const result = schema.safeParse(body);
