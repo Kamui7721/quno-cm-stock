@@ -115,6 +115,24 @@ export function RechnungDetail({ id, onClose, onEdit }: Props) {
     onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
   });
 
+  const [mengeEditId, setMengeEditId] = useState<string | null>(null);
+  const [mengeWert, setMengeWert] = useState("");
+
+  const mengeSpeichern = useMutation({
+    mutationFn: async ({ posId, menge }: { posId: string; menge: number }) => {
+      const { error } = await db.from("rechnungspositionen").update({ menge }).eq("id", posId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Menge aktualisiert");
+      setMengeEditId(null);
+      qc.invalidateQueries({ queryKey: ["rechnungspositionen", id] });
+      qc.invalidateQueries({ queryKey: ["produkte"] });
+      aktualisieren();
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
+
   const r = rechnung.data;
 
   return (
