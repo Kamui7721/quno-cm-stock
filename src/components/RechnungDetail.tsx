@@ -242,10 +242,57 @@ export function RechnungDetail({ id, onClose, onEdit }: Props) {
                   >
                     <div className="flex items-center justify-between gap-3">
                       <span className="font-medium">
-                        {num(Number(p.menge))} × {p.bezeichnung}
+                        {num(Number(p.menge))} {einheitLabel(p.einheit)} × {p.bezeichnung}
                       </span>
-                      <span>{eur(Number(p.preis))}</span>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <span>{eur(Number(p.preis))}</span>
+                        {mengeEditId !== p.id && (
+                          <button
+                            type="button"
+                            aria-label="Menge bearbeiten"
+                            className="rounded-md p-1 text-muted-foreground transition hover:bg-surface hover:text-foreground"
+                            onClick={() => {
+                              setMengeEditId(p.id);
+                              setMengeWert(String(p.menge ?? 0));
+                            }}
+                          >
+                            <Pencil size={14} />
+                          </button>
+                        )}
+                      </div>
                     </div>
+                    {mengeEditId === p.id && (
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <input
+                          type="number"
+                          inputMode="decimal"
+                          step="any"
+                          autoFocus
+                          value={mengeWert}
+                          onChange={(e) => setMengeWert(e.target.value)}
+                          className="w-24 rounded-md border border-border bg-surface px-2 py-1 text-sm text-foreground outline-none focus:border-primary"
+                        />
+                        <span className="text-xs text-muted-foreground">
+                          {einheitLabel(p.einheit)}
+                        </span>
+                        <Button
+                          className="px-3 py-1 text-xs"
+                          disabled={mengeSpeichern.isPending || mengeWert.trim() === ""}
+                          onClick={() =>
+                            mengeSpeichern.mutate({ posId: p.id, menge: Number(mengeWert) || 0 })
+                          }
+                        >
+                          Speichern
+                        </Button>
+                        <Button
+                          variant="outline"
+                          className="px-3 py-1 text-xs"
+                          onClick={() => setMengeEditId(null)}
+                        >
+                          Abbrechen
+                        </Button>
+                      </div>
+                    )}
                     {p.kategorien && (
                       <div className="mt-1 flex items-center gap-2 text-muted-foreground">
                         <Badge color={p.kategorien.farbe}>{p.kategorien.name}</Badge>
