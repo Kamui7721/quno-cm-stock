@@ -9,7 +9,7 @@ import { pruefungSetzen } from "@/lib/pruefung";
 
 
 import { Badge, Button, DetailModal, InfoRow } from "@/components/ui-kit";
-import { datum, datumZeit, eur, num } from "@/lib/format";
+import { datum, datumZeit, einheitLabel, eur, num } from "@/lib/format";
 
 type Props = {
   id: string | null;
