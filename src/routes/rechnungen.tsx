@@ -492,7 +492,7 @@ function RechnungenPage() {
               {positionen.map((p, i) => (
                 <div
                   key={i}
-                  className="grid grid-cols-[2fr_1fr_1fr_70px_90px_32px] items-center gap-2"
+                  className="grid grid-cols-[2fr_1fr_1fr_1fr_70px_90px_32px] items-center gap-2"
                 >
                   <Input
                     placeholder="Bezeichnung"
