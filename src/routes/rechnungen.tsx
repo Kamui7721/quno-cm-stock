@@ -451,6 +451,7 @@ function RechnungenPage() {
                       <Input
                         autoFocus
                         value={notizEdit!.wert}
+                        onClick={(e) => e.stopPropagation()}
                         onChange={(e) => setNotizEdit({ ...notizEdit!, wert: e.target.value })}
                         onBlur={() => {
                           const wert = notizEdit!.wert.trim();
@@ -472,8 +473,11 @@ function RechnungenPage() {
                     ) : (
                       <button
                         type="button"
-                        onClick={() => setNotizEdit({ id: r.id, wert: r.notizen ?? "" })}
-                        className="max-w-[180px] truncate text-left text-sm text-foreground hover:text-primary"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setNotizEdit({ id: r.id, wert: r.notizen ?? "" });
+                        }}
+                        className="block w-full truncate text-left text-sm text-foreground hover:text-primary"
                         title={r.notizen ?? undefined}
                       >
                         {r.notizen || <span className="text-muted-foreground">–</span>}
