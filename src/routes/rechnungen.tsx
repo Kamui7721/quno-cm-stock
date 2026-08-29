@@ -445,9 +445,9 @@ function RechnungenPage() {
                     <span className="text-muted-foreground">–</span>
                   )}
                 </Td>
-                <Td>
+                <Td className="p-0">
                   <div
-                    className="-mx-5 -my-3 px-5 py-3"
+                    className="h-full w-full px-5 py-3"
                     onClick={(e) => e.stopPropagation()}
                   >
                     {notizEdit?.id === r.id ? (
