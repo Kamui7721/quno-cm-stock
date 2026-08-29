@@ -446,7 +446,10 @@ function RechnungenPage() {
                   )}
                 </Td>
                 <Td>
-                  <span onClick={(e) => e.stopPropagation()}>
+                  <div
+                    className="-mx-5 -my-3 px-5 py-3"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     {notizEdit?.id === r.id ? (
                       <Input
                         autoFocus
@@ -483,7 +486,7 @@ function RechnungenPage() {
                         {r.notizen || <span className="text-muted-foreground">–</span>}
                       </button>
                     )}
-                  </span>
+                  </div>
                 </Td>
               </Tr>
             ))}
