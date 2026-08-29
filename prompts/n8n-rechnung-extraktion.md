@@ -62,7 +62,7 @@ Extrahiere die folgenden Felder und gib sie als **reines JSON** zurück – ohne
    - Beispiel: `"Kein PDF im Storage abgelegt"` oder `"Gesamtbetrag unklar, verwende höchste Summe"`.
 7. **Kein Output außer JSON**: Antworte ausschließlich mit dem JSON-Objekt, damit n8n es direkt weiterverarbeiten kann.
 8. **Mehrfache Datums- und Nummernangaben**: Kommen auf einer Rechnung Datum und Rechnungsnummer mehrfach vor (z. B. links als Auftragsdatum/Auftragsnummer und rechts als Rechnungsdatum/Rechnungsnummer):
-   - `rechnungsnummer`: Bevorzuge das Feld, das explizit als **Rechnungsnummer**, **Re-Nr**, **Nummer** oder **Beleg-Nr** gekennzeichnet ist – nicht die Auftragsnummer.
-   - `datum`: Bevorzuge das Feld, das explizit als **Rechnungsdatum**, **Datum** oder **Beleg-Datum** (meist rechts auf der Rechnung) gekennzeichnet ist – nicht das Lieferdatum oder Auftragsdatum links.
+   - `rechnungsnummer`: Bevorzuge das Feld, das explizit als **Rechnungsnummer**, **Re-Nr**, **Rechnung-Nr.**, **Nummer** oder **Beleg-Nr** gekennzeichnet ist – nicht die Auftragsnummer.
+   - `datum`: Bevorzuge das Feld, das explizit als **Rechnungsdatum**, **RE-Datum**, **Datum** oder **Beleg-Datum** (meist rechts auf der Rechnung) gekennzeichnet ist – nicht das Lieferdatum oder Auftragsdatum links.
    - Im Zweifel wähle das Datum, das näher am Wort **Rechnung** bzw. **RECHNUNG** steht.
 
