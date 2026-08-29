@@ -453,6 +453,7 @@ function RechnungenPage() {
                 </Td>
                 <Td className="p-0">
                   <div
+                    data-note-cell
                     className="h-full w-full px-5 py-3"
                     onClick={(e) => e.stopPropagation()}
                   >
