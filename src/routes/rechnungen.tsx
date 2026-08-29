@@ -450,10 +450,10 @@ function RechnungenPage() {
                     {notizEdit?.id === r.id ? (
                       <Input
                         autoFocus
-                        value={notizEdit.wert}
-                        onChange={(e) => setNotizEdit({ ...notizEdit, wert: e.target.value })}
+                        value={notizEdit!.wert}
+                        onChange={(e) => setNotizEdit({ ...notizEdit!, wert: e.target.value })}
                         onBlur={() => {
-                          const wert = notizEdit.wert.trim();
+                          const wert = notizEdit!.wert.trim();
                           if (wert !== (r.notizen ?? "")) {
                             notizSpeichern.mutate({ id: r.id, notizen: wert });
                           } else {
