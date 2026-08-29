@@ -192,6 +192,7 @@ export type Database = {
           import_ok: boolean
           import_warnungen: string | null
           lieferant_id: string | null
+          notizen: string | null
           pdf_dateiname: string | null
           pdf_url: string | null
           pdf_vorschau: string | null
@@ -211,6 +212,7 @@ export type Database = {
           import_ok?: boolean
           import_warnungen?: string | null
           lieferant_id?: string | null
+          notizen?: string | null
           pdf_dateiname?: string | null
           pdf_url?: string | null
           pdf_vorschau?: string | null
@@ -230,6 +232,7 @@ export type Database = {
           import_ok?: boolean
           import_warnungen?: string | null
           lieferant_id?: string | null
+          notizen?: string | null
           pdf_dateiname?: string | null
           pdf_url?: string | null
           pdf_vorschau?: string | null
