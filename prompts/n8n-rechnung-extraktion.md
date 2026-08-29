@@ -42,12 +42,14 @@ Extrahiere die folgenden Felder und gib sie als **reines JSON** zurück – ohne
    - Erkenne folgende Bezeichnungen als Gesamtbetrag: **Rechnungssumme**, **Gesamt**, **Total**, **Endbetrag**, **Summe**.
    - Bevorzuge den Endbetrag inkl. MwSt. (Brutto).
    - Falls mehrere Summen vorhanden sind, wähle die höchste als `gesamtbetrag`.
-   - Gib den Betrag als Zahl oder String zurück (Dezimalkomma ist erlaubt, z. B. `"571,20"`).
+   - Gib den Betrag als Zahl oder String zurück (Dezimalkomma ist erlaubt, z. B. `"571,20"` oder `"715,67 EUR"`).
+   - Behandle das Komma immer als Dezimaltrennzeichen und ignoriere Währungsangaben wie **€**, **EUR** oder **e** (z. B. wird `"715,67 EUR"` zu `715.67`).
 3. **Währung**:
    - Das Euro-Zeichen kann als **€**, **EUR** oder **e** (kleines e) angegeben sein.
    - Ignoriere das Währungszeichen bei der Zahlextraktion.
 4. **Lieferant**:
    - `lieferant_name` ist der Rechnungsaussteller (Firmenname oben im Briefkopf).
+   - Wenn kein explizites Absenderfeld vorhanden ist, extrahiere den Firmennamen aus der Kopfzeile oder Fußzeile der Rechnung (z. B. **restsüße**, **Copains du Vin GmbH**).
    - Weitere Felder nur ausfüllen, wenn sie klar erkennbar sind.
 5. **Positionen**:
    - Jede einzelne Artikelzeile wird zu einem Objekt im Array `positionen`.
@@ -60,7 +62,7 @@ Extrahiere die folgenden Felder und gib sie als **reines JSON** zurück – ohne
    - Beispiel: `"Kein PDF im Storage abgelegt"` oder `"Gesamtbetrag unklar, verwende höchste Summe"`.
 7. **Kein Output außer JSON**: Antworte ausschließlich mit dem JSON-Objekt, damit n8n es direkt weiterverarbeiten kann.
 8. **Mehrfache Datums- und Nummernangaben**: Kommen auf einer Rechnung Datum und Rechnungsnummer mehrfach vor (z. B. links als Auftragsdatum/Auftragsnummer und rechts als Rechnungsdatum/Rechnungsnummer):
-   - `rechnungsnummer`: Bevorzuge das Feld, das explizit als **Rechnungsnummer**, **Re-Nr**, **Nummer** oder **Beleg-Nr** gekennzeichnet ist – nicht die Auftragsnummer.
-   - `datum`: Bevorzuge das Feld, das explizit als **Rechnungsdatum**, **Datum** oder **Beleg-Datum** (meist rechts auf der Rechnung) gekennzeichnet ist – nicht das Lieferdatum oder Auftragsdatum links.
+   - `rechnungsnummer`: Bevorzuge das Feld, das explizit als **Rechnungsnummer**, **Re-Nr**, **Rechnung-Nr.**, **Nummer** oder **Beleg-Nr** gekennzeichnet ist – nicht die Auftragsnummer.
+   - `datum`: Bevorzuge das Feld, das explizit als **Rechnungsdatum**, **RE-Datum**, **Datum** oder **Beleg-Datum** (meist rechts auf der Rechnung) gekennzeichnet ist – nicht das Lieferdatum oder Auftragsdatum links.
    - Im Zweifel wähle das Datum, das näher am Wort **Rechnung** bzw. **RECHNUNG** steht.
 
