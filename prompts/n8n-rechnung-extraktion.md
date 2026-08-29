@@ -42,7 +42,8 @@ Extrahiere die folgenden Felder und gib sie als **reines JSON** zurück – ohne
    - Erkenne folgende Bezeichnungen als Gesamtbetrag: **Rechnungssumme**, **Gesamt**, **Total**, **Endbetrag**, **Summe**.
    - Bevorzuge den Endbetrag inkl. MwSt. (Brutto).
    - Falls mehrere Summen vorhanden sind, wähle die höchste als `gesamtbetrag`.
-   - Gib den Betrag als Zahl oder String zurück (Dezimalkomma ist erlaubt, z. B. `"571,20"`).
+   - Gib den Betrag als Zahl oder String zurück (Dezimalkomma ist erlaubt, z. B. `"571,20"` oder `"715,67 EUR"`).
+   - Behandle das Komma immer als Dezimaltrennzeichen und ignoriere Währungsangaben wie **€**, **EUR** oder **e** (z. B. wird `"715,67 EUR"` zu `715.67`).
 3. **Währung**:
    - Das Euro-Zeichen kann als **€**, **EUR** oder **e** (kleines e) angegeben sein.
    - Ignoriere das Währungszeichen bei der Zahlextraktion.
