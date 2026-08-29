@@ -460,7 +460,7 @@ export function Tr({
   onClick,
 }: {
   children: ReactNode;
-  onClick?: (() => void) | undefined;
+  onClick?: ((e: React.MouseEvent<HTMLTableRowElement>) => void) | undefined;
 }) {
   const head = useContext(TableHeadContext);
   return (
