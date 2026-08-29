@@ -1,0 +1,1 @@
+ALTER TABLE public.rechnungen ADD COLUMN notizen TEXT NULL;

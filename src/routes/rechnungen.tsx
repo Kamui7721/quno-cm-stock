@@ -96,6 +96,7 @@ function RechnungenPage() {
     gesamtbetrag: "0",
     bezahlt: false,
   });
+  const [notizEdit, setNotizEdit] = useState<{ id: string; wert: string } | null>(null);
 
   const lieferanten = useQuery({
     queryKey: ["lieferanten"],
@@ -218,6 +219,18 @@ function RechnungenPage() {
     onSuccess: () => {
       toast.success("Rechnung aktualisiert");
       setEditId(null);
+      qc.invalidateQueries({ queryKey: ["rechnungen"] });
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
+  const notizSpeichern = useMutation({
+    mutationFn: async ({ id, notizen }: { id: string; notizen: string }) => {
+      const { error } = await db.from("rechnungen").update({ notizen: notizen || null }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Notiz gespeichert");
+      setNotizEdit(null);
       qc.invalidateQueries({ queryKey: ["rechnungen"] });
     },
     onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
@@ -364,10 +377,17 @@ function RechnungenPage() {
               "Status",
               "Prüfung",
               "PDF",
+              "Notizen",
             ]}
           >
             {liste.map((r) => (
-              <Tr key={r.id} onClick={() => setDetailId(r.id)}>
+            <Tr
+              key={r.id}
+              onClick={(e) => {
+                if ((e.target as HTMLElement).closest("[data-note-cell]")) return;
+                setDetailId(r.id);
+              }}
+            >
                 <Td>
                   <span onClick={(e) => e.stopPropagation()}>
                     <Checkbox
@@ -430,6 +450,50 @@ function RechnungenPage() {
                   ) : (
                     <span className="text-muted-foreground">–</span>
                   )}
+                </Td>
+                <Td className="p-0">
+                  <div
+                    data-note-cell
+                    className="h-full w-full px-5 py-3"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {notizEdit?.id === r.id ? (
+                      <Input
+                        autoFocus
+                        value={notizEdit!.wert}
+                        onClick={(e) => e.stopPropagation()}
+                        onChange={(e) => setNotizEdit({ ...notizEdit!, wert: e.target.value })}
+                        onBlur={() => {
+                          const wert = notizEdit!.wert.trim();
+                          if (wert !== (r.notizen ?? "")) {
+                            notizSpeichern.mutate({ id: r.id, notizen: wert });
+                          } else {
+                            setNotizEdit(null);
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.currentTarget.blur();
+                          } else if (e.key === "Escape") {
+                            setNotizEdit(null);
+                          }
+                        }}
+                        className="min-h-8 py-1 text-sm"
+                      />
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setNotizEdit({ id: r.id, wert: r.notizen ?? "" });
+                        }}
+                        className="block w-full truncate text-left text-sm text-foreground hover:text-primary"
+                        title={r.notizen ?? undefined}
+                      >
+                        {r.notizen || <span className="text-muted-foreground">–</span>}
+                      </button>
+                    )}
+                  </div>
                 </Td>
               </Tr>
             ))}
