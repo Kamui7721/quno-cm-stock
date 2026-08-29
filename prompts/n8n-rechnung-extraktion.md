@@ -49,6 +49,7 @@ Extrahiere die folgenden Felder und gib sie als **reines JSON** zurück – ohne
    - Ignoriere das Währungszeichen bei der Zahlextraktion.
 4. **Lieferant**:
    - `lieferant_name` ist der Rechnungsaussteller (Firmenname oben im Briefkopf).
+   - Wenn kein explizites Absenderfeld vorhanden ist, extrahiere den Firmennamen aus der Kopfzeile oder Fußzeile der Rechnung (z. B. **restsüße**, **Copains du Vin GmbH**).
    - Weitere Felder nur ausfüllen, wenn sie klar erkennbar sind.
 5. **Positionen**:
    - Jede einzelne Artikelzeile wird zu einem Objekt im Array `positionen`.
