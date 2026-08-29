@@ -381,7 +381,13 @@ function RechnungenPage() {
             ]}
           >
             {liste.map((r) => (
-              <Tr key={r.id} onClick={() => setDetailId(r.id)}>
+            <Tr
+              key={r.id}
+              onClick={(e) => {
+                if ((e.target as HTMLElement).closest("[data-note-cell]")) return;
+                setDetailId(r.id);
+              }}
+            >
                 <Td>
                   <span onClick={(e) => e.stopPropagation()}>
                     <Checkbox
