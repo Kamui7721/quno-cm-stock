@@ -54,7 +54,7 @@ Extrahiere die folgenden Felder und gib sie als **reines JSON** zurück – ohne
 5. **Positionen**:
    - Jede einzelne Artikelzeile wird zu einem Objekt im Array `positionen`.
    - `bezeichnung`: Artikelbezeichnung exakt wie angegeben, aber bereinigt.
-   - `kategorie_name`: Versuche, eine passende Kategorie zu erkennen (z. B. "Getränke", "Lebensmittel", "Obst & Gemüse"). Null, falls nicht eindeutig.
+   - `kategorie_name`: Versuche, eine passende Kategorie zu erkennen (z. B. "Getränke", "Spirituosen", "Lebensmittel", "Sonstiges"). Verwende "Sonstiges", wenn die Position in keine der anderen Kategorien passt. Null nur, wenn gar keine Zuordnung möglich ist.
    - `menge`, `einzelpreis`, `gesamtpreis`: als Zahl oder String zurückgeben. Wenn `gesamtpreis` fehlt, aber Menge und Einzelpreis vorhanden sind, kannst du ihn berechnen.
    - `einheit`: kg, l, Stück, Flasche, Kiste, Palette etc. – falls nicht angegeben, null.
 6. **Warnungen**:
