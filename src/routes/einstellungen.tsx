@@ -594,6 +594,7 @@ function EinstellungenPage() {
             <Select value={form.typ} onChange={(e) => setForm({ ...form, typ: e.target.value })}>
               <option value="getränk">Getränk</option>
               <option value="lebensmittel">Lebensmittel</option>
+              <option value="sonstiges">Sonstiges</option>
             </Select>
           </Field>
           <Field label="Farbe">
