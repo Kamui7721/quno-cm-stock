@@ -376,10 +376,41 @@ function ProduktePage() {
         {suchbegriff && <p className="text-xs text-muted-foreground">Suche über alle Kategorien</p>}
 
         {auswahl.length > 0 && (
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-xs text-muted-foreground">
-              {auswahl.length} Produkt(e) ausgewählt
+          <div className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3 sm:flex-row sm:items-center">
+            <span className="text-sm font-medium text-foreground">
+              {auswahl.length} {auswahl.length === 1 ? "Produkt" : "Produkte"} ausgewählt
             </span>
+            <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+              <span className="text-sm text-muted-foreground">Kategorie ändern zu:</span>
+              <div className="w-full sm:w-56">
+                <Select
+                  value={bulkKategorie}
+                  onChange={(e) => setBulkKategorie(e.target.value)}
+                >
+                  <option value="">– Kategorie wählen –</option>
+                  {(kategorien.data ?? []).map((k) => (
+                    <option key={k.id} value={k.id}>
+                      {k.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <Button
+                disabled={!bulkKategorie || kategorieBulkUpdate.isPending}
+                onClick={() => kategorieBulkUpdate.mutate()}
+              >
+                Anwenden
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setAuswahl([]);
+                  setBulkKategorie("");
+                }}
+              >
+                Abbrechen
+              </Button>
+            </div>
             {auswahl.length === 2 && (
               <Button
                 variant="outline"
@@ -392,13 +423,6 @@ function ProduktePage() {
                 <GitMerge size={14} /> Zusammenführen
               </Button>
             )}
-            <button
-              type="button"
-              className="text-xs text-muted-foreground underline hover:text-foreground"
-              onClick={() => setAuswahl([])}
-            >
-              Auswahl aufheben
-            </button>
           </div>
         )}
       </div>
