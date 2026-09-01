@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { GitMerge, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
+import { bulkUpdateKategorie } from "@/lib/produkte.functions";
 import { ProduktDetail } from "@/components/ProduktDetail";
 import { abweichungProzent, trendLabel, trendTone } from "@/lib/preise";
 import { normalisiereBezeichnung } from "@/lib/aehnlichkeit";
@@ -79,6 +80,7 @@ function ProduktePage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [auswahl, setAuswahl] = useState<string[]>([]);
+  const [bulkKategorie, setBulkKategorie] = useState("");
   const [mergeOpen, setMergeOpen] = useState(false);
   const [mergeZielId, setMergeZielId] = useState<string | null>(null);
   const [sortFeld, setSortFeld] = useState<"name" | "letzter_ek" | "trend" | null>(null);
@@ -222,6 +224,21 @@ function ProduktePage() {
     onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
   });
 
+  const kategorieBulkUpdate = useMutation({
+    mutationFn: async () => {
+      if (auswahl.length === 0) throw new Error("Keine Produkte ausgewählt");
+      if (!bulkKategorie) throw new Error("Keine Kategorie ausgewählt");
+      await bulkUpdateKategorie({ data: { ids: auswahl, kategorie_id: bulkKategorie } });
+    },
+    onSuccess: () => {
+      toast.success(`${auswahl.length} ${auswahl.length === 1 ? "Produkt" : "Produkte"} aktualisiert`);
+      setAuswahl([]);
+      setBulkKategorie("");
+      qc.invalidateQueries({ queryKey: ["produkte"] });
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
+
   const bearbeiten = (p: {
     id: string;
     name?: string | null;
@@ -359,10 +376,41 @@ function ProduktePage() {
         {suchbegriff && <p className="text-xs text-muted-foreground">Suche über alle Kategorien</p>}
 
         {auswahl.length > 0 && (
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-xs text-muted-foreground">
-              {auswahl.length} Produkt(e) ausgewählt
+          <div className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/5 p-3 sm:flex-row sm:items-center">
+            <span className="text-sm font-medium text-foreground">
+              {auswahl.length} {auswahl.length === 1 ? "Produkt" : "Produkte"} ausgewählt
             </span>
+            <div className="flex flex-1 flex-col gap-2 sm:flex-row sm:items-center">
+              <span className="text-sm text-muted-foreground">Kategorie ändern zu:</span>
+              <div className="w-full sm:w-56">
+                <Select
+                  value={bulkKategorie}
+                  onChange={(e) => setBulkKategorie(e.target.value)}
+                >
+                  <option value="">– Kategorie wählen –</option>
+                  {(kategorien.data ?? []).map((k) => (
+                    <option key={k.id} value={k.id}>
+                      {k.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+              <Button
+                disabled={!bulkKategorie || kategorieBulkUpdate.isPending}
+                onClick={() => kategorieBulkUpdate.mutate()}
+              >
+                Anwenden
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setAuswahl([]);
+                  setBulkKategorie("");
+                }}
+              >
+                Abbrechen
+              </Button>
+            </div>
             {auswahl.length === 2 && (
               <Button
                 variant="outline"
@@ -375,13 +423,6 @@ function ProduktePage() {
                 <GitMerge size={14} /> Zusammenführen
               </Button>
             )}
-            <button
-              type="button"
-              className="text-xs text-muted-foreground underline hover:text-foreground"
-              onClick={() => setAuswahl([])}
-            >
-              Auswahl aufheben
-            </button>
           </div>
         )}
       </div>
@@ -394,7 +435,18 @@ function ProduktePage() {
         ) : (
           <Table
             head={[
-              "",
+              {
+                label: "Auswählen",
+                node: (
+                  <Checkbox
+                    checked={liste.length > 0 && auswahl.length === liste.length}
+                    onChange={() => {
+                      if (auswahl.length === liste.length) setAuswahl([]);
+                      else setAuswahl(liste.map((p) => p.id));
+                    }}
+                  />
+                ),
+              },
               kopfZelle("Name", "name"),
               "Kategorie",
               "Lieferant",
