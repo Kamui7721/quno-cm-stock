@@ -224,6 +224,21 @@ function ProduktePage() {
     onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
   });
 
+  const kategorieBulkUpdate = useMutation({
+    mutationFn: async () => {
+      if (auswahl.length === 0) throw new Error("Keine Produkte ausgewählt");
+      if (!bulkKategorie) throw new Error("Keine Kategorie ausgewählt");
+      await bulkUpdateKategorie({ data: { ids: auswahl, kategorie_id: bulkKategorie } });
+    },
+    onSuccess: () => {
+      toast.success(`${auswahl.length} ${auswahl.length === 1 ? "Produkt" : "Produkte"} aktualisiert`);
+      setAuswahl([]);
+      setBulkKategorie("");
+      qc.invalidateQueries({ queryKey: ["produkte"] });
+    },
+    onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
+  });
+
   const bearbeiten = (p: {
     id: string;
     name?: string | null;
