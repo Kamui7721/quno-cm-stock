@@ -80,6 +80,7 @@ function ProduktePage() {
   const [editId, setEditId] = useState<string | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [auswahl, setAuswahl] = useState<string[]>([]);
+  const [bulkKategorie, setBulkKategorie] = useState("");
   const [mergeOpen, setMergeOpen] = useState(false);
   const [mergeZielId, setMergeZielId] = useState<string | null>(null);
   const [sortFeld, setSortFeld] = useState<"name" | "letzter_ek" | "trend" | null>(null);
