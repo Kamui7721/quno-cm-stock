@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { GitMerge, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
+import { bulkUpdateKategorie } from "@/lib/produkte.functions";
 import { ProduktDetail } from "@/components/ProduktDetail";
 import { abweichungProzent, trendLabel, trendTone } from "@/lib/preise";
 import { normalisiereBezeichnung } from "@/lib/aehnlichkeit";
