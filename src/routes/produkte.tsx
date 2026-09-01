@@ -435,7 +435,18 @@ function ProduktePage() {
         ) : (
           <Table
             head={[
-              "",
+              {
+                label: "Auswählen",
+                node: (
+                  <Checkbox
+                    checked={liste.length > 0 && auswahl.length === liste.length}
+                    onChange={() => {
+                      if (auswahl.length === liste.length) setAuswahl([]);
+                      else setAuswahl(liste.map((p) => p.id));
+                    }}
+                  />
+                ),
+              },
               kopfZelle("Name", "name"),
               "Kategorie",
               "Lieferant",
