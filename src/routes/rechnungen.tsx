@@ -54,7 +54,9 @@ type PosForm = {
   produkt_id: string;
   einheit: string;
   menge: string;
+  einzelpreis: string;
   preis: string;
+  preisManuell: boolean;
 };
 
 const leerePos = (): PosForm => ({
@@ -63,8 +65,19 @@ const leerePos = (): PosForm => ({
   produkt_id: "",
   einheit: "stück",
   menge: "1",
+  einzelpreis: "",
   preis: "0",
+  preisManuell: false,
 });
+
+/** Berechnet den Gesamtpreis einer Position neu, solange er nicht manuell überschrieben wurde. */
+const posBerechnen = (p: PosForm): PosForm => {
+  if (p.preisManuell) return p;
+  if (p.einzelpreis.trim() === "" || p.menge.trim() === "") return p;
+  const wert = (Number(p.einzelpreis) || 0) * (Number(p.menge) || 0);
+  return { ...p, preis: String(Number(wert.toFixed(4))) };
+};
+
 
 function RechnungenPage() {
   const qc = useQueryClient();
