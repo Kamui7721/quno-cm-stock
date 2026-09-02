@@ -101,6 +101,8 @@ function RechnungenPage() {
     datum: new Date().toISOString().slice(0, 10),
   });
   const [positionen, setPositionen] = useState<PosForm[]>([leerePos()]);
+  const [belegDatei, setBelegDatei] = useState<File | null>(null);
+  const [dragAktiv, setDragAktiv] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     rechnungsnummer: "",
