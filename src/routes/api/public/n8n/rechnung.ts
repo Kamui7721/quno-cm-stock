@@ -374,6 +374,10 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
               einzelpreis,
               einheit,
               gebindegroesse: p.gebindegroesse,
+              flaschen_pro_kiste: istKiste(einheit)
+                ? (standardFlaschenProKiste(einheit) ??
+                  (p.gebindegroesse ? Math.round(p.gebindegroesse) : null))
+                : null,
             });
           }
 
