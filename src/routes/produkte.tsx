@@ -529,7 +529,7 @@ function ProduktePage() {
         {mergeZiel && mergeQuelle && (
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Wähle das Ziel-Produkt. Alle Rechnungspositionen, Zählungen und Verkaufszahlen des
+              Wähle das Ziel-Produkt. Alle Rechnungspositionen, Inventuren und Verkaufszahlen des
               anderen Produkts werden übertragen, die Bestände addiert.
             </p>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -751,10 +751,10 @@ function ProduktePage() {
         zusatz={
           <div>
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Zählungs-Verlauf
+              Inventur-Verlauf
             </h3>
             {(historie.data ?? []).length === 0 ? (
-              <p className="text-sm text-muted-foreground">Noch keine Zählungen.</p>
+              <p className="text-sm text-muted-foreground">Noch keine Inventuren.</p>
             ) : (
               <div className="space-y-2">
                 {(historie.data ?? []).map((h) => (

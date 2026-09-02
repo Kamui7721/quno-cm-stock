@@ -21,7 +21,7 @@ const nav = [
   { to: "/produkte", label: "Produkte", icon: Package },
   { to: "/lieferanten", label: "Lieferanten", icon: Truck },
   { to: "/rechnungen", label: "Rechnungen", icon: Receipt },
-  { to: "/zaehlung", label: "Zählung", icon: ClipboardList },
+  { to: "/zaehlung", label: "Inventur", icon: ClipboardList },
   { to: "/verkaufszahlen", label: "Verkaufszahlen", icon: TrendingUp },
   { to: "/einstellungen", label: "Einstellungen", icon: Settings },
 ] as const;
