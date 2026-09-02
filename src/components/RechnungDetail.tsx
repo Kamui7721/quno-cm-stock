@@ -10,6 +10,7 @@ import { pruefungSetzen } from "@/lib/pruefung";
 
 import { Badge, Button, DetailModal, InfoRow } from "@/components/ui-kit";
 import { datum, datumZeit, einheitLabel, eur, num } from "@/lib/format";
+import { istKiste } from "@/lib/types";
 
 type Props = {
   id: string | null;
@@ -291,6 +292,28 @@ export function RechnungDetail({ id, onClose, onEdit }: Props) {
                         >
                           Abbrechen
                         </Button>
+                      </div>
+                    )}
+                    {istKiste(p.einheit) && (
+                      <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+                        <div className="rounded-md border border-border bg-surface px-2 py-1">
+                          <span className="block text-muted-foreground">Kistenpreis</span>
+                          <span className="text-foreground">
+                            {p.einzelpreis != null ? eur(Number(p.einzelpreis)) : "—"}
+                          </span>
+                        </div>
+                        <div className="rounded-md border border-border bg-surface px-2 py-1">
+                          <span className="block text-muted-foreground">Stückpreis / Flasche</span>
+                          <span className="text-foreground">
+                            {p.einzelpreis != null && Number(p.flaschen_pro_kiste) > 0
+                              ? eur(Number(p.einzelpreis) / Number(p.flaschen_pro_kiste))
+                              : "—"}
+                          </span>
+                        </div>
+                        <div className="rounded-md border border-border bg-surface px-2 py-1">
+                          <span className="block text-muted-foreground">Gesamtbetrag</span>
+                          <span className="text-foreground">{eur(Number(p.preis))}</span>
+                        </div>
                       </div>
                     )}
                     {p.kategorien && (
