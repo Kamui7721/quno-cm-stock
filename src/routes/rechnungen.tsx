@@ -561,6 +561,65 @@ function RechnungenPage() {
           </div>
 
           <div>
+            <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Beleg (PDF, optional)
+            </span>
+            {belegDatei ? (
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
+                <FileText size={18} className="text-primary" />
+                <span className="min-w-0 flex-1 truncate text-sm">{belegDatei.name}</span>
+                <span className="text-xs text-muted-foreground">
+                  {(belegDatei.size / 1024 / 1024).toFixed(2)} MB
+                </span>
+                <button
+                  type="button"
+                  aria-label="Beleg entfernen"
+                  className="text-muted-foreground hover:text-primary"
+                  onClick={() => setBelegDatei(null)}
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ) : (
+              <label
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragAktiv(true);
+                }}
+                onDragLeave={() => setDragAktiv(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragAktiv(false);
+                  const f = e.dataTransfer.files?.[0];
+                  if (f) belegWaehlen(f);
+                }}
+                className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed px-4 py-6 text-center text-sm transition ${
+                  dragAktiv ? "border-primary bg-primary/5" : "border-border bg-card"
+                }`}
+              >
+                <FileText size={20} className="text-muted-foreground" />
+                <span className="text-muted-foreground">
+                  PDF hierher ziehen oder{" "}
+                  <span className="font-medium text-primary">Datei auswählen</span>
+                </span>
+                <span className="text-xs text-muted-foreground">Nur PDF, max. 10 MB</span>
+                <input
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) belegWaehlen(f);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+            )}
+          </div>
+
+
+
+          <div>
             <div className="mb-2 flex items-center justify-between">
               <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Positionen
