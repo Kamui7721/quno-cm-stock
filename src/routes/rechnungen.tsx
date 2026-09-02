@@ -147,7 +147,7 @@ function RechnungenPage() {
   const produkte = useQuery({
     queryKey: ["produkte-simple"],
     queryFn: async () => {
-      const { data, error } = await db.from("produkte").select("id, name").order("name");
+      const { data, error } = await db.from("produkte").select("id, name, kategorie_id").order("name");
       if (error) throw error;
       return data;
     },
