@@ -303,7 +303,7 @@ export function RechnungDetail({ id, onClose, onEdit }: Props) {
                           </span>
                         </div>
                         <div className="rounded-md border border-border bg-surface px-2 py-1">
-                          <span className="block text-muted-foreground">Stückpreis / Flasche</span>
+                          <span className="block text-muted-foreground">Stückpreis</span>
                           <span className="text-foreground">
                             {p.einzelpreis != null && Number(p.flaschen_pro_kiste) > 0
                               ? eur(Number(p.einzelpreis) / Number(p.flaschen_pro_kiste))

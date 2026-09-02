@@ -149,7 +149,7 @@ function RechnungenPage() {
   const produkte = useQuery({
     queryKey: ["produkte-simple"],
     queryFn: async () => {
-      const { data, error } = await db.from("produkte").select("id, name, kategorie_id").order("name");
+      const { data, error } = await db.from("produkte").select("id, name, kategorie_id, einheit, stueck_pro_einheit").order("name");
       if (error) throw error;
       return data;
     },
@@ -691,13 +691,24 @@ function RechnungenPage() {
                   </Select>
                   <Select
                     value={p.produkt_id}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const pr = (produkte.data ?? []).find((q) => q.id === e.target.value);
+                      const stueck = pr?.stueck_pro_einheit;
                       setPositionen(
                         positionen.map((x, j) =>
-                          j === i ? { ...x, produkt_id: e.target.value } : x,
+                          j === i
+                            ? {
+                                ...x,
+                                produkt_id: e.target.value,
+                                flaschen_pro_kiste:
+                                  istKiste(x.einheit) && stueck != null
+                                    ? String(stueck)
+                                    : x.flaschen_pro_kiste,
+                              }
+                            : x,
                         ),
-                      )
-                    }
+                      );
+                    }}
                   >
                     <option value="">Produkt</option>
                     {(produkte.data ?? [])
@@ -720,7 +731,12 @@ function RechnungenPage() {
                                 ...x,
                                 einheit: e.target.value,
                                 flaschen_pro_kiste: istKiste(e.target.value)
-                                  ? String(standardFlaschenProKiste(e.target.value) ?? "")
+                                  ? String(
+                                      (produkte.data ?? []).find((q) => q.id === x.produkt_id)
+                                        ?.stueck_pro_einheit ??
+                                        standardFlaschenProKiste(e.target.value) ??
+                                        "",
+                                    )
                                   : "",
                               }
                             : x,
@@ -791,7 +807,7 @@ function RechnungenPage() {
                 {istKiste(p.einheit) && (
                   <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-surface-2 px-3 py-2">
                     <label className="text-xs text-muted-foreground">
-                      <span className="mb-1 block">Flaschen pro Kiste</span>
+                      <span className="mb-1 block">Stück pro Kiste</span>
                       <Input
                         type="number"
                         step="1"
@@ -816,7 +832,7 @@ function RechnungenPage() {
                       </div>
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      <span className="mb-1 block">Stückpreis / Flasche</span>
+                      <span className="mb-1 block">Stückpreis</span>
                       <div className="rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-foreground">
                         {p.einzelpreis.trim() !== "" && Number(p.flaschen_pro_kiste) > 0
                           ? eur((Number(p.einzelpreis) || 0) / Number(p.flaschen_pro_kiste))

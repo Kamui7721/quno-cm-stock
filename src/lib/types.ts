@@ -18,21 +18,22 @@ export const EINHEITEN = [
   { wert: "ml", label: "Milliliter" },
   { wert: "flasche_075", label: "Flasche (0,75 l)" },
   { wert: "flasche_100", label: "Flasche (1,0 l)" },
-  { wert: "kiste_6", label: "Kiste (6 Flaschen)" },
-  { wert: "kiste_12", label: "Kiste (12 Flaschen)" },
   { wert: "kiste", label: "Kiste" },
   { wert: "dose", label: "Dose" },
 ] as const;
 
-export const EINHEIT_LABELS: Record<string, string> = Object.fromEntries(
-  EINHEITEN.map((e) => [e.wert, e.label]),
-);
+export const EINHEIT_LABELS: Record<string, string> = {
+  ...Object.fromEntries(EINHEITEN.map((e) => [e.wert, e.label])),
+  // Altbestände (nicht mehr auswählbar, aber weiterhin lesbar)
+  kiste_6: "Kiste (6 Stück)",
+  kiste_12: "Kiste (12 Stück)",
+};
 
 /** Prüft, ob eine Einheit eine Kisten-Einheit ist. */
 export const istKiste = (einheit?: string | null): boolean =>
   ["kiste", "kiste_6", "kiste_12"].includes((einheit ?? "").trim().toLowerCase());
 
-/** Standard-Flaschenanzahl je Kisten-Einheit (null = manuell erfassen). */
+/** Standard-Stückzahl je Kisten-Einheit (null = manuell erfassen). */
 export const standardFlaschenProKiste = (einheit?: string | null): number | null => {
   const e = (einheit ?? "").trim().toLowerCase();
   if (e === "kiste_6") return 6;

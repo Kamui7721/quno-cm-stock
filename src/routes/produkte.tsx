@@ -26,7 +26,7 @@ import {
   Tr,
 } from "@/components/ui-kit";
 import { datum, einheitLabel, eur, num } from "@/lib/format";
-import { EINHEITEN } from "@/lib/types";
+import { EINHEITEN, istKiste } from "@/lib/types";
 
 export const Route = createFileRoute("/produkte")({
   head: () => ({
@@ -67,6 +67,7 @@ const leer = {
   lieferant_id: "",
   einheit: "stück",
   aktueller_bestand: "0",
+  stueck_pro_einheit: "",
 };
 
 function ProduktePage() {
@@ -155,6 +156,9 @@ function ProduktePage() {
         kategorie_id: form.kategorie_id || null,
         lieferant_id: form.lieferant_id || null,
         einheit: form.einheit,
+        stueck_pro_einheit: istKiste(form.einheit)
+          ? Math.round(Number(form.stueck_pro_einheit)) || null
+          : null,
         aktueller_bestand: Number(form.aktueller_bestand) || 0,
       });
       if (error) throw error;
@@ -211,6 +215,9 @@ function ProduktePage() {
           kategorie_id: form.kategorie_id || null,
           lieferant_id: form.lieferant_id || null,
           einheit: form.einheit,
+          stueck_pro_einheit: istKiste(form.einheit)
+            ? Math.round(Number(form.stueck_pro_einheit)) || null
+            : null,
         })
         .eq("id", editId!);
       if (error) throw error;
@@ -246,6 +253,7 @@ function ProduktePage() {
     lieferant_id?: string | null;
     einheit?: string | null;
     aktueller_bestand?: number | string | null;
+    stueck_pro_einheit?: number | string | null;
   }) => {
     setForm({
       name: p.name ?? "",
@@ -253,6 +261,7 @@ function ProduktePage() {
       lieferant_id: p.lieferant_id ?? "",
       einheit: p.einheit ?? "stück",
       aktueller_bestand: String(p.aktueller_bestand ?? "0"),
+      stueck_pro_einheit: p.stueck_pro_einheit == null ? "" : String(p.stueck_pro_einheit),
     });
     setEditId(p.id);
   };
@@ -643,6 +652,20 @@ function ProduktePage() {
                 ))}
               </Select>
             </Field>
+            {istKiste(form.einheit) && (
+              <Field label="Stück pro Kiste">
+                <Input
+                  required
+                  type="number"
+                  step="1"
+                  min="1"
+                  inputMode="numeric"
+                  placeholder="z. B. 12"
+                  value={form.stueck_pro_einheit}
+                  onChange={(e) => setForm({ ...form, stueck_pro_einheit: e.target.value })}
+                />
+              </Field>
+            )}
             <Field label="Aktueller Bestand">
               <Input
                 type="number"
@@ -724,6 +747,20 @@ function ProduktePage() {
                 ))}
               </Select>
             </Field>
+            {istKiste(form.einheit) && (
+              <Field label="Stück pro Kiste">
+                <Input
+                  required
+                  type="number"
+                  step="1"
+                  min="1"
+                  inputMode="numeric"
+                  placeholder="z. B. 12"
+                  value={form.stueck_pro_einheit}
+                  onChange={(e) => setForm({ ...form, stueck_pro_einheit: e.target.value })}
+                />
+              </Field>
+            )}
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button
