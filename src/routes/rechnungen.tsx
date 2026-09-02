@@ -54,7 +54,9 @@ type PosForm = {
   produkt_id: string;
   einheit: string;
   menge: string;
+  einzelpreis: string;
   preis: string;
+  preisManuell: boolean;
 };
 
 const leerePos = (): PosForm => ({
@@ -63,8 +65,19 @@ const leerePos = (): PosForm => ({
   produkt_id: "",
   einheit: "stück",
   menge: "1",
+  einzelpreis: "",
   preis: "0",
+  preisManuell: false,
 });
+
+/** Berechnet den Gesamtpreis einer Position neu, solange er nicht manuell überschrieben wurde. */
+const posBerechnen = (p: PosForm): PosForm => {
+  if (p.preisManuell) return p;
+  if (p.einzelpreis.trim() === "" || p.menge.trim() === "") return p;
+  const wert = (Number(p.einzelpreis) || 0) * (Number(p.menge) || 0);
+  return { ...p, preis: String(Number(wert.toFixed(4))) };
+};
+
 
 function RechnungenPage() {
   const qc = useQueryClient();
@@ -145,10 +158,8 @@ function RechnungenPage() {
     onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
   });
 
-  const gesamt = positionen.reduce(
-    (s, p) => s + (Number(p.menge) || 0) * (Number(p.preis) || 0),
-    0,
-  );
+  const gesamt = positionen.reduce((s, p) => s + (Number(p.preis) || 0), 0);
+
 
   const anlegen = useMutation({
     mutationFn: async () => {
@@ -172,7 +183,9 @@ function RechnungenPage() {
           produkt_id: p.produkt_id || null,
           einheit: p.einheit || "stück",
           menge: Number(p.menge) || 0,
+          einzelpreis: p.einzelpreis.trim() === "" ? null : Number(p.einzelpreis) || 0,
           preis: Number(p.preis) || 0,
+
         }));
       if (rows.length) {
         const res = await db.from("rechnungspositionen").insert(rows);
@@ -557,7 +570,7 @@ function RechnungenPage() {
               {positionen.map((p, i) => (
                 <div
                   key={i}
-                  className="grid grid-cols-[2fr_1fr_1fr_1fr_70px_90px_32px] items-center gap-2"
+                  className="grid grid-cols-[2fr_1fr_1fr_1fr_70px_90px_90px_32px] items-center gap-2"
                 >
                   <Input
                     placeholder="Bezeichnung"
@@ -621,23 +634,49 @@ function RechnungenPage() {
                   <Input
                     type="number"
                     step="any"
+                    inputMode="decimal"
+                    title="Menge"
+                    placeholder="Menge"
                     value={p.menge}
                     onChange={(e) =>
                       setPositionen(
-                        positionen.map((x, j) => (j === i ? { ...x, menge: e.target.value } : x)),
+                        positionen.map((x, j) =>
+                          j === i ? posBerechnen({ ...x, menge: e.target.value }) : x,
+                        ),
                       )
                     }
                   />
                   <Input
                     type="number"
                     step="any"
-                    value={p.preis}
+                    inputMode="decimal"
+                    title="Einzelpreis (optional)"
+                    placeholder="Einzelpreis"
+                    value={p.einzelpreis}
                     onChange={(e) =>
                       setPositionen(
-                        positionen.map((x, j) => (j === i ? { ...x, preis: e.target.value } : x)),
+                        positionen.map((x, j) =>
+                          j === i ? posBerechnen({ ...x, einzelpreis: e.target.value }) : x,
+                        ),
                       )
                     }
                   />
+                  <Input
+                    type="number"
+                    step="any"
+                    inputMode="decimal"
+                    title="Gesamtpreis (überschreibbar)"
+                    placeholder="Gesamt"
+                    value={p.preis}
+                    onChange={(e) =>
+                      setPositionen(
+                        positionen.map((x, j) =>
+                          j === i ? { ...x, preis: e.target.value, preisManuell: true } : x,
+                        ),
+                      )
+                    }
+                  />
+
                   <button
                     type="button"
                     className="text-muted-foreground hover:text-primary"
