@@ -104,6 +104,20 @@ function RechnungenPage() {
   const [positionen, setPositionen] = useState<PosForm[]>([leerePos()]);
   const [belegDatei, setBelegDatei] = useState<File | null>(null);
   const [dragAktiv, setDragAktiv] = useState(false);
+
+  const belegWaehlen = (datei: File) => {
+    const istPdf =
+      datei.type === "application/pdf" || datei.name.toLowerCase().endsWith(".pdf");
+    if (!istPdf) {
+      toast.error("Nur PDF-Dateien sind erlaubt");
+      return;
+    }
+    if (datei.size > 10 * 1024 * 1024) {
+      toast.error("Datei ist größer als 10 MB");
+      return;
+    }
+    setBelegDatei(datei);
+  };
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     rechnungsnummer: "",
