@@ -193,6 +193,10 @@ function RechnungenPage() {
         const res = await db.from("rechnungspositionen").insert(rows);
         if (res.error) throw res.error;
       }
+      if (belegDatei) {
+        await belegHochladen(data.id, belegDatei);
+        void vorschauErzeugen(data.id);
+      }
     },
     onSuccess: () => {
       toast.success("Rechnung gespeichert");
@@ -203,6 +207,7 @@ function RechnungenPage() {
         datum: new Date().toISOString().slice(0, 10),
       });
       setPositionen([leerePos()]);
+      setBelegDatei(null);
       qc.invalidateQueries({ queryKey: ["rechnungen"] });
     },
     onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
