@@ -158,10 +158,8 @@ function RechnungenPage() {
     onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
   });
 
-  const gesamt = positionen.reduce(
-    (s, p) => s + (Number(p.menge) || 0) * (Number(p.preis) || 0),
-    0,
-  );
+  const gesamt = positionen.reduce((s, p) => s + (Number(p.preis) || 0), 0);
+
 
   const anlegen = useMutation({
     mutationFn: async () => {
