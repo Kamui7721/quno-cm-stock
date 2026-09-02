@@ -634,23 +634,49 @@ function RechnungenPage() {
                   <Input
                     type="number"
                     step="any"
+                    inputMode="decimal"
+                    title="Menge"
+                    placeholder="Menge"
                     value={p.menge}
                     onChange={(e) =>
                       setPositionen(
-                        positionen.map((x, j) => (j === i ? { ...x, menge: e.target.value } : x)),
+                        positionen.map((x, j) =>
+                          j === i ? posBerechnen({ ...x, menge: e.target.value }) : x,
+                        ),
                       )
                     }
                   />
                   <Input
                     type="number"
                     step="any"
-                    value={p.preis}
+                    inputMode="decimal"
+                    title="Einzelpreis (optional)"
+                    placeholder="Einzelpreis"
+                    value={p.einzelpreis}
                     onChange={(e) =>
                       setPositionen(
-                        positionen.map((x, j) => (j === i ? { ...x, preis: e.target.value } : x)),
+                        positionen.map((x, j) =>
+                          j === i ? posBerechnen({ ...x, einzelpreis: e.target.value }) : x,
+                        ),
                       )
                     }
                   />
+                  <Input
+                    type="number"
+                    step="any"
+                    inputMode="decimal"
+                    title="Gesamtpreis (überschreibbar)"
+                    placeholder="Gesamt"
+                    value={p.preis}
+                    onChange={(e) =>
+                      setPositionen(
+                        positionen.map((x, j) =>
+                          j === i ? { ...x, preis: e.target.value, preisManuell: true } : x,
+                        ),
+                      )
+                    }
+                  />
+
                   <button
                     type="button"
                     className="text-muted-foreground hover:text-primary"
