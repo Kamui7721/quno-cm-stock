@@ -82,12 +82,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "QUNO x CM — Inventur" },
       {
         name: "description",
-        content: "Inventur-Management für Club Michel: Produkte, Lieferanten, Rechnungen, Zählungen.",
+        content: "Inventur-Management für Club Michel: Produkte, Lieferanten, Rechnungen, Inventur.",
       },
       { property: "og:title", content: "QUNO x CM — Inventur" },
       {
         property: "og:description",
-        content: "Inventur-Management für Club Michel: Produkte, Lieferanten, Rechnungen, Zählungen.",
+        content: "Inventur-Management für Club Michel: Produkte, Lieferanten, Rechnungen, Inventur.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

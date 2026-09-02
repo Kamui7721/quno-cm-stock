@@ -20,9 +20,9 @@ import { datum, einheitLabel, num } from "@/lib/format";
 export const Route = createFileRoute("/zaehlung/$zaehlungId")({
   head: () => ({
     meta: [
-      { title: "Zählung erfassen — QUNO x CM Inventur" },
+      { title: "Inventur erfassen — QUNO x CM Inventur" },
       { name: "description", content: "Bestände einer Kategorie zählen und Differenzen berechnen." },
-      { property: "og:title", content: "Zählung erfassen — QUNO x CM Inventur" },
+      { property: "og:title", content: "Inventur erfassen — QUNO x CM Inventur" },
       {
         property: "og:description",
         content: "Bestände einer Kategorie zählen und Differenzen berechnen.",
@@ -120,7 +120,7 @@ function ZaehlungDetail() {
       if (upd.error) throw upd.error;
     },
     onSuccess: () => {
-      toast.success("Zählung abgeschlossen");
+      toast.success("Inventur abgeschlossen");
       qc.invalidateQueries({ queryKey: ["zaehlung", zaehlungId] });
       qc.invalidateQueries({ queryKey: ["zaehlung-positionen", zaehlungId] });
       qc.invalidateQueries({ queryKey: ["zaehlungen"] });
@@ -145,8 +145,8 @@ function ZaehlungDetail() {
       </Link>
 
       <PageHeader
-        title={zaehlung.data?.kategorien?.name ?? "Zählung"}
-        subtitle={zaehlung.data ? `Zählung vom ${datum(zaehlung.data.datum)}` : undefined}
+        title={zaehlung.data?.kategorien?.name ?? "Inventur"}
+        subtitle={zaehlung.data ? `Inventur vom ${datum(zaehlung.data.datum)}` : undefined}
         action={
           zaehlung.data ? (
             <Badge tone={abgeschlossen ? "success" : "warning"}>{zaehlung.data.status}</Badge>
@@ -242,7 +242,7 @@ function ZaehlungDetail() {
               disabled={abschliessen.isPending || (produkte.data ?? []).length === 0}
               className="h-14 w-full text-base md:h-auto md:w-auto md:text-sm"
             >
-              Zählung abschließen
+              Inventur abschließen
             </Button>
           </div>
         </>

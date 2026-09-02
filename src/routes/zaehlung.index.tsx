@@ -19,10 +19,10 @@ import { datum, heutigerMonat, monatLabel, num } from "@/lib/format";
 export const Route = createFileRoute("/zaehlung/")({
   head: () => ({
     meta: [
-      { title: "Zählung — QUNO x CM Inventur" },
-      { name: "description", content: "Inventurzählungen pro Kategorie starten und auswerten." },
-      { property: "og:title", content: "Zählung — QUNO x CM Inventur" },
-      { property: "og:description", content: "Inventurzählungen pro Kategorie starten und auswerten." },
+      { title: "Inventur — QUNO x CM Inventur" },
+      { name: "description", content: "Inventuren pro Kategorie starten und auswerten." },
+      { property: "og:title", content: "Inventur — QUNO x CM Inventur" },
+      { property: "og:description", content: "Inventuren pro Kategorie starten und auswerten." },
     ],
   }),
   component: ZaehlungUebersicht,
@@ -83,7 +83,7 @@ function ZaehlungUebersicht() {
 
   return (
     <div>
-      <PageHeader title="Zählung" subtitle="Inventur pro Kategorie" />
+      <PageHeader title="Inventur" subtitle="Inventur pro Kategorie" />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {(kategorien.data ?? []).map((k) => {
@@ -99,7 +99,7 @@ function ZaehlungUebersicht() {
                 )}
               </div>
               <div className="mt-4 text-sm text-muted-foreground">
-                Letzte Zählung:{" "}
+                Letzte Inventur:{" "}
                 <span className="text-foreground">
                   {letzte ? datum(letzte.datum) : "noch keine"}
                 </span>
@@ -110,7 +110,7 @@ function ZaehlungUebersicht() {
                   onClick={() => neueZaehlung.mutate(k.id)}
                   disabled={neueZaehlung.isPending}
                 >
-                  <Plus size={14} /> Neue Zählung
+                  <Plus size={14} /> Neue Inventur
                 </Button>
                 {letzte && (
                   <Button
@@ -133,9 +133,9 @@ function ZaehlungUebersicht() {
       </div>
 
       <Card className="mt-6">
-        <CardHeader title="Zählungs-Historie" />
+        <CardHeader title="Inventur-Historie" />
         {(zaehlungen.data ?? []).length === 0 ? (
-          <Empty text="Noch keine Zählungen." />
+          <Empty text="Noch keine Inventuren." />
         ) : (
           <div>
             {monate.map((m) => (

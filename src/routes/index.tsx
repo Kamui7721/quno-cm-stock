@@ -37,9 +37,9 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Dashboard — QUNO x CM Inventur" },
-      { name: "description", content: "Überblick über Rechnungen, Bestände und Zählungen." },
+      { name: "description", content: "Überblick über Rechnungen, Bestände und Inventur." },
       { property: "og:title", content: "Dashboard — QUNO x CM Inventur" },
-      { property: "og:description", content: "Überblick über Rechnungen, Bestände und Zählungen." },
+      { property: "og:description", content: "Überblick über Rechnungen, Bestände und Inventur." },
     ],
   }),
   component: Dashboard,
@@ -162,9 +162,9 @@ function Dashboard() {
           icon={<Package size={16} />}
         />
         <KpiCard
-          label="Letzte Zählung"
+          label="Letzte Inventur"
           value={letzteZaehlung ? datum(letzteZaehlung.datum) : "–"}
-          hint={letzteZaehlung?.kategorien?.name ?? "Noch keine Zählung"}
+          hint={letzteZaehlung?.kategorien?.name ?? "Noch keine Inventur"}
           icon={<ClipboardList size={16} />}
         />
         <KpiCard
@@ -346,9 +346,9 @@ function Dashboard() {
       })()}
 
       <Card className="mt-6">
-        <CardHeader title="Letzte Zählungen pro Kategorie" />
+        <CardHeader title="Letzte Inventuren pro Kategorie" />
         {(data?.zaehlungen ?? []).length === 0 ? (
-          <Empty text="Noch keine Zählungen vorhanden." />
+          <Empty text="Noch keine Inventuren vorhanden." />
         ) : (
           <Table head={["Kategorie", "Datum", "Status", "Ø Differenz"]}>
             {(data?.zaehlungen ?? []).slice(0, 8).map((z) => (
