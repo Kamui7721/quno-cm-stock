@@ -134,6 +134,7 @@ export type Database = {
           letzter_ek_datum: string | null
           lieferant_id: string | null
           name: string
+          stueck_pro_einheit: number | null
         }
         Insert: {
           aktueller_bestand?: number
@@ -147,6 +148,7 @@ export type Database = {
           letzter_ek_datum?: string | null
           lieferant_id?: string | null
           name: string
+          stueck_pro_einheit?: number | null
         }
         Update: {
           aktueller_bestand?: number
@@ -160,6 +162,7 @@ export type Database = {
           letzter_ek_datum?: string | null
           lieferant_id?: string | null
           name?: string
+          stueck_pro_einheit?: number | null
         }
         Relationships: [
           {

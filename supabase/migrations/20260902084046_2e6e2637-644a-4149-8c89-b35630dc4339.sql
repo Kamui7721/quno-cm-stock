@@ -1,0 +1,1 @@
+ALTER TABLE public.produkte ADD COLUMN IF NOT EXISTS stueck_pro_einheit integer;
