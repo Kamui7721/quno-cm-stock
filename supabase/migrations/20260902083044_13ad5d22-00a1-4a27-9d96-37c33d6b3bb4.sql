@@ -1,0 +1,1 @@
+ALTER TABLE public.rechnungspositionen ADD COLUMN IF NOT EXISTS flaschen_pro_kiste integer;

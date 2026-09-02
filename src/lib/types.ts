@@ -27,3 +27,15 @@ export const EINHEITEN = [
 export const EINHEIT_LABELS: Record<string, string> = Object.fromEntries(
   EINHEITEN.map((e) => [e.wert, e.label]),
 );
+
+/** Prüft, ob eine Einheit eine Kisten-Einheit ist. */
+export const istKiste = (einheit?: string | null): boolean =>
+  ["kiste", "kiste_6", "kiste_12"].includes((einheit ?? "").trim().toLowerCase());
+
+/** Standard-Flaschenanzahl je Kisten-Einheit (null = manuell erfassen). */
+export const standardFlaschenProKiste = (einheit?: string | null): number | null => {
+  const e = (einheit ?? "").trim().toLowerCase();
+  if (e === "kiste_6") return 6;
+  if (e === "kiste_12") return 12;
+  return null;
+};
