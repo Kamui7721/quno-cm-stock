@@ -254,6 +254,7 @@ export type Database = {
           bezeichnung: string
           einheit: string | null
           einzelpreis: number | null
+          flaschen_pro_kiste: number | null
           gebindegroesse: number | null
           id: string
           kategorie_id: string | null
@@ -266,6 +267,7 @@ export type Database = {
           bezeichnung: string
           einheit?: string | null
           einzelpreis?: number | null
+          flaschen_pro_kiste?: number | null
           gebindegroesse?: number | null
           id?: string
           kategorie_id?: string | null
@@ -278,6 +280,7 @@ export type Database = {
           bezeichnung?: string
           einheit?: string | null
           einzelpreis?: number | null
+          flaschen_pro_kiste?: number | null
           gebindegroesse?: number | null
           id?: string
           kategorie_id?: string | null
