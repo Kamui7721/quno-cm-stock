@@ -147,7 +147,7 @@ function RechnungenPage() {
   const produkte = useQuery({
     queryKey: ["produkte-simple"],
     queryFn: async () => {
-      const { data, error } = await db.from("produkte").select("id, name").order("name");
+      const { data, error } = await db.from("produkte").select("id, name, kategorie_id").order("name");
       if (error) throw error;
       return data;
     },
@@ -669,7 +669,9 @@ function RechnungenPage() {
                     onChange={(e) =>
                       setPositionen(
                         positionen.map((x, j) =>
-                          j === i ? { ...x, kategorie_id: e.target.value } : x,
+                          j === i
+                            ? { ...x, kategorie_id: e.target.value, produkt_id: "" }
+                            : x,
                         ),
                       )
                     }
@@ -692,11 +694,15 @@ function RechnungenPage() {
                     }
                   >
                     <option value="">Produkt</option>
-                    {(produkte.data ?? []).map((pr) => (
-                      <option key={pr.id} value={pr.id}>
-                        {pr.name}
-                      </option>
-                    ))}
+                    {(produkte.data ?? [])
+                      .filter(
+                        (pr) => !p.kategorie_id || pr.kategorie_id === p.kategorie_id,
+                      )
+                      .map((pr) => (
+                        <option key={pr.id} value={pr.id}>
+                          {pr.name}
+                        </option>
+                      ))}
                   </Select>
                   <Select
                     value={p.einheit}
