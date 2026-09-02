@@ -67,6 +67,7 @@ const leer = {
   lieferant_id: "",
   einheit: "stück",
   aktueller_bestand: "0",
+  stueck_pro_einheit: "",
 };
 
 function ProduktePage() {
