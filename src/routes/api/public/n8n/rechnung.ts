@@ -6,6 +6,7 @@ import {
   levenshtein,
   normalisiereBezeichnung,
 } from "@/lib/aehnlichkeit";
+import { istKiste, standardFlaschenProKiste } from "@/lib/types";
 
 const API_TOKEN = "quno-cm-2026";
 
@@ -308,6 +309,7 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
             einzelpreis: number | null;
             einheit: string;
             gebindegroesse: number | null;
+            flaschen_pro_kiste: number | null;
           }> = [];
 
           for (const p of parsed.positionen) {
