@@ -655,8 +655,8 @@ function RechnungenPage() {
             </div>
             <div className="space-y-2">
               {positionen.map((p, i) => (
+                <div key={i} className="space-y-2">
                 <div
-                  key={i}
                   className="grid grid-cols-[2fr_1fr_1fr_1fr_70px_90px_90px_32px] items-center gap-2"
                 >
                   <Input
@@ -787,6 +787,50 @@ function RechnungenPage() {
                   >
                     <Trash2 size={16} />
                   </button>
+                </div>
+                {istKiste(p.einheit) && (
+                  <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-surface-2 px-3 py-2">
+                    <label className="text-xs text-muted-foreground">
+                      <span className="mb-1 block">Flaschen pro Kiste</span>
+                      <Input
+                        type="number"
+                        step="1"
+                        min="1"
+                        inputMode="numeric"
+                        className="w-28"
+                        placeholder="z. B. 12"
+                        value={p.flaschen_pro_kiste}
+                        onChange={(e) =>
+                          setPositionen(
+                            positionen.map((x, j) =>
+                              j === i ? { ...x, flaschen_pro_kiste: e.target.value } : x,
+                            ),
+                          )
+                        }
+                      />
+                    </label>
+                    <div className="text-xs text-muted-foreground">
+                      <span className="mb-1 block">Kistenpreis</span>
+                      <div className="rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-foreground">
+                        {p.einzelpreis.trim() === "" ? "—" : eur(Number(p.einzelpreis) || 0)}
+                      </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      <span className="mb-1 block">Stückpreis / Flasche</span>
+                      <div className="rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-foreground">
+                        {p.einzelpreis.trim() !== "" && Number(p.flaschen_pro_kiste) > 0
+                          ? eur((Number(p.einzelpreis) || 0) / Number(p.flaschen_pro_kiste))
+                          : "—"}
+                      </div>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      <span className="mb-1 block">Gesamtbetrag</span>
+                      <div className="rounded-md border border-border bg-surface px-2 py-1.5 text-sm text-foreground">
+                        {eur(Number(p.preis) || 0)}
+                      </div>
+                    </div>
+                  </div>
+                )}
                 </div>
               ))}
             </div>
