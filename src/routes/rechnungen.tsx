@@ -26,7 +26,7 @@ import {
   Tr,
 } from "@/components/ui-kit";
 import { datum, eur } from "@/lib/format";
-import { EINHEITEN } from "@/lib/types";
+import { EINHEITEN, istKiste, standardFlaschenProKiste } from "@/lib/types";
 
 export const Route = createFileRoute("/rechnungen")({
   head: () => ({
@@ -58,6 +58,7 @@ type PosForm = {
   einzelpreis: string;
   preis: string;
   preisManuell: boolean;
+  flaschen_pro_kiste: string;
 };
 
 const leerePos = (): PosForm => ({
@@ -69,6 +70,7 @@ const leerePos = (): PosForm => ({
   einzelpreis: "",
   preis: "0",
   preisManuell: false,
+  flaschen_pro_kiste: "",
 });
 
 /** Berechnet den Gesamtpreis einer Position neu, solange er nicht manuell überschrieben wurde. */
@@ -202,6 +204,10 @@ function RechnungenPage() {
           menge: Number(p.menge) || 0,
           einzelpreis: p.einzelpreis.trim() === "" ? null : Number(p.einzelpreis) || 0,
           preis: Number(p.preis) || 0,
+          flaschen_pro_kiste:
+            istKiste(p.einheit) && p.flaschen_pro_kiste.trim() !== ""
+              ? Math.round(Number(p.flaschen_pro_kiste)) || null
+              : null,
 
         }));
       if (rows.length) {
@@ -708,7 +714,17 @@ function RechnungenPage() {
                     value={p.einheit}
                     onChange={(e) =>
                       setPositionen(
-                        positionen.map((x, j) => (j === i ? { ...x, einheit: e.target.value } : x)),
+                        positionen.map((x, j) =>
+                          j === i
+                            ? {
+                                ...x,
+                                einheit: e.target.value,
+                                flaschen_pro_kiste: istKiste(e.target.value)
+                                  ? String(standardFlaschenProKiste(e.target.value) ?? "")
+                                  : "",
+                              }
+                            : x,
+                        ),
                       )
                     }
                   >
