@@ -21,3 +21,18 @@ export async function belegUrlHolen(rechnungId: string): Promise<string> {
   }
   return body.url;
 }
+
+/** Lädt eine PDF-Datei zu einer bestehenden Rechnung hoch. */
+export async function belegHochladen(rechnungId: string, datei: File): Promise<void> {
+  const res = await fetch(`/api/rechnung-beleg/${rechnungId}`, {
+    method: "POST",
+    credentials: "include",
+    headers: {
+      "content-type": "application/pdf",
+      "x-dateiname": encodeURIComponent(datei.name),
+    },
+    body: datei,
+  });
+  const body = (await res.json().catch(() => null)) as { fehler?: string } | null;
+  if (!res.ok) throw new Error(body?.fehler ?? "Beleg konnte nicht hochgeladen werden");
+}

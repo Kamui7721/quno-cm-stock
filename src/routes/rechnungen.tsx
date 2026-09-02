@@ -4,7 +4,8 @@ import { useState } from "react";
 import { AlertTriangle, FileText, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
-import { belegPfad, belegUrlHolen } from "@/lib/beleg";
+import { belegHochladen, belegPfad, belegUrlHolen } from "@/lib/beleg";
+import { vorschauErzeugen } from "@/lib/vorschau";
 
 import { pruefungSetzen } from "@/lib/pruefung";
 import { rechnungStandardSort } from "@/lib/sortierung";
@@ -101,6 +102,22 @@ function RechnungenPage() {
     datum: new Date().toISOString().slice(0, 10),
   });
   const [positionen, setPositionen] = useState<PosForm[]>([leerePos()]);
+  const [belegDatei, setBelegDatei] = useState<File | null>(null);
+  const [dragAktiv, setDragAktiv] = useState(false);
+
+  const belegWaehlen = (datei: File) => {
+    const istPdf =
+      datei.type === "application/pdf" || datei.name.toLowerCase().endsWith(".pdf");
+    if (!istPdf) {
+      toast.error("Nur PDF-Dateien sind erlaubt");
+      return;
+    }
+    if (datei.size > 10 * 1024 * 1024) {
+      toast.error("Datei ist größer als 10 MB");
+      return;
+    }
+    setBelegDatei(datei);
+  };
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({
     rechnungsnummer: "",
@@ -191,6 +208,10 @@ function RechnungenPage() {
         const res = await db.from("rechnungspositionen").insert(rows);
         if (res.error) throw res.error;
       }
+      if (belegDatei) {
+        await belegHochladen(data.id, belegDatei);
+        void vorschauErzeugen(data.id);
+      }
     },
     onSuccess: () => {
       toast.success("Rechnung gespeichert");
@@ -201,6 +222,7 @@ function RechnungenPage() {
         datum: new Date().toISOString().slice(0, 10),
       });
       setPositionen([leerePos()]);
+      setBelegDatei(null);
       qc.invalidateQueries({ queryKey: ["rechnungen"] });
     },
     onError: (e: Error) => toast.error(`Fehler: ${e.message}`),
@@ -551,6 +573,65 @@ function RechnungenPage() {
               />
             </Field>
           </div>
+
+          <div>
+            <span className="mb-2 block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Beleg (PDF, optional)
+            </span>
+            {belegDatei ? (
+              <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3">
+                <FileText size={18} className="text-primary" />
+                <span className="min-w-0 flex-1 truncate text-sm">{belegDatei.name}</span>
+                <span className="text-xs text-muted-foreground">
+                  {(belegDatei.size / 1024 / 1024).toFixed(2)} MB
+                </span>
+                <button
+                  type="button"
+                  aria-label="Beleg entfernen"
+                  className="text-muted-foreground hover:text-primary"
+                  onClick={() => setBelegDatei(null)}
+                >
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ) : (
+              <label
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDragAktiv(true);
+                }}
+                onDragLeave={() => setDragAktiv(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragAktiv(false);
+                  const f = e.dataTransfer.files?.[0];
+                  if (f) belegWaehlen(f);
+                }}
+                className={`flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-dashed px-4 py-6 text-center text-sm transition ${
+                  dragAktiv ? "border-primary bg-primary/5" : "border-border bg-card"
+                }`}
+              >
+                <FileText size={20} className="text-muted-foreground" />
+                <span className="text-muted-foreground">
+                  PDF hierher ziehen oder{" "}
+                  <span className="font-medium text-primary">Datei auswählen</span>
+                </span>
+                <span className="text-xs text-muted-foreground">Nur PDF, max. 10 MB</span>
+                <input
+                  type="file"
+                  accept="application/pdf,.pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) belegWaehlen(f);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+            )}
+          </div>
+
+
 
           <div>
             <div className="mb-2 flex items-center justify-between">
