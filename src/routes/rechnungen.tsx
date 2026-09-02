@@ -183,7 +183,9 @@ function RechnungenPage() {
           produkt_id: p.produkt_id || null,
           einheit: p.einheit || "stück",
           menge: Number(p.menge) || 0,
+          einzelpreis: p.einzelpreis.trim() === "" ? null : Number(p.einzelpreis) || 0,
           preis: Number(p.preis) || 0,
+
         }));
       if (rows.length) {
         const res = await db.from("rechnungspositionen").insert(rows);
