@@ -786,17 +786,17 @@ function RechnungenPage() {
                       </option>
                     ))}
                   </Select>
-                  <Select
+                  <ProduktSuche
                     value={p.produkt_id}
-                    onChange={(e) => {
-                      const pr = (produkte.data ?? []).find((q) => q.id === e.target.value);
-                      const stueck = pr?.stueck_pro_einheit;
+                    kategorieId={p.kategorie_id}
+                    produkte={produkte.data}
+                    onChange={(id, _name, stueck) => {
                       setPositionen(
                         positionen.map((x, j) =>
                           j === i
                             ? {
                                 ...x,
-                                produkt_id: e.target.value,
+                                produkt_id: id,
                                 flaschen_pro_kiste:
                                   istKiste(x.einheit) && stueck != null
                                     ? String(stueck)
@@ -806,18 +806,7 @@ function RechnungenPage() {
                         ),
                       );
                     }}
-                  >
-                    <option value="">Produkt</option>
-                    {(produkte.data ?? [])
-                      .filter(
-                        (pr) => !p.kategorie_id || pr.kategorie_id === p.kategorie_id,
-                      )
-                      .map((pr) => (
-                        <option key={pr.id} value={pr.id}>
-                          {pr.name}
-                        </option>
-                      ))}
-                  </Select>
+                  />
                   <Select
                     value={p.einheit}
                     onChange={(e) =>
