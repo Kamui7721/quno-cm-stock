@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { AlertTriangle, FileText, Plus, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { AlertTriangle, FileText, Plus, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 import { db } from "@/lib/db";
 import { belegHochladen, belegPfad, belegUrlHolen } from "@/lib/beleg";
@@ -81,6 +81,103 @@ const posBerechnen = (p: PosForm): PosForm => {
   return { ...p, preis: String(Number(wert.toFixed(4))) };
 };
 
+
+function ProduktSuche({
+  value,
+  onChange,
+  produkte,
+  kategorieId,
+}: {
+  value: string;
+  onChange: (id: string, name: string, stueckProEinheit: number | null) => void;
+  produkte:
+    | {
+        id: string;
+        name: string;
+        kategorie_id: string | null;
+        einheit: string;
+        stueck_pro_einheit: number | null;
+      }[]
+    | undefined;
+  kategorieId?: string | null;
+}) {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+
+  const selected = (produkte ?? []).find((p) => p.id === value);
+  const displayValue = selected ? selected.name : query;
+
+  const filtered = (produkte ?? [])
+    .filter((p) => !kategorieId || p.kategorie_id === kategorieId)
+    .filter((p) => {
+      const q = query.trim().toLowerCase();
+      if (q.length < 2) return false;
+      return p.name.toLowerCase().includes(q);
+    });
+
+  useEffect(() => {
+    if (selected) setQuery(selected.name);
+  }, [selected?.id]);
+
+  return (
+    <div className="relative">
+      <div className="relative">
+        <Input
+          placeholder="Produkt suchen…"
+          value={displayValue}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setOpen(true);
+            if (selected && e.target.value !== selected.name) {
+              onChange("", "", null);
+            }
+          }}
+          onFocus={() => setOpen(true)}
+          onBlur={() => setTimeout(() => setOpen(false), 150)}
+        />
+        {(selected || query) && (
+          <button
+            type="button"
+            aria-label="Auswahl zurücksetzen"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            onClick={() => {
+              setQuery("");
+              onChange("", "", null);
+              setOpen(false);
+            }}
+          >
+            <X size={16} />
+          </button>
+        )}
+      </div>
+      {open && filtered.length > 0 && (
+        <ul className="absolute z-10 mt-1 max-h-48 w-full overflow-auto rounded-lg border border-border bg-card shadow-xl">
+          {filtered.map((p) => (
+            <li key={p.id}>
+              <button
+                type="button"
+                className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  onChange(p.id, p.name, p.stueck_pro_einheit ?? null);
+                  setQuery(p.name);
+                  setOpen(false);
+                }}
+              >
+                {p.name}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {open && query.trim().length >= 2 && filtered.length === 0 && (
+        <div className="absolute z-10 mt-1 w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-muted-foreground shadow-xl">
+          Keine Produkte gefunden
+        </div>
+      )}
+    </div>
+  );
+}
 
 function RechnungenPage() {
   const qc = useQueryClient();
@@ -689,17 +786,17 @@ function RechnungenPage() {
                       </option>
                     ))}
                   </Select>
-                  <Select
+                  <ProduktSuche
                     value={p.produkt_id}
-                    onChange={(e) => {
-                      const pr = (produkte.data ?? []).find((q) => q.id === e.target.value);
-                      const stueck = pr?.stueck_pro_einheit;
+                    kategorieId={p.kategorie_id}
+                    produkte={produkte.data}
+                    onChange={(id, _name, stueck) => {
                       setPositionen(
                         positionen.map((x, j) =>
                           j === i
                             ? {
                                 ...x,
-                                produkt_id: e.target.value,
+                                produkt_id: id,
                                 flaschen_pro_kiste:
                                   istKiste(x.einheit) && stueck != null
                                     ? String(stueck)
@@ -709,18 +806,7 @@ function RechnungenPage() {
                         ),
                       );
                     }}
-                  >
-                    <option value="">Produkt</option>
-                    {(produkte.data ?? [])
-                      .filter(
-                        (pr) => !p.kategorie_id || pr.kategorie_id === p.kategorie_id,
-                      )
-                      .map((pr) => (
-                        <option key={pr.id} value={pr.id}>
-                          {pr.name}
-                        </option>
-                      ))}
-                  </Select>
+                  />
                   <Select
                     value={p.einheit}
                     onChange={(e) =>
