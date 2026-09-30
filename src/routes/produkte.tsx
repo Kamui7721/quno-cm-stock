@@ -772,6 +772,19 @@ function ProduktePage() {
                 />
               </Field>
             )}
+            {istKiste(form.einheit) && (
+              <Field label="Stückpreis (berechnet)">
+                <Input
+                  disabled
+                  value={(() => {
+                    const ek = letzterEk(alleProdukte.find((x) => x.id === editId));
+                    const stueck = Number(form.stueck_pro_einheit);
+                    return ek !== null && stueck > 0 ? eur(ek / stueck) : "–";
+                  })()}
+                  readOnly
+                />
+              </Field>
+            )}
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button
