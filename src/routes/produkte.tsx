@@ -756,20 +756,17 @@ function ProduktePage() {
                 ))}
               </Select>
             </Field>
-            {istKiste(form.einheit) && (
-              <Field label="Stück pro Kiste">
-                <Input
-                  required
-                  type="number"
-                  step="1"
-                  min="1"
-                  inputMode="numeric"
-                  placeholder="z. B. 12"
-                  value={form.stueck_pro_einheit}
-                  onChange={(e) => setForm({ ...form, stueck_pro_einheit: e.target.value })}
-                />
-              </Field>
-            )}
+            <Field label="Stück pro Kiste">
+              <Input
+                type="number"
+                step="1"
+                min="1"
+                inputMode="numeric"
+                placeholder="z. B. 12"
+                value={form.stueck_pro_einheit}
+                onChange={(e) => setForm({ ...form, stueck_pro_einheit: e.target.value })}
+              />
+            </Field>
             {istKiste(form.einheit) && (
               <Field label="Stückpreis (berechnet)">
                 <Input
