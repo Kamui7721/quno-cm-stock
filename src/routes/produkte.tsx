@@ -53,6 +53,15 @@ function letzterEk(p: unknown): number | null {
   return v == null ? null : Number(v);
 }
 
+/** Stückpreis = letzter EK ÷ Stück pro Einheit (nur bei gesetztem stueck_pro_einheit). */
+function stueckPreis(p: unknown): number | null {
+  const row = p as PreisFelder & { stueck_pro_einheit?: number | string | null };
+  const ek = letzterEk(p);
+  const stueck = row.stueck_pro_einheit == null ? null : Number(row.stueck_pro_einheit);
+  if (ek === null || !stueck || stueck <= 0) return null;
+  return ek / stueck;
+}
+
 function trendWert(p: unknown): number | null {
   const row = p as PreisFelder;
   return abweichungProzent(
@@ -462,6 +471,7 @@ function ProduktePage() {
               "Einheit",
               "Bestand",
               kopfZelle("Letzter EK", "letzter_ek"),
+              "Stückpreis",
               kopfZelle("Trend", "trend"),
               "",
             ]}
@@ -492,6 +502,7 @@ function ProduktePage() {
                   {num(Number(p.aktueller_bestand))} {einheitLabel(p.einheit)}
                 </Td>
                 <Td>{letzterEk(p) !== null ? eur(letzterEk(p)!) : "–"}</Td>
+                <Td>{stueckPreis(p) !== null ? eur(stueckPreis(p)!) : "–"}</Td>
                 <Td>
                   {trendWert(p) === null ? (
                     <span className="text-muted-foreground">–</span>
@@ -758,6 +769,19 @@ function ProduktePage() {
                   placeholder="z. B. 12"
                   value={form.stueck_pro_einheit}
                   onChange={(e) => setForm({ ...form, stueck_pro_einheit: e.target.value })}
+                />
+              </Field>
+            )}
+            {istKiste(form.einheit) && (
+              <Field label="Stückpreis (berechnet)">
+                <Input
+                  disabled
+                  value={(() => {
+                    const ek = letzterEk(alleProdukte.find((x) => x.id === editId));
+                    const stueck = Number(form.stueck_pro_einheit);
+                    return ek !== null && stueck > 0 ? eur(ek / stueck) : "–";
+                  })()}
+                  readOnly
                 />
               </Field>
             )}
