@@ -291,11 +291,12 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
           // Produktbestand einmalig laden (für exakte + unscharfe Suche)
           const prodRes = await supabaseAdmin
             .from("produkte")
-            .select("id, name, bezeichnung_normalisiert, lieferant_id");
+            .select("id, name, bezeichnung_normalisiert, lieferant_id, stueck_pro_einheit");
           if (prodRes.error) return json({ error: prodRes.error.message }, 500);
           const produkte = (prodRes.data ?? []).map((p) => ({
             id: p.id,
             lieferant_id: p.lieferant_id,
+            stueck_pro_einheit: p.stueck_pro_einheit as number | null,
             norm: p.bezeichnung_normalisiert || normalisiereBezeichnung(p.name),
           }));
 
@@ -330,6 +331,11 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
               if (best && best.score >= PRODUKT_SCHWELLE) treffer = best.p;
             }
 
+            const gebinde =
+              p.gebindegroesse && p.gebindegroesse > 0
+                ? Math.round(p.gebindegroesse)
+                : null;
+
             let produktId: string;
             if (treffer) {
               produktId = treffer.id;
@@ -342,6 +348,16 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
                 if (upd.error) return json({ error: upd.error.message }, 500);
                 treffer.lieferant_id = lieferantId;
               }
+              // Stück pro Einheit aus Gebindegröße übernehmen, falls noch nicht gesetzt
+              if (gebinde && (treffer.stueck_pro_einheit == null || treffer.stueck_pro_einheit <= 0)) {
+                const upd = await supabaseAdmin
+                  .from("produkte")
+                  .update({ stueck_pro_einheit: gebinde })
+                  .eq("id", treffer.id)
+                  .is("stueck_pro_einheit", null);
+                if (upd.error) return json({ error: upd.error.message }, 500);
+                treffer.stueck_pro_einheit = gebinde;
+              }
             } else {
               const neuesProdukt = await supabaseAdmin
                 .from("produkte")
@@ -352,13 +368,14 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
                   lieferant_id: lieferantId,
                   einheit,
                   aktueller_bestand: 0,
+                  stueck_pro_einheit: gebinde,
                 })
                 .select("id")
                 .single();
               if (neuesProdukt.error) return json({ error: neuesProdukt.error.message }, 500);
               produktId = neuesProdukt.data.id;
               neueProdukte++;
-              produkte.push({ id: produktId, lieferant_id: lieferantId, norm });
+              produkte.push({ id: produktId, lieferant_id: lieferantId, stueck_pro_einheit: gebinde, norm });
             }
 
             const menge = p.menge ?? 0;
