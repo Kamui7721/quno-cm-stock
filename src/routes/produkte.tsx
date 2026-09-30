@@ -224,9 +224,7 @@ function ProduktePage() {
           kategorie_id: form.kategorie_id || null,
           lieferant_id: form.lieferant_id || null,
           einheit: form.einheit,
-          stueck_pro_einheit: istKiste(form.einheit)
-            ? Math.round(Number(form.stueck_pro_einheit)) || null
-            : null,
+          stueck_pro_einheit: Math.round(Number(form.stueck_pro_einheit)) || null,
         })
         .eq("id", editId!);
       if (error) throw error;
