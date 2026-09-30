@@ -173,7 +173,9 @@ function ZaehlungDetail() {
   const abschliessen = useMutation({
     mutationFn: async () => {
       const rows = (produkte.data ?? []).map((p) => {
-        const ist = Number(werte[p.id] ?? 0) || 0;
+        const roh = Number(werte[p.id] ?? 0) || 0;
+        const stueck = Number(p.stueck_pro_einheit ?? 0);
+        const ist = flaschenModus[p.id] && stueck > 0 ? roh / stueck : roh;
         const soll = Number(p.aktueller_bestand) || 0;
         const differenz = ist - soll;
         return {
