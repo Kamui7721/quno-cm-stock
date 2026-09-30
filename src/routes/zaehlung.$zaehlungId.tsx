@@ -32,11 +32,92 @@ export const Route = createFileRoute("/zaehlung/$zaehlungId")({
   component: ZaehlungDetail,
 });
 
+type ProduktRow = {
+  id: string;
+  name: string;
+  einheit: string;
+  aktueller_bestand: number | string;
+  stueck_pro_einheit: number | string | null;
+};
+
+/** Eingabefeld mit optionalem Kisten/Flaschen-Umschalter. */
+function ZaehlInput({
+  p,
+  wert,
+  onWert,
+  flaschen,
+  onFlaschen,
+  className,
+}: {
+  p: ProduktRow;
+  wert: string;
+  onWert: (v: string) => void;
+  flaschen: boolean;
+  onFlaschen: (v: boolean) => void;
+  className?: string;
+}) {
+  const stueck = Number(p.stueck_pro_einheit ?? 0);
+  const umschaltbar = stueck > 0;
+  const menge = Number(wert) || 0;
+  const hinweis = !umschaltbar
+    ? null
+    : flaschen
+      ? `= ${num(menge / stueck)} Kisten`
+      : `= ${num(menge * stueck, 0)} Flaschen`;
+
+  return (
+    <div>
+      {umschaltbar && (
+        <div className="mb-2 inline-flex rounded-lg border border-border bg-surface-2 p-0.5 text-xs">
+          <button
+            type="button"
+            onClick={() => onFlaschen(false)}
+            className={
+              "rounded-md px-3 py-1.5 transition " +
+              (!flaschen
+                ? "bg-primary font-medium text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground")
+            }
+          >
+            Kisten zählen
+          </button>
+          <button
+            type="button"
+            onClick={() => onFlaschen(true)}
+            className={
+              "rounded-md px-3 py-1.5 transition " +
+              (flaschen
+                ? "bg-primary font-medium text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground")
+            }
+          >
+            Flaschen zählen
+          </button>
+        </div>
+      )}
+      <Input
+        type="number"
+        step={flaschen ? "1" : "any"}
+        min="0"
+        inputMode="decimal"
+        className={className}
+        placeholder="0"
+        value={wert}
+        onChange={(e) => onWert(e.target.value)}
+      />
+      {hinweis && wert !== "" && (
+        <p className="mt-1 text-xs text-muted-foreground">{hinweis}</p>
+      )}
+    </div>
+  );
+}
+
 function ZaehlungDetail() {
   const { zaehlungId } = Route.useParams();
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [werte, setWerte] = useState<Record<string, string>>({});
+  const [flaschenModus, setFlaschenModus] = useState<Record<string, boolean>>({});
 
   const zaehlung = useQuery({
     queryKey: ["zaehlung", zaehlungId],
