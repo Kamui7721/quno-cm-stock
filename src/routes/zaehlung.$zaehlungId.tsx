@@ -278,15 +278,16 @@ function ZaehlungDetail() {
                       Soll {num(Number(p.aktueller_bestand))} {einheitLabel(p.einheit)}
                     </span>
                   </div>
-                  <Input
-                    type="number"
-                    step="any"
-                    inputMode="decimal"
-                    className="mt-3 h-[60px] text-center text-2xl font-semibold"
-                    placeholder="0"
-                    value={werte[p.id] ?? ""}
-                    onChange={(e) => setWerte({ ...werte, [p.id]: e.target.value })}
-                  />
+                  <div className="mt-3">
+                    <ZaehlInput
+                      p={p}
+                      wert={werte[p.id] ?? ""}
+                      onWert={(v) => setWerte({ ...werte, [p.id]: v })}
+                      flaschen={!!flaschenModus[p.id]}
+                      onFlaschen={(v) => setFlaschenModus({ ...flaschenModus, [p.id]: v })}
+                      className="h-[60px] text-center text-2xl font-semibold"
+                    />
+                  </div>
                 </Card>
               ))
             )}
@@ -304,14 +305,13 @@ function ZaehlungDetail() {
                       {num(Number(p.aktueller_bestand))} {einheitLabel(p.einheit)}
                     </Td>
                     <Td>
-                      <Input
-                        type="number"
-                        step="any"
-                        inputMode="decimal"
+                      <ZaehlInput
+                        p={p}
+                        wert={werte[p.id] ?? ""}
+                        onWert={(v) => setWerte({ ...werte, [p.id]: v })}
+                        flaschen={!!flaschenModus[p.id]}
+                        onFlaschen={(v) => setFlaschenModus({ ...flaschenModus, [p.id]: v })}
                         className="w-32"
-                        placeholder="0"
-                        value={werte[p.id] ?? ""}
-                        onChange={(e) => setWerte({ ...werte, [p.id]: e.target.value })}
                       />
                     </Td>
                   </Tr>
