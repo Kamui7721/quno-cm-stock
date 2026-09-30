@@ -53,6 +53,15 @@ function letzterEk(p: unknown): number | null {
   return v == null ? null : Number(v);
 }
 
+/** Stückpreis = letzter EK ÷ Stück pro Einheit (nur bei gesetztem stueck_pro_einheit). */
+function stueckPreis(p: unknown): number | null {
+  const row = p as PreisFelder & { stueck_pro_einheit?: number | string | null };
+  const ek = letzterEk(p);
+  const stueck = row.stueck_pro_einheit == null ? null : Number(row.stueck_pro_einheit);
+  if (ek === null || !stueck || stueck <= 0) return null;
+  return ek / stueck;
+}
+
 function trendWert(p: unknown): number | null {
   const row = p as PreisFelder;
   return abweichungProzent(
@@ -462,6 +471,7 @@ function ProduktePage() {
               "Einheit",
               "Bestand",
               kopfZelle("Letzter EK", "letzter_ek"),
+              "Stückpreis",
               kopfZelle("Trend", "trend"),
               "",
             ]}
@@ -492,6 +502,7 @@ function ProduktePage() {
                   {num(Number(p.aktueller_bestand))} {einheitLabel(p.einheit)}
                 </Td>
                 <Td>{letzterEk(p) !== null ? eur(letzterEk(p)!) : "–"}</Td>
+                <Td>{stueckPreis(p) !== null ? eur(stueckPreis(p)!) : "–"}</Td>
                 <Td>
                   {trendWert(p) === null ? (
                     <span className="text-muted-foreground">–</span>
