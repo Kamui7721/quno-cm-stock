@@ -224,9 +224,7 @@ function ProduktePage() {
           kategorie_id: form.kategorie_id || null,
           lieferant_id: form.lieferant_id || null,
           einheit: form.einheit,
-          stueck_pro_einheit: istKiste(form.einheit)
-            ? Math.round(Number(form.stueck_pro_einheit)) || null
-            : null,
+          stueck_pro_einheit: Math.round(Number(form.stueck_pro_einheit)) || null,
         })
         .eq("id", editId!);
       if (error) throw error;
@@ -758,20 +756,17 @@ function ProduktePage() {
                 ))}
               </Select>
             </Field>
-            {istKiste(form.einheit) && (
-              <Field label="Stück pro Kiste">
-                <Input
-                  required
-                  type="number"
-                  step="1"
-                  min="1"
-                  inputMode="numeric"
-                  placeholder="z. B. 12"
-                  value={form.stueck_pro_einheit}
-                  onChange={(e) => setForm({ ...form, stueck_pro_einheit: e.target.value })}
-                />
-              </Field>
-            )}
+            <Field label="Stück pro Kiste">
+              <Input
+                type="number"
+                step="1"
+                min="1"
+                inputMode="numeric"
+                placeholder="z. B. 12"
+                value={form.stueck_pro_einheit}
+                onChange={(e) => setForm({ ...form, stueck_pro_einheit: e.target.value })}
+              />
+            </Field>
             {istKiste(form.einheit) && (
               <Field label="Stückpreis (berechnet)">
                 <Input
