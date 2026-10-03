@@ -219,6 +219,9 @@ function ZaehlungDetail() {
           soll_bestand: soll,
           differenz,
           differenz_prozent: soll === 0 ? 0 : (differenz / soll) * 100,
+          angebrochen: zeigAngebrochen(p)
+            ? Math.max(0, Math.round(Number(angebrochenWerte[p.id] ?? 0) || 0))
+            : 0,
         };
       });
       const del = await db
@@ -280,7 +283,14 @@ function ZaehlungDetail() {
               {(positionen.data ?? []).map((p) => (
                 <Tr key={p.id}>
                   <Td>{p.produkte?.name ?? "–"}</Td>
-                  <Td>{num(Number(p.ist_bestand))}</Td>
+                  <Td>
+                    {num(Number(p.ist_bestand))}
+                    {Number(p.angebrochen) > 0 && (
+                      <span className="block text-xs text-muted-foreground">
+                        (davon {num(Number(p.angebrochen), 0)} angebrochen)
+                      </span>
+                    )}
+                  </Td>
                   <Td>{num(Number(p.soll_bestand))}</Td>
                   <Td>{num(Number(p.differenz))}</Td>
                   <Td>
@@ -320,6 +330,11 @@ function ZaehlungDetail() {
                       flaschen={!!flaschenModus[p.id]}
                       onFlaschen={(v) => setFlaschenModus({ ...flaschenModus, [p.id]: v })}
                       className="h-[60px] text-center text-2xl font-semibold"
+                      angebrochenWert={angebrochenWerte[p.id] ?? ""}
+                      onAngebrochen={(v) =>
+                        setAngebrochenWerte({ ...angebrochenWerte, [p.id]: v })
+                      }
+                      angebrochenClassName="h-12 text-center text-lg font-semibold"
                     />
                   </div>
                 </Card>
@@ -346,6 +361,11 @@ function ZaehlungDetail() {
                         flaschen={!!flaschenModus[p.id]}
                         onFlaschen={(v) => setFlaschenModus({ ...flaschenModus, [p.id]: v })}
                         className="w-32"
+                        angebrochenWert={angebrochenWerte[p.id] ?? ""}
+                        onAngebrochen={(v) =>
+                          setAngebrochenWerte({ ...angebrochenWerte, [p.id]: v })
+                        }
+                        angebrochenClassName="w-32"
                       />
                     </Td>
                   </Tr>
