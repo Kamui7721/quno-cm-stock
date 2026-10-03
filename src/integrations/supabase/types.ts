@@ -391,6 +391,7 @@ export type Database = {
       }
       zaehlungspositionen: {
         Row: {
+          angebrochen: number
           differenz: number
           differenz_prozent: number
           id: string
@@ -400,6 +401,7 @@ export type Database = {
           zaehlung_id: string
         }
         Insert: {
+          angebrochen?: number
           differenz?: number
           differenz_prozent?: number
           id?: string
@@ -409,6 +411,7 @@ export type Database = {
           zaehlung_id: string
         }
         Update: {
+          angebrochen?: number
           differenz?: number
           differenz_prozent?: number
           id?: string

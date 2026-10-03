@@ -40,6 +40,15 @@ type ProduktRow = {
   stueck_pro_einheit: number | string | null;
 };
 
+/** Sichtbar, wenn das Produkt Flaschen-Einheit hat oder Stück pro Kiste gesetzt ist. */
+export const zeigAngebrochen = (p: {
+  einheit: string;
+  stueck_pro_einheit: number | string | null;
+}): boolean => {
+  const e = (p.einheit ?? "").trim().toLowerCase();
+  return e.startsWith("flasche") || Number(p.stueck_pro_einheit ?? 0) > 0;
+};
+
 /** Eingabefeld mit optionalem Kisten/Flaschen-Umschalter. */
 function ZaehlInput({
   p,
@@ -48,6 +57,9 @@ function ZaehlInput({
   flaschen,
   onFlaschen,
   className,
+  angebrochenWert,
+  onAngebrochen,
+  angebrochenClassName,
 }: {
   p: ProduktRow;
   wert: string;
@@ -55,6 +67,9 @@ function ZaehlInput({
   flaschen: boolean;
   onFlaschen: (v: boolean) => void;
   className?: string;
+  angebrochenWert?: string;
+  onAngebrochen?: (v: string) => void;
+  angebrochenClassName?: string;
 }) {
   const stueck = Number(p.stueck_pro_einheit ?? 0);
   const umschaltbar = stueck > 0;
@@ -64,6 +79,7 @@ function ZaehlInput({
     : flaschen
       ? `= ${num(menge / stueck)} Kisten`
       : `= ${num(menge * stueck, 0)} Flaschen`;
+  const mitAngebrochen = zeigAngebrochen(p) && !!onAngebrochen;
 
   return (
     <div>
@@ -108,6 +124,23 @@ function ZaehlInput({
       {hinweis && wert !== "" && (
         <p className="mt-1 text-xs text-muted-foreground">{hinweis}</p>
       )}
+      {mitAngebrochen && (
+        <div className="mt-2">
+          <label className="mb-1 block text-xs text-muted-foreground">
+            davon angebrochen
+          </label>
+          <Input
+            type="number"
+            step="1"
+            min="0"
+            inputMode="numeric"
+            className={angebrochenClassName}
+            placeholder="0"
+            value={angebrochenWert ?? ""}
+            onChange={(e) => onAngebrochen(e.target.value)}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -117,6 +150,7 @@ function ZaehlungDetail() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [werte, setWerte] = useState<Record<string, string>>({});
+  const [angebrochenWerte, setAngebrochenWerte] = useState<Record<string, string>>({});
   const [flaschenModus, setFlaschenModus] = useState<Record<string, boolean>>({});
 
   const zaehlung = useQuery({
@@ -185,6 +219,9 @@ function ZaehlungDetail() {
           soll_bestand: soll,
           differenz,
           differenz_prozent: soll === 0 ? 0 : (differenz / soll) * 100,
+          angebrochen: zeigAngebrochen(p)
+            ? Math.max(0, Math.round(Number(angebrochenWerte[p.id] ?? 0) || 0))
+            : 0,
         };
       });
       const del = await db
@@ -246,7 +283,14 @@ function ZaehlungDetail() {
               {(positionen.data ?? []).map((p) => (
                 <Tr key={p.id}>
                   <Td>{p.produkte?.name ?? "–"}</Td>
-                  <Td>{num(Number(p.ist_bestand))}</Td>
+                  <Td>
+                    {num(Number(p.ist_bestand))}
+                    {Number(p.angebrochen) > 0 && (
+                      <span className="block text-xs text-muted-foreground">
+                        (davon {num(Number(p.angebrochen), 0)} angebrochen)
+                      </span>
+                    )}
+                  </Td>
                   <Td>{num(Number(p.soll_bestand))}</Td>
                   <Td>{num(Number(p.differenz))}</Td>
                   <Td>
@@ -286,6 +330,11 @@ function ZaehlungDetail() {
                       flaschen={!!flaschenModus[p.id]}
                       onFlaschen={(v) => setFlaschenModus({ ...flaschenModus, [p.id]: v })}
                       className="h-[60px] text-center text-2xl font-semibold"
+                      angebrochenWert={angebrochenWerte[p.id] ?? ""}
+                      onAngebrochen={(v) =>
+                        setAngebrochenWerte({ ...angebrochenWerte, [p.id]: v })
+                      }
+                      angebrochenClassName="h-12 text-center text-lg font-semibold"
                     />
                   </div>
                 </Card>
@@ -312,6 +361,11 @@ function ZaehlungDetail() {
                         flaschen={!!flaschenModus[p.id]}
                         onFlaschen={(v) => setFlaschenModus({ ...flaschenModus, [p.id]: v })}
                         className="w-32"
+                        angebrochenWert={angebrochenWerte[p.id] ?? ""}
+                        onAngebrochen={(v) =>
+                          setAngebrochenWerte({ ...angebrochenWerte, [p.id]: v })
+                        }
+                        angebrochenClassName="w-32"
                       />
                     </Td>
                   </Tr>
