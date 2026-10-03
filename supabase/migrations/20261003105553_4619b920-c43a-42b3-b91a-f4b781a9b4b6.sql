@@ -1,0 +1,1 @@
+ALTER TABLE public.zaehlungspositionen ADD COLUMN angebrochen integer NOT NULL DEFAULT 0;
