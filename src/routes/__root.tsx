@@ -36,10 +36,9 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {}
 const ErrorBoundary = lazy(async () => ({ default: ErrorComponent }));
 
-function ErrorComponentImpl({ error, reset }: { error: Error; reset: () => void }) {
+function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
