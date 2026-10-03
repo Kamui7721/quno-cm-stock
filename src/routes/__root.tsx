@@ -7,7 +7,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import { lazy, useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -36,7 +36,9 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+const ErrorBoundary = lazy(async () => ({ default: ErrorComponent }));
+
+function ErrorComponent({ error, reset }: { error: unknown; reset?: () => void }) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
@@ -56,7 +58,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
           <button
             onClick={() => {
               router.invalidate();
-              reset();
+              reset?.();
             }}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
@@ -104,7 +106,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
-  errorComponent: ErrorComponent,
+  errorComponent: ErrorBoundary,
 });
 
 function RootShell({ children }: { children: ReactNode }) {
