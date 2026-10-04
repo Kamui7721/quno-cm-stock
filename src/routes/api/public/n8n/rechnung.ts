@@ -358,6 +358,15 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
                 if (upd.error) return json({ error: upd.error.message }, 500);
                 treffer.stueck_pro_einheit = gebinde;
               }
+              // Einheit auf "kiste" setzen, wenn Gebindegröße erkannt und noch keine Kiste
+              if (gebinde && !istKiste((treffer as { einheit?: string }).einheit)) {
+                const upd = await supabaseAdmin
+                  .from("produkte")
+                  .update({ einheit: "kiste" })
+                  .eq("id", treffer.id);
+                if (upd.error) return json({ error: upd.error.message }, 500);
+                (treffer as { einheit?: string }).einheit = "kiste";
+              }
             } else {
               const neuesProdukt = await supabaseAdmin
                 .from("produkte")
