@@ -342,6 +342,7 @@ function ZaehlungDetail() {
                         setAngebrochenWerte({ ...angebrochenWerte, [p.id]: v })
                       }
                       angebrochenClassName="h-12 text-center text-lg font-semibold"
+                      istGetraenke={istGetraenke}
                     />
                   </div>
                 </Card>
