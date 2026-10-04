@@ -40,14 +40,17 @@ type ProduktRow = {
   stueck_pro_einheit: number | string | null;
 };
 
-/** Sichtbar, wenn das Produkt Flaschen-Einheit hat oder Stück pro Kiste gesetzt ist. */
-export const zeigAngebrochen = (p: {
-  einheit: string;
-  stueck_pro_einheit: number | string | null;
-}): boolean => {
-  const e = (p.einheit ?? "").trim().toLowerCase();
-  return e.startsWith("flasche") || Number(p.stueck_pro_einheit ?? 0) > 0;
-};
+/** Sichtbar bei Kategorie "Getränke" oder wenn Flaschen-Einheit / Stück pro Kiste gesetzt. */
+export const zeigAngebrochen = (
+  p: {
+    einheit: string;
+    stueck_pro_einheit: number | string | null;
+  },
+  istGetraenke = false,
+): boolean =>
+  istGetraenke ||
+  (p.einheit ?? "").trim().toLowerCase().startsWith("flasche") ||
+  Number(p.stueck_pro_einheit ?? 0) > 0;
 
 /** Eingabefeld mit optionalem Kisten/Flaschen-Umschalter. */
 function ZaehlInput({
@@ -60,6 +63,7 @@ function ZaehlInput({
   angebrochenWert,
   onAngebrochen,
   angebrochenClassName,
+  istGetraenke,
 }: {
   p: ProduktRow;
   wert: string;
@@ -70,6 +74,7 @@ function ZaehlInput({
   angebrochenWert?: string;
   onAngebrochen?: (v: string) => void;
   angebrochenClassName?: string;
+  istGetraenke?: boolean;
 }) {
   const stueck = Number(p.stueck_pro_einheit ?? 0);
   const umschaltbar = stueck > 0;
@@ -79,7 +84,7 @@ function ZaehlInput({
     : flaschen
       ? `= ${num(menge / stueck)} Kisten`
       : `= ${num(menge * stueck, 0)} Flaschen`;
-  const mitAngebrochen = zeigAngebrochen(p) && !!onAngebrochen;
+  const mitAngebrochen = zeigAngebrochen(p, istGetraenke) && !!onAngebrochen;
 
   return (
     <div>
@@ -219,7 +224,7 @@ function ZaehlungDetail() {
           soll_bestand: soll,
           differenz,
           differenz_prozent: soll === 0 ? 0 : (differenz / soll) * 100,
-          angebrochen: zeigAngebrochen(p)
+          angebrochen: zeigAngebrochen(p, istGetraenke)
             ? Math.max(0, Math.round(Number(angebrochenWerte[p.id] ?? 0) || 0))
             : 0,
         };
@@ -250,6 +255,8 @@ function ZaehlungDetail() {
   });
 
   const abgeschlossen = zaehlung.data?.status === "abgeschlossen";
+  const kategorieName = zaehlung.data?.kategorien?.name ?? "";
+  const istGetraenke = kategorieName.trim().toLowerCase() === "getränke";
 
   if (zaehlung.error) {
     return <p className="text-sm text-primary">Fehler: {zaehlung.error.message}</p>;
@@ -335,6 +342,7 @@ function ZaehlungDetail() {
                         setAngebrochenWerte({ ...angebrochenWerte, [p.id]: v })
                       }
                       angebrochenClassName="h-12 text-center text-lg font-semibold"
+                      istGetraenke={istGetraenke}
                     />
                   </div>
                 </Card>
@@ -366,6 +374,7 @@ function ZaehlungDetail() {
                           setAngebrochenWerte({ ...angebrochenWerte, [p.id]: v })
                         }
                         angebrochenClassName="w-32"
+                        istGetraenke={istGetraenke}
                       />
                     </Td>
                   </Tr>
