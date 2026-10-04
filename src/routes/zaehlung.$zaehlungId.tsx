@@ -374,6 +374,7 @@ function ZaehlungDetail() {
                           setAngebrochenWerte({ ...angebrochenWerte, [p.id]: v })
                         }
                         angebrochenClassName="w-32"
+                        istGetraenke={istGetraenke}
                       />
                     </Td>
                   </Tr>
