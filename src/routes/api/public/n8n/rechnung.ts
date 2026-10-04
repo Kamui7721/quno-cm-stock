@@ -291,12 +291,13 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
           // Produktbestand einmalig laden (für exakte + unscharfe Suche)
           const prodRes = await supabaseAdmin
             .from("produkte")
-            .select("id, name, bezeichnung_normalisiert, lieferant_id, stueck_pro_einheit");
+            .select("id, name, bezeichnung_normalisiert, lieferant_id, stueck_pro_einheit, einheit");
           if (prodRes.error) return json({ error: prodRes.error.message }, 500);
           const produkte = (prodRes.data ?? []).map((p) => ({
             id: p.id,
             lieferant_id: p.lieferant_id,
             stueck_pro_einheit: p.stueck_pro_einheit as number | null,
+            einheit: p.einheit as string | null,
             norm: p.bezeichnung_normalisiert || normalisiereBezeichnung(p.name),
           }));
 
@@ -375,7 +376,7 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
                   bezeichnung_normalisiert: norm,
                   kategorie_id: katId,
                   lieferant_id: lieferantId,
-                  einheit,
+                  einheit: gebinde ? "kiste" : einheit,
                   aktueller_bestand: 0,
                   stueck_pro_einheit: gebinde,
                 })
@@ -384,7 +385,7 @@ export const Route = createFileRoute("/api/public/n8n/rechnung")({
               if (neuesProdukt.error) return json({ error: neuesProdukt.error.message }, 500);
               produktId = neuesProdukt.data.id;
               neueProdukte++;
-              produkte.push({ id: produktId, lieferant_id: lieferantId, stueck_pro_einheit: gebinde, norm });
+              produkte.push({ id: produktId, lieferant_id: lieferantId, stueck_pro_einheit: gebinde, einheit: gebinde ? "kiste" : einheit, norm });
             }
 
             const menge = p.menge ?? 0;
