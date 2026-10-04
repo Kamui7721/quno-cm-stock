@@ -53,20 +53,20 @@ function letzterEk(p: unknown): number | null {
   return v == null ? null : Number(v);
 }
 
-/** Stückpreis: bei Kiste = letzter EK (Kistenpreis) ÷ Stück pro Einheit, sonst = letzter EK selbst. */
+/**
+ * Stückpreis: nur bei Einheit "Kiste" mit stueck_pro_einheit > 0
+ * (letzter EK = Kistenpreis ÷ Stück pro Einheit). Sonst null → Zelle leer.
+ */
 function stueckPreis(p: unknown): number | null {
   const row = p as PreisFelder & {
     stueck_pro_einheit?: number | string | null;
     einheit?: string | null;
   };
   const ek = letzterEk(p);
-  if (ek === null) return null;
-  if (istKiste(row.einheit)) {
-    const stueck = row.stueck_pro_einheit == null ? null : Number(row.stueck_pro_einheit);
-    if (stueck && stueck > 0) return ek / stueck;
-    return null;
-  }
-  return ek;
+  if (ek === null || !istKiste(row.einheit)) return null;
+  const stueck = row.stueck_pro_einheit == null ? null : Number(row.stueck_pro_einheit);
+  if (!stueck || stueck <= 0) return null;
+  return ek / stueck;
 }
 
 function trendWert(p: unknown): number | null {
