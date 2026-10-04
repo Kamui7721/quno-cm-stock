@@ -255,6 +255,8 @@ function ZaehlungDetail() {
   });
 
   const abgeschlossen = zaehlung.data?.status === "abgeschlossen";
+  const kategorieName = zaehlung.data?.kategorien?.name ?? "";
+  const istGetraenke = kategorieName.trim().toLowerCase() === "getränke";
 
   if (zaehlung.error) {
     return <p className="text-sm text-primary">Fehler: {zaehlung.error.message}</p>;
