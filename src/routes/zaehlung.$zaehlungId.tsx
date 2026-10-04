@@ -40,14 +40,17 @@ type ProduktRow = {
   stueck_pro_einheit: number | string | null;
 };
 
-/** Sichtbar, wenn das Produkt Flaschen-Einheit hat oder Stück pro Kiste gesetzt ist. */
-export const zeigAngebrochen = (p: {
-  einheit: string;
-  stueck_pro_einheit: number | string | null;
-}): boolean => {
-  const e = (p.einheit ?? "").trim().toLowerCase();
-  return e.startsWith("flasche") || Number(p.stueck_pro_einheit ?? 0) > 0;
-};
+/** Sichtbar bei Kategorie "Getränke" oder wenn Flaschen-Einheit / Stück pro Kiste gesetzt. */
+export const zeigAngebrochen = (
+  p: {
+    einheit: string;
+    stueck_pro_einheit: number | string | null;
+  },
+  istGetraenke = false,
+): boolean =>
+  istGetraenke ||
+  (p.einheit ?? "").trim().toLowerCase().startsWith("flasche") ||
+  Number(p.stueck_pro_einheit ?? 0) > 0;
 
 /** Eingabefeld mit optionalem Kisten/Flaschen-Umschalter. */
 function ZaehlInput({
