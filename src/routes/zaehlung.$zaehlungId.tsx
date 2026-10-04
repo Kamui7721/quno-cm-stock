@@ -84,7 +84,7 @@ function ZaehlInput({
     : flaschen
       ? `= ${num(menge / stueck)} Kisten`
       : `= ${num(menge * stueck, 0)} Flaschen`;
-  const mitAngebrochen = zeigAngebrochen(p) && !!onAngebrochen;
+  const mitAngebrochen = zeigAngebrochen(p, istGetraenke) && !!onAngebrochen;
 
   return (
     <div>
