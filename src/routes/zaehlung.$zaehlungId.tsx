@@ -224,7 +224,7 @@ function ZaehlungDetail() {
           soll_bestand: soll,
           differenz,
           differenz_prozent: soll === 0 ? 0 : (differenz / soll) * 100,
-          angebrochen: zeigAngebrochen(p)
+          angebrochen: zeigAngebrochen(p, istGetraenke)
             ? Math.max(0, Math.round(Number(angebrochenWerte[p.id] ?? 0) || 0))
             : 0,
         };
