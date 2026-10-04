@@ -507,7 +507,7 @@ function ProduktePage() {
                   {num(Number(p.aktueller_bestand))} {einheitLabel(p.einheit)}
                 </Td>
                 <Td>{letzterEk(p) !== null ? eur(letzterEk(p)!) : "–"}</Td>
-                <Td>{stueckPreis(p) !== null ? eur(stueckPreis(p)!) : "–"}</Td>
+                <Td>{stueckPreis(p) !== null ? eur(stueckPreis(p)!) : ""}</Td>
                 <Td>
                   {trendWert(p) === null ? (
                     <span className="text-muted-foreground">–</span>
