@@ -63,6 +63,7 @@ function ZaehlInput({
   angebrochenWert,
   onAngebrochen,
   angebrochenClassName,
+  istGetraenke,
 }: {
   p: ProduktRow;
   wert: string;
@@ -73,6 +74,7 @@ function ZaehlInput({
   angebrochenWert?: string;
   onAngebrochen?: (v: string) => void;
   angebrochenClassName?: string;
+  istGetraenke?: boolean;
 }) {
   const stueck = Number(p.stueck_pro_einheit ?? 0);
   const umschaltbar = stueck > 0;
